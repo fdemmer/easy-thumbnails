@@ -1,6 +1,12 @@
 Changes
 =======
 
+2.10.1 (2025-01-25)
+-------------------
+
+* Fix for non-filesystem storage (regression in 26e8f9f of 2.8.5)
+
+
 2.10 (2024-09-11)
 -----------------
 * Drop support for Python-3.8.
