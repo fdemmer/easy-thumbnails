@@ -1,6 +1,13 @@
 Changes
 =======
 
+2.10.2 (2025-02-11)
+-------------------
+
+* Removed due to problems with MPO (Multi-Picture Format) images:
+  Experimental support for animated image formats.
+
+
 2.10.1 (2025-01-25)
 -------------------
 
