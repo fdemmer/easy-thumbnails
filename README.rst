@@ -5,9 +5,9 @@ Easy Thumbnails
 .. image:: https://img.shields.io/pypi/v/easy-thumbnails.svg
     :target: https://pypi.python.org/pypi/easy-thumbnails/
 
-.. image:: https://github.com/SmileyChris/easy-thumbnails/actions/workflows/python.yml/badge.svg
+.. image:: https://github.com/SmileyChris/easy-thumbnails/actions/workflows/main.yml/badge.svg
     :alt: Build Status
-    :target: https://github.com/SmileyChris/easy-thumbnails/actions/workflows/python.yml
+    :target: https://github.com/SmileyChris/easy-thumbnails/actions/workflows/main.yml
 
 
 A powerful, yet easy to implement thumbnailing application for Django 4.2+
@@ -111,9 +111,9 @@ Python:
 Using in combination with other thumbnailers
 --------------------------------------------
 
-Alternatively, you load the templatetags by {% load easy_thumbnails_tags %} 
-instead of traditional {% load thumbnail %}. It's especially useful in 
-projects that do make use of multiple thumbnailer libraries that use the 
+Alternatively, you load the templatetags by {% load easy_thumbnails_tags %}
+instead of traditional {% load thumbnail %}. It's especially useful in
+projects that do make use of multiple thumbnailer libraries that use the
 same name (`thumbnail`) for the templatetag module:
 
 .. code-block:: html+django

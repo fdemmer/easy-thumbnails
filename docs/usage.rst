@@ -37,7 +37,7 @@ used by the image processors to generate the required image.
 must fit within.
 
 Other options are only provided if the given functionality is required:
-   
+
 - ``quality=<N>`` where N is an integer between 1 and 100 specifying output
   JPEG quality. The default is 85.
 - ``subsampling=<N>`` sets the JPEG color subsampling level where N is:
@@ -50,10 +50,10 @@ Other options are only provided if the given functionality is required:
 - ``replace_alpha=#colorcode`` replaces any transparency layer with a solid
   color.
 - ``crop=<smart|scale|W,H>`` cuts the edges of the image to match the aspect
-  ratio of ``size`` before resizing. 
+  ratio of ``size`` before resizing.
 
   - `smart` means the image is incrementally cropped down to the requested size
-    by removing slices from edges with the least entropy. 
+    by removing slices from edges with the least entropy.
   - `scale` means at least one dimension fits within the size dimensions given.
   - `W,H` modifies the cropping origin behavior:
 
@@ -139,7 +139,7 @@ models.py::
     from django.dispatch import receiver
     from easy_thumbnails.signals import saved_file
     from myapp import tasks
-    
+
     @receiver(saved_file)
     def generate_thumbnails_async(sender, fieldfile, **kwargs):
         tasks.generate_thumbnails.delay(
@@ -153,7 +153,7 @@ tasks.py::
     import importlib
     from celery import shared_task
     from easy_thumbnails.files import generate_all_aliases
-    
+
     @task
     def generate_thumbnails(class_path, pk, field):
         bits = class_path.split(".")
@@ -190,7 +190,7 @@ Templates
 
 To make the easy-thumbnail template library available for use in your template,
 use::
-    
+
     {% load thumbnail %}
 
 
@@ -222,7 +222,7 @@ Fallback images
 
 If you need to support fallback or default images at template level you can
 use::
-    
+
     {% thumbnail object.image|default:'img/default_image.png' 50x50 %}
 
 Where the image string is relative to your default storage (usually the
@@ -292,10 +292,10 @@ doesn't exist (or if the source image has been modified since it was created).
 For example, assuming an ``aardvark.jpg`` image exists in the default storage::
 
     from easy_thumbnails.files import get_thumbnailer
-    
+
     thumbnailer = get_thumbnailer('animals/aardvark.jpg')
-    
-    thumbnail_options = {'crop': True} 
+
+    thumbnail_options = {'crop': True}
     for size in (50, 100, 250):
         thumbnail_options.update({'size': (size, size)})
         thumbnailer.get_thumbnail(thumbnail_options)
@@ -315,7 +315,7 @@ and provide a ``relative_name`` like this::
 
 If you don't even need to save the thumbnail to storage because you are
 planning on using it in some more direct way, you can use the
-:meth:`Thumbnailer.generate_thumbnail` method. 
+:meth:`Thumbnailer.generate_thumbnail` method.
 
 Thumbnails generated in this manner don't use any cache reference, i.e. every
 call to :meth:`Thumbnailer.get_thumbnail` will generate a fresh thumbnail

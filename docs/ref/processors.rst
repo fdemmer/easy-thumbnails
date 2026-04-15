@@ -60,7 +60,7 @@ options used to generate the thumbnail are passed to processors, not just the
 ones defined.
 
 Whether a processor actually modifies the image or not, they must always return
-an image. 
+an image.
 
 Use the processor
 -----------------

@@ -10,3 +10,6 @@ docs/_build
 *.orig
 reports/*
 .python-version
+.idea
+.coverage
+coverage.xml
