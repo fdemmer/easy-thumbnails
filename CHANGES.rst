@@ -1,8 +1,8 @@
 Changes
 =======
 
-3.0.0a1 (2026-04-16)
----------------------
+3.0.0 (2026-04-16)
+------------------
 
 * Fork published as ``fdemmer-easy-thumbnails`` on PyPI.
 * Major modernization: migrated to ``src/`` layout, ``pyproject.toml``-only
