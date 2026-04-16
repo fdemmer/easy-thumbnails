@@ -1,6 +1,6 @@
 import datetime
-import os
 import subprocess
+from pathlib import Path
 
 
 def get_version(version=None):
@@ -44,7 +44,7 @@ def get_git_changeset():
     This value isn't guaranteed to be unique, but collisions are very unlikely,
     so it's sufficient for generating the development version numbers.
     """
-    repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    repo_dir = Path(__file__).resolve().parent.parent
     git_log = subprocess.Popen(
         'git log --pretty=format:%ct --quiet -1 HEAD',
         stdout=subprocess.PIPE,

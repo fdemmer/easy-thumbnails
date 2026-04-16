@@ -1,9 +1,9 @@
-import os
+from pathlib import Path
 
 
 SITE_ID = 1
 
-MEDIA_ROOT = os.path.normcase(os.path.dirname(os.path.abspath(__file__)))
+MEDIA_ROOT = str(Path(__file__).resolve().parent)
 MEDIA_URL = '/media/'
 
 DATABASE_ENGINE = 'sqlite3'

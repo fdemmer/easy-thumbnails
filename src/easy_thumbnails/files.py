@@ -1,4 +1,4 @@
-import os
+from pathlib import Path, PurePath
 
 from django.core.files.base import ContentFile, File
 from django.core.files.images import get_image_dimensions
@@ -120,7 +120,7 @@ def database_get_image_dimensions(file, close=False, dimensions=None):
             dimensions_cache = None
         if dimensions_cache:
             return dimensions_cache.width, dimensions_cache.height
-    if os.path.splitext(file.file.name)[1] == '.svg':
+    if Path(file.file.name).suffix.lower() == '.svg':
         from easy_thumbnails.VIL.Image import load
 
         dimensions = load(file.path).size
@@ -329,7 +329,7 @@ class Thumbnailer(File):
         *args,
         **kwargs,
     ):
-        super().__init__(file, name, *args, **kwargs)
+        super().__init__(file, name)
         if source_storage is None:
             source_storage = default_storage
         self.source_storage = source_storage
@@ -425,7 +425,7 @@ class Thumbnailer(File):
         quality = thumbnail_options['quality']
         subsampling = thumbnail_options['subsampling']
 
-        if os.path.splitext(self.name)[1][1:].lower() == 'svg':
+        if Path(self.name).suffix.lower() == '.svg':
             img = engine.save_svg_image(thumbnail_image, filename=filename)
         else:
             img = engine.save_pil_image(
@@ -459,15 +459,17 @@ class Thumbnailer(File):
         if not provided).
         """
         thumbnail_options = self.get_options(thumbnail_options)
-        path, source_filename = os.path.split(self.name)
-        if hasattr(
-            self.source_storage, 'location'
-        ):  # remote storages do not have the location attribute
+        source_file_path = PurePath(self.name)
+
+        path = str(source_file_path.parent)
+        # remote storages do not have the location attribute
+        if hasattr(self.source_storage, 'location'):
             # remove storage location
             path = path.replace(self.source_storage.location, '')
         # remove leading slash if present
         path = path.lstrip('/')
-        source_extension = os.path.splitext(source_filename)[1][1:].lower()
+
+        source_extension = source_file_path.suffix[1:].lower()
         preserve_extensions = self.thumbnail_preserve_extensions
         if (
             preserve_extensions is True
@@ -494,14 +496,14 @@ class Thumbnailer(File):
             namer_func = self.thumbnail_namer
         filename = namer_func(
             thumbnailer=self,
-            source_filename=source_filename,
+            source_filename=source_file_path.name,
             thumbnail_extension=extension,
             thumbnail_options=thumbnail_options,
             prepared_options=prepared_opts,
         )
         filename = f'{self.thumbnail_prefix}{filename}'
 
-        return os.path.join(basedir, path, subdir, filename)
+        return str(PurePath(basedir) / path / subdir / filename)
 
     def get_existing_thumbnail(self, thumbnail_options):
         """
@@ -787,15 +789,16 @@ class ThumbnailerImageFieldFile(ImageFieldFile, ThumbnailerFieldFile):
         ``resize_source`` (a dictionary of thumbnail options) is provided by
         the field.
         """
-        options = getattr(self.field, 'resize_source', None)
-        if options:
+        if options := getattr(self.field, 'resize_source', None):
             if 'quality' not in options:
                 options['quality'] = self.thumbnail_quality
+
             content = Thumbnailer(content, name).generate_thumbnail(options)
-            # If the generated extension differs from the original, use it
-            # instead.
-            orig_name, ext = os.path.splitext(name)
-            generated_ext = os.path.splitext(content.name)[1]
-            if generated_ext.lower() != ext.lower():
-                name = orig_name + generated_ext
+
+            # If the generated extension differs from the original, use it instead.
+            given_name = Path(name)
+            content_suffix = Path(content.name).suffix
+            if given_name.suffix.lower() != content_suffix.lower():
+                name = given_name.with_suffix(content_suffix)
+
         super().save(name, content, *args, **kwargs)

@@ -1,5 +1,5 @@
-import os
 import pickle
+from pathlib import Path
 
 from django import VERSION as DJANGO_VERSION
 from django.core.files.base import ContentFile
@@ -59,13 +59,13 @@ class ThumbnailerFieldTest(AliasBaseTest):
             instance.avatar.get_thumbnail({'size': (200, 200)}).path,
             instance.avatar.get_thumbnail({'size': (100, 100)}).path,
         )
-        self.assertTrue(os.path.exists(source_path))
+        self.assertTrue(Path(source_path).exists())
         for path in thumb_paths:
-            self.assertTrue(os.path.exists(path))
+            self.assertTrue(Path(path).exists())
         instance.avatar.delete(save=False)
-        self.assertFalse(os.path.exists(source_path))
+        self.assertFalse(Path(source_path).exists())
         for path in thumb_paths:
-            self.assertFalse(os.path.exists(path))
+            self.assertFalse(Path(path).exists())
 
     def test_delete_thumbnails(self):
         instance = models.TestModel(avatar='avatars/avatar.jpg')
@@ -75,13 +75,13 @@ class ThumbnailerFieldTest(AliasBaseTest):
             instance.avatar.get_thumbnail({'size': (200, 200)}).path,
             instance.avatar.get_thumbnail({'size': (100, 100)}).path,
         )
-        self.assertTrue(os.path.exists(source_path))
+        self.assertTrue(Path(source_path).exists())
         for path in thumb_paths:
-            self.assertTrue(os.path.exists(path))
+            self.assertTrue(Path(path).exists())
         instance.avatar.delete_thumbnails()
-        self.assertTrue(os.path.exists(source_path))
+        self.assertTrue(Path(source_path).exists())
         for path in thumb_paths:
-            self.assertFalse(os.path.exists(path))
+            self.assertFalse(Path(path).exists())
 
     def test_get_thumbnails(self):
         instance = models.TestModel(avatar='avatars/avatar.jpg')
@@ -114,7 +114,9 @@ class ThumbnailerFieldTest(AliasBaseTest):
         # using instance.field.save() does not fail
         instance = models.TestModel(avatar='avatars/avatar.jpg')
         instance.picture.save(
-            'file.jpg', ContentFile(self._read_filefield(instance.avatar)), save=False
+            'file.jpg',
+            ContentFile(self._read_filefield(instance.avatar)),
+            save=False,
         )
 
         self.assertEqual(instance.picture.width, 10)
@@ -122,7 +124,9 @@ class ThumbnailerFieldTest(AliasBaseTest):
     def test_saving_image_field_with_resize_source_different_ext(self):
         instance = models.TestModel(avatar='avatars/avatar.jpg')
         instance.picture.save(
-            'file.gif', ContentFile(self._read_filefield(instance.avatar)), save=False
+            'file.gif',
+            ContentFile(self._read_filefield(instance.avatar)),
+            save=False,
         )
 
         self.assertEqual(instance.picture.name, 'pictures/file.jpg')

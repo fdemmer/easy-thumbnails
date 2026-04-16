@@ -1,5 +1,5 @@
-import os
 from io import BytesIO, StringIO
+from pathlib import Path
 
 from PIL import Image
 
@@ -37,12 +37,13 @@ def save_pil_image(image, destination=None, filename=None, **options):
     """
     Save a PIL image.
     """
-    if destination is None:
-        destination = BytesIO()
-    filename = filename or ''
+    destination = BytesIO() if destination is None else destination
+    filename =  '' if filename is None else filename
+
     # Ensure plugins are fully loaded so that Image.EXTENSION is populated.
     Image.init()
-    format = Image.EXTENSION.get(os.path.splitext(filename)[1].lower(), 'JPEG')
+
+    format = Image.EXTENSION.get(Path(filename).suffix.lower(), 'JPEG')
     if format in settings.THUMBNAIL_IMAGE_SAVE_OPTIONS:
         for key, value in settings.THUMBNAIL_IMAGE_SAVE_OPTIONS[format].items():
             options.setdefault(key, value)

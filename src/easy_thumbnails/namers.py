@@ -1,5 +1,5 @@
 import base64
-import os
+from pathlib import Path
 
 from easy_thumbnails.utils import sha1_not_used_for_security
 
@@ -17,7 +17,7 @@ def default(
         '%(opts)s' in thumbnailer.thumbnail_basedir
         or '%(opts)s' in thumbnailer.thumbnail_subdir
     ):
-        if thumbnail_extension != os.path.splitext(source_filename)[1][1:]:
+        if thumbnail_extension != Path(source_filename).suffix[1:]:
             filename_parts.append(thumbnail_extension)
     else:
         filename_parts.extend(['_'.join(prepared_options), thumbnail_extension])

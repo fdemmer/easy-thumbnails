@@ -100,7 +100,7 @@ class Aliases:
             return
         target_bits = target.split('.')
         for i in range(len(target_bits)):
-            yield '.'.join(target_bits[: i + 1])
+            yield '.'.join(target_bits[:i + 1])
 
     def _coerce_target(self, target):
         """

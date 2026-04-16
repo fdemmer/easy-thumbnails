@@ -22,10 +22,8 @@ class TemporaryStorage(FileSystemStorage):
         """
         Create the temporary location.
         """
-        if location is None:
-            location = tempfile.mkdtemp()
-            self.temporary_location = location
-        super().__init__(location=location, **kwargs)
+        self.tmp_path = tempfile.mkdtemp() if location is None else location
+        super().__init__(location=self.tmp_path, **kwargs)
 
     def delete_temporary_storage(self):
         """
@@ -33,9 +31,8 @@ class TemporaryStorage(FileSystemStorage):
         This storage class should not be used again after this method is
         called.
         """
-        temporary_location = getattr(self, 'temporary_location', None)
-        if temporary_location:
-            shutil.rmtree(temporary_location)
+        if self.tmp_path:
+            shutil.rmtree(self.tmp_path)
 
 
 @deconstructible

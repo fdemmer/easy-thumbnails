@@ -190,7 +190,7 @@ class GenerationBase(BaseTest):
         signals.saved_file.connect(self.get_signal_handler(), sender=models.Profile)
         # Fix the standard storage to use the test's temporary location.
         self._MEDIA_ROOT = settings.MEDIA_ROOT
-        settings.MEDIA_ROOT = self.storage.temporary_location
+        settings.MEDIA_ROOT = self.storage._location
         # Make the temporary storage location the default storage for now.
         self._old_default_storage = django_storage.default_storage._wrapped
         django_storage.default_storage._wrapped = self.storage

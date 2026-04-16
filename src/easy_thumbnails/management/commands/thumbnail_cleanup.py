@@ -1,7 +1,7 @@
 import datetime as dt
 import gc
-import os
 import time
+from pathlib import Path
 
 from django.core.files.storage import storages
 from django.core.management.base import BaseCommand
@@ -30,12 +30,12 @@ class ThumbnailCollectionCleaner:
 
     def _get_absolute_path(self, path, storage):
         if hasattr(storage, 'location'):
-            return os.path.join(storage.location, path)
+            return str(Path(storage.location) / path)
         else:
-            return os.path.join(settings.MEDIA_ROOT, path)
+            return str(Path(settings.MEDIA_ROOT) / path)
 
     def _get_relative_path(self, path):
-        return os.path.relpath(path, settings.MEDIA_ROOT)
+        return str(Path(path).relative_to(settings.MEDIA_ROOT))
 
     def _check_if_exists(self, storage, path):
         try:
