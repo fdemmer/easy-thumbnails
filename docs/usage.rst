@@ -320,3 +320,11 @@ planning on using it in some more direct way, you can use the
 Thumbnails generated in this manner don't use any cache reference, i.e. every
 call to :meth:`Thumbnailer.get_thumbnail` will generate a fresh thumbnail
 image.
+
+
+Maintenance
+===========
+
+To remove thumbnail files and database records for source images that
+have been deleted from storage, use the
+:ref:`thumbnail_cleanup <thumbnail_cleanup>` management command.
