@@ -1,6 +1,17 @@
 Changes
 =======
 
+3.0.0a1 (2026-04-16)
+---------------------
+
+* Fork published as ``fdemmer-easy-thumbnails`` on PyPI.
+* Major modernization: migrated to ``src/`` layout, ``pyproject.toml``-only
+  build configuration, pytest, uv/tox, and pathlib.
+* Drop support for Python < 3.9 and Django < 4.2.
+* Add support for Django 5.2 and 6.0, Python 3.13 and 3.14.
+* Add ``thumbnail_cleanup`` management command documentation.
+
+
 2.10.2 (2025-02-11)
 -------------------
 
