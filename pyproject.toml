@@ -54,8 +54,19 @@ readme = {file = ["README.rst", "CHANGES.rst"], content-type = "text/x-rst"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
+[tool.coverage.html]
+show_contexts = true
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.settings"
+testpaths = ["tests"]
 
 [tool.ruff]
 # https://docs.astral.sh/ruff/formatter/
