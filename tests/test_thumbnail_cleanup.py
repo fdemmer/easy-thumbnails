@@ -1,4 +1,4 @@
-from datetime import timedelta
+import datetime as dt
 from pathlib import Path
 
 from django.conf import settings
@@ -81,7 +81,7 @@ class ThumbnailCleanupTest(test.BaseTest):
         self.assertIsNotNone(Source.objects.get(id=self.source.id))
 
     def test_cleanup_last_n_days(self):
-        old_time = timezone.now() - timedelta(days=10)
+        old_time = timezone.now() - dt.timedelta(days=10)
         self.source.modified = old_time
         self.source.save()
 
@@ -111,6 +111,32 @@ class ThumbnailCleanupTest(test.BaseTest):
         # Verify the source reference has been deleted
         with self.assertRaises(Source.DoesNotExist):
             Source.objects.get(id=self.source.id)
+
+    def test_cleanup_path_filter(self):
+        # Create a second source + thumbnail under a subdirectory.
+        filename_b = self.create_image(self.storage, 'subdir/b.jpg')
+        with self.storage.open(filename_b) as f:
+            source_b_image_path = f.name
+        thumbnailer_b = get_thumbnailer(self.storage, filename_b)
+        thumbnailer_b.generate_thumbnail({'size': (100, 100)})
+        thumbnail_b_path = thumbnailer_b.get_thumbnail({'size': (100, 100)}).path
+        source_b = Source.objects.get(name=filename_b)
+
+        # Delete both source files to simulate missing sources.
+        Path(self.source_image_path).unlink()
+        Path(source_b_image_path).unlink()
+
+        # Run cleanup scoped to 'subdir/' only.
+        call_command('thumbnail_cleanup', cleanup_path='subdir/', verbosity=0)
+
+        # The subdir source and its thumbnail should be cleaned up.
+        with self.assertRaises(Source.DoesNotExist):
+            Source.objects.get(id=source_b.id)
+        self.assertFalse(Path(thumbnail_b_path).exists())
+
+        # The top-level source is outside the path scope — it must be untouched.
+        Source.objects.get(id=self.source.id)
+        self.assertTrue(Path(self.thumbnail_path).exists())
 
     def test_source_storage_hash_not_found(self):
         self.assertTrue(Path(self.source_image_path).exists())

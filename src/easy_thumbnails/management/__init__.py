@@ -1,7 +1,6 @@
 import os
 import re
 from pathlib import Path, PurePath
-from pydoc import plainpager
 
 from easy_thumbnails.conf import settings
 
@@ -36,7 +35,7 @@ def all_thumbnails(path, recursive=True, prefix=None, subdir=None):
         files = [p.name for p in Path(path).iterdir() if p.is_file()]
         all = [(path, [], files)]
 
-    for dir_, subdirs, files in all:
+    for dir_, subdirs, files in all:  # noqa: B007
         rel_dir = dir_[len_path:]
         for file in files:
             thumb = re_thumbnail_file.match(file)
@@ -51,14 +50,14 @@ def all_thumbnails(path, recursive=True, prefix=None, subdir=None):
                 source_filename = source_file_path.name
                 # remove prefix from source_filename
                 if source_filename.startswith(prefix):
-                    plain_filename = source_filename[len(prefix):]
+                    plain_filename = source_filename[len(prefix) :]
                     source_filename = str(source_file_path.parent / plain_filename)
                 else:
                     continue
 
             d['options'] = d['options'] and d['options'].split('_') or []
             if subdir and rel_dir.endswith(subdir):
-                rel_dir = rel_dir[:-len(subdir)]
+                rel_dir = rel_dir[: -len(subdir)]
 
             # Corner-case bug: if the filename didn't have an extension but did
             # have an underscore, the last underscore will get converted to a

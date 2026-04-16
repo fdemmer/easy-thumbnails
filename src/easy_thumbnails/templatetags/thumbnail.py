@@ -51,17 +51,15 @@ class ThumbnailNode(Node):
         # Get the source file.
         try:
             source = self.source_var.resolve(context)
-        except VariableDoesNotExist:
+        except VariableDoesNotExist as exc:
             if raise_errors:
-                raise VariableDoesNotExist(
-                    f"Variable '{self.source_var}' does not exist."
-                )
+                msg = f"Variable '{self.source_var}' does not exist."
+                raise VariableDoesNotExist(msg) from exc
             return self.bail_out(context)
         if not source:
             if raise_errors:
-                raise TemplateSyntaxError(
-                    f"Variable '{self.source_var}' is an invalid source."
-                )
+                msg = f"Variable '{self.source_var}' is an invalid source."
+                raise TemplateSyntaxError(msg)
             return self.bail_out(context)
         # Resolve the thumbnail option values.
         try:
@@ -95,21 +93,19 @@ class ThumbnailNode(Node):
         if 'quality' in opts:
             try:
                 opts['quality'] = int(opts['quality'])
-            except (TypeError, ValueError):
+            except (TypeError, ValueError) as exc:
                 if raise_errors:
-                    raise TemplateSyntaxError(
-                        f'{opts["quality"]!r} is an invalid quality.'
-                    )
+                    msg = f'{opts["quality"]!r} is an invalid quality.'
+                    raise TemplateSyntaxError(msg) from exc
                 return self.bail_out(context)
         # Ensure the subsampling level is an integer.
         if 'subsampling' in opts:
             try:
                 opts['subsampling'] = int(opts['subsampling'])
-            except (TypeError, ValueError):
+            except (TypeError, ValueError) as exc:
                 if raise_errors:
-                    raise TemplateSyntaxError(
-                        f'{opts["subsampling"]!r} is an invalid subsampling level.'
-                    )
+                    msg = f'{opts["subsampling"]!r} is an invalid subsampling level.'
+                    raise TemplateSyntaxError(msg) from exc
                 return self.bail_out(context)
 
         try:

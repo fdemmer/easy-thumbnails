@@ -38,7 +38,7 @@ def save_pil_image(image, destination=None, filename=None, **options):
     Save a PIL image.
     """
     destination = BytesIO() if destination is None else destination
-    filename =  '' if filename is None else filename
+    filename = '' if filename is None else filename
 
     # Ensure plugins are fully loaded so that Image.EXTENSION is populated.
     Image.init()

@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import subprocess
 from pathlib import Path
 
@@ -55,7 +55,7 @@ def get_git_changeset():
     )
     timestamp = git_log.communicate()[0]
     try:
-        timestamp = datetime.datetime.utcfromtimestamp(int(timestamp))
+        timestamp = dt.datetime.fromtimestamp(int(timestamp), dt.UTC)
     except ValueError:
         return None
     return timestamp.strftime('%Y%m%d%H%M%S')

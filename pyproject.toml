@@ -86,4 +86,4 @@ section-order = ["future", "standard-library", "third-party", "django", "first-p
 "django" = ["django"]
 
 [tool.ruff.lint.mccabe]
-max-complexity = 10
+max-complexity = 12

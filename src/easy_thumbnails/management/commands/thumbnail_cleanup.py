@@ -48,7 +48,12 @@ class ThumbnailCollectionCleaner:
         Source.objects.all().filter(id__in=ids).delete()
 
     def clean_up(
-        self, dry_run=False, verbosity=1, last_n_days=0, cleanup_path=None, storage=None
+        self,
+        dry_run=False,
+        verbosity=1,
+        last_n_days=0,
+        cleanup_path=None,
+        storage=None,
     ):
         """
         Iterate through sources. Delete database references to sources
