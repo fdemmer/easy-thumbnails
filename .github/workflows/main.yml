@@ -16,10 +16,10 @@ concurrency:
 jobs:
   tests:
     name: tox on ${{ matrix.python-version }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     strategy:
-      max-parallel: 4
+      max-parallel: 6
       matrix:
         python-version:
         - '3.9'
@@ -32,19 +32,17 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
+          python-version: ${{ matrix.python-version }}
           enable-cache: true
 
-      - name: Install dependencies
-        run: |
-          python -VV
-          python -m site
-          uv pip install --system tox tox-uv tox-gh-actions
+      - name: Install system dependencies
+        run: sudo apt-get install -y libcairo2-dev libpango1.0-dev
 
       - name: Run tox targets for ${{ matrix.python-version }}
-        run: tox run
+        run: |
+          uv run python -VV
+          uv run python -m site
+          uv pip install tox tox-uv tox-gh-actions
+          uv run tox
