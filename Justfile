@@ -6,7 +6,7 @@ gha-update:
     uvx gha-update
 
 clean:
-    rm -rf build dist
+    rm -rf build dist htmlcov
     rm -rf *.egg-info
     rm -f .coverage
 

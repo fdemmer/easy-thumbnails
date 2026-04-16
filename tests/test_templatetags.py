@@ -75,24 +75,46 @@ class Base(test.BaseTest):
 class ThumbnailTagTest(Base):
     restore_settings = ['THUMBNAIL_DEBUG', 'TEMPLATE_DEBUG']
 
-    def testTagInvalid(self):
+    def setUp(self):
+        super().setUp()
+        settings.THUMBNAIL_DEBUG = True
+
+    def test_tag_invalid_syntax(self):
         # No args, or wrong number of args
-        src = '{% thumbnail %}'
-        self.assertRaises(TemplateSyntaxError, self.render_template, src)
-        src = '{% thumbnail source %}'
-        self.assertRaises(TemplateSyntaxError, self.render_template, src)
-        src = '{% thumbnail source 80x80 as variable crop %}'
-        self.assertRaises(TemplateSyntaxError, self.render_template, src)
-
+        self.assertRaises(
+            TemplateSyntaxError,
+            self.render_template,
+            '{% thumbnail %}',
+        )
+        self.assertRaises(
+            TemplateSyntaxError,
+            self.render_template,
+            '{% thumbnail source %}',
+        )
+        self.assertRaises(
+            TemplateSyntaxError,
+            self.render_template,
+            '{% thumbnail source 80x80 as variable crop %}',
+        )
         # Invalid option
-        src = '{% thumbnail source 240x200 invalid %}'
-        self.assertRaises(TemplateSyntaxError, self.render_template, src)
-
+        self.assertRaises(
+            TemplateSyntaxError,
+            self.render_template,
+            '{% thumbnail source 240x200 invalid %}',
+        )
         # Old comma separated options format can only have an = for quality
-        src = '{% thumbnail source 80x80 crop=1,quality=1 %}'
-        self.assertRaises(TemplateSyntaxError, self.render_template, src)
+        self.assertRaises(
+            TemplateSyntaxError,
+            self.render_template,
+            '{% thumbnail source 80x80 crop=1,quality=1 %}',
+        )
+        self.assertRaises(
+            TemplateSyntaxError,
+            self.render_template,
+            '{% thumbnail source 240x240 HIGH_RESOLUTION %}',
+        )
 
-        # Invalid quality
+    def test_tag_invalid_quality(self):
         src_invalid = '{% thumbnail source 240x200 quality=invalid_q %}'
         src_missing = '{% thumbnail source 240x200 quality=missing_q %}'
         # ...with THUMBNAIL_DEBUG = False
@@ -104,20 +126,22 @@ class ThumbnailTagTest(Base):
         self.assertRaises(TemplateSyntaxError, self.render_template, src_invalid)
         self.assertRaises(TemplateSyntaxError, self.render_template, src_missing)
 
-        # Invalid source
+    def test_tag_invalid_source(self):
         src = '{% thumbnail invalid_source 80x80 %}'
-        src_on_context = '{% thumbnail invalid_source 80x80 as thumb %}'
         # ...with THUMBNAIL_DEBUG = False
         settings.THUMBNAIL_DEBUG = False
         self.assertEqual(self.render_template(src), '')
         # ...and with THUMBNAIL_DEBUG = True
         settings.THUMBNAIL_DEBUG = True
         self.assertRaises(TemplateSyntaxError, self.render_template, src)
-        self.assertRaises(TemplateSyntaxError, self.render_template, src_on_context)
+        self.assertRaises(
+            TemplateSyntaxError,
+            self.render_template,
+            '{% thumbnail invalid_source 80x80 as thumb %}',
+        )
 
-        # Non-existent source
+    def test_tag_nonexistent_source(self):
         src = '{% thumbnail non_existant_source 80x80 %}'
-        src_on_context = '{% thumbnail non_existant_source 80x80 as thumb %}'
         # ...with THUMBNAIL_DEBUG = False
         settings.THUMBNAIL_DEBUG = False
         self.assertEqual(self.render_template(src), '')
@@ -125,46 +149,34 @@ class ThumbnailTagTest(Base):
         settings.THUMBNAIL_DEBUG = True
         self.assertRaises(TemplateSyntaxError, self.render_template, src)
 
+    def test_tag_invalid_size(self):
         # Invalid size as a tuple:
         src = '{% thumbnail source invalid_size %}'
-        # ...with THUMBNAIL_DEBUG = False
         settings.THUMBNAIL_DEBUG = False
         self.assertEqual(self.render_template(src), '')
-        # ...and THUMBNAIL_DEBUG = True
         settings.THUMBNAIL_DEBUG = True
         self.assertRaises(ValueError, self.render_template, src)
         # Invalid size as a string:
         src = '{% thumbnail source invalid_strsize %}'
-        # ...with THUMBNAIL_DEBUG = False
         settings.THUMBNAIL_DEBUG = False
         self.assertEqual(self.render_template(src), '')
-        # ...and THUMBNAIL_DEBUG = True
         settings.THUMBNAIL_DEBUG = True
         self.assertRaises(TemplateSyntaxError, self.render_template, src)
 
-        # Non-existent size
+    def test_tag_nonexistent_size(self):
         src = '{% thumbnail source non_existant_size %}'
-        # ...with THUMBNAIL_DEBUG = False
         settings.THUMBNAIL_DEBUG = False
         self.assertEqual(self.render_template(src), '')
-        # ...and THUMBNAIL_DEBUG = True
         settings.THUMBNAIL_DEBUG = True
         self.assertRaises(TemplateSyntaxError, self.render_template, src)
 
-        src = '{% thumbnail source 240x240 HIGH_RESOLUTION %}'
-        self.assertRaises(TemplateSyntaxError, self.render_template, src)
-
-    def testTag(self):
-        # Set THUMBNAIL_DEBUG = True to make it easier to trace any failures
-        settings.THUMBNAIL_DEBUG = True
-
-        # Basic
+    def test_tag_basic(self):
         output = self.render_template('src="{% thumbnail source 240x240 %}"')
         expected = self.verify_thumbnail((240, 180), {'size': (240, 240)})
         expected_url = ''.join((settings.MEDIA_URL, expected))
         self.assertEqual(output, f'src="{expected_url}"')
 
-        # Size from context variable
+    def test_tag_size_from_context(self):
         # as a tuple:
         output = self.render_template('src="{% thumbnail source size %}"')
         expected = self.verify_thumbnail((90, 68), {'size': (90, 100)})
@@ -176,32 +188,38 @@ class ThumbnailTagTest(Base):
         expected_url = ''.join((settings.MEDIA_URL, expected))
         self.assertEqual(output, f'src="{expected_url}"')
 
-        # On context
+    def test_tag_on_context(self):
         output = self.render_template(
             'height:{% thumbnail source 240x240 as thumb %}{{ thumb.height }}'
         )
         self.assertEqual(output, 'height:180')
 
-        # With options and quality
+    def test_tag_options_and_quality(self):
         output = self.render_template(
             'src="{% thumbnail source 240x240 sharpen crop quality=95 %}"'
         )
         # Note that the opts are sorted to ensure a consistent filename.
         expected = self.verify_thumbnail(
-            (240, 240), {'size': (240, 240), 'crop': True, 'sharpen': True, 'quality': 95}
+            (240, 240),
+            {'size': (240, 240), 'crop': True, 'sharpen': True, 'quality': 95},
         )
         expected_url = ''.join((settings.MEDIA_URL, expected))
         self.assertEqual(output, f'src="{expected_url}"')
 
-        # With option and quality on context (also using its unicode method to
-        # display the url)
+    def test_tag_options_and_quality_on_context(self):
+        # Also using the unicode method to display the url.
         output = self.render_template(
             '{% thumbnail source 240x240 sharpen crop quality=95 as thumb %}'
             'width:{{ thumb.width }}, url:{{ thumb.url }}'
         )
+        expected = self.verify_thumbnail(
+            (240, 240),
+            {'size': (240, 240), 'crop': True, 'sharpen': True, 'quality': 95},
+        )
+        expected_url = ''.join((settings.MEDIA_URL, expected))
         self.assertEqual(output, f'width:240, url:{expected_url}')
 
-        # One dimensional resize
+    def test_tag_one_dimensional_resize(self):
         output = self.render_template('src="{% thumbnail source 100x0 %}"')
         expected = self.verify_thumbnail((100, 75), {'size': (100, 0)})
         expected_url = ''.join((settings.MEDIA_URL, expected))
@@ -214,9 +232,6 @@ class ThumbnailTagTest(Base):
         Testing the loading {% load easy_thumbnails_tags %} instead of
         traditional {% load thumbnail %}.
         """
-        # Set THUMBNAIL_DEBUG = True to make it easier to trace any failures
-        settings.THUMBNAIL_DEBUG = True
-
         # Basic (just one basic test is enough)
         output = self.render_template(
             'src="{% thumbnail source 240x240 %}"', 'easy_thumbnails_tags'
@@ -359,6 +374,8 @@ class ThumbnailSVGImage(test.BaseTest):
 
         # Required so that IOError's get wrapped as TemplateSyntaxError
         settings.TEMPLATE_DEBUG = True
+        # Set THUMBNAIL_DEBUG = True to make it easier to trace any failures
+        settings.THUMBNAIL_DEBUG = True
 
     def tearDown(self):
         self.storage.delete_temporary_storage()
@@ -384,17 +401,13 @@ class ThumbnailSVGImage(test.BaseTest):
         source = '{% load ' + template_tag_library + ' %}' + source
         return Template(source).render(context)
 
-    def testTag(self):
-        # Set THUMBNAIL_DEBUG = True to make it easier to trace any failures
-        settings.THUMBNAIL_DEBUG = True
-
-        # Basic
+    def test_tag_basic(self):
         output = self.render_template('src="{% thumbnail source 240x240 %}"')
         expected = self.verify_thumbnail((240, 180), {'size': (240, 240)})
         expected_url = ''.join((settings.MEDIA_URL, expected))
         self.assertEqual(output, f'src="{expected_url}"')
 
-        # Size from context variable
+    def test_tag_size_from_context(self):
         # as a tuple:
         output = self.render_template('src="{% thumbnail source size %}"')
         expected = self.verify_thumbnail((90, 68), {'size': (90, 100)})
@@ -406,50 +419,62 @@ class ThumbnailSVGImage(test.BaseTest):
         expected_url = ''.join((settings.MEDIA_URL, expected))
         self.assertEqual(output, f'src="{expected_url}"')
 
-        # On context
+    def test_tag_on_context(self):
         output = self.render_template(
             'height:{% thumbnail source 240x240 as thumb %}{{ thumb.height }}'
         )
         self.assertEqual(output, 'height:180.0')
 
-        # With options and quality
+    def test_tag_options_and_quality(self):
         output = self.render_template(
             'src="{% thumbnail source 240x240 sharpen crop quality=95 %}"'
         )
         # Note that the opts are sorted to ensure a consistent filename.
         expected = self.verify_thumbnail(
-            (240, 240), {'size': (240, 240), 'crop': True, 'sharpen': True, 'quality': 95}
+            (240, 240),
+            {'size': (240, 240), 'crop': True, 'sharpen': True, 'quality': 95},
         )
         expected_url = ''.join((settings.MEDIA_URL, expected))
         self.assertEqual(output, f'src="{expected_url}"')
 
-        # With option and quality on context (also using its unicode method to
-        # display the url)
+    def test_tag_options_and_quality_on_context(self):
+        # Also using the unicode method to display the url.
         output = self.render_template(
             '{% thumbnail source 240x240 sharpen crop quality=95 as thumb %}'
             'width:{{ thumb.width }}, url:{{ thumb.url }}'
         )
+        expected = self.verify_thumbnail(
+            (240, 240),
+            {'size': (240, 240), 'crop': True, 'sharpen': True, 'quality': 95},
+        )
+        expected_url = ''.join((settings.MEDIA_URL, expected))
         self.assertEqual(output, f'width:240.0, url:{expected_url}')
 
-        # One dimensional resize
+    def test_tag_one_dimensional_resize(self):
         output = self.render_template('src="{% thumbnail source 100x0 %}"')
         expected = self.verify_thumbnail((100, 75), {'size': (100, 0)})
         expected_url = ''.join((settings.MEDIA_URL, expected))
         self.assertEqual(output, f'src="{expected_url}"')
 
     def verify_thumbnail(
-        self, expected_size, options, source_filename=None, transparent=False
+        self,
+        expected_size,
+        options,
+        source_filename=None,
+        transparent=False,
     ):
         from easy_thumbnails.VIL import Image
 
         if source_filename is None:
             source_filename = self.filename
+
         self.assertTrue(isinstance(options, dict))
         # Verify that the thumbnail file exists
         thumbnailer = get_thumbnailer(self.storage, source_filename)
         thumbnailer.thumbnail_preserve_extensions = True
         expected_filename = thumbnailer.get_thumbnail_name(
-            options, transparent=transparent
+            options,
+            transparent=transparent,
         )
 
         self.assertTrue(
