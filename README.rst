@@ -2,12 +2,12 @@
 Easy Thumbnails
 ===============
 
-.. image:: https://img.shields.io/pypi/v/easy-thumbnails.svg
-    :target: https://pypi.python.org/pypi/easy-thumbnails/
+.. image:: https://img.shields.io/pypi/v/fdemmer-easy-thumbnails.svg
+    :target: https://pypi.python.org/pypi/fdemmer-easy-thumbnails/
 
-.. image:: https://github.com/SmileyChris/easy-thumbnails/actions/workflows/main.yml/badge.svg
+.. image:: https://github.com/fdemmer/easy-thumbnails/actions/workflows/main.yml/badge.svg
     :alt: Build Status
-    :target: https://github.com/SmileyChris/easy-thumbnails/actions/workflows/main.yml
+    :target: https://github.com/fdemmer/easy-thumbnails/actions/workflows/main.yml
 
 
 A powerful, yet easy to implement thumbnailing application for Django 4.2+

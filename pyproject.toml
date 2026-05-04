@@ -45,7 +45,7 @@ svg = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/SmileyChris/easy-thumbnails"
+Homepage = "https://github.com/fdemmer/easy-thumbnails"
 
 [tool.setuptools.dynamic]
 version = {attr = "easy_thumbnails.__version__"}
