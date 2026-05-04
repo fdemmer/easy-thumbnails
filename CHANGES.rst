@@ -1,6 +1,17 @@
 Changes
 =======
 
+3.0.1 (2026-05-04)
+------------------
+
+* Fix ``thumbnail_cleanup``: storage errors during source existence check no
+  longer cause false-positive deletion of thumbnails (``_check_if_exists``
+  returning ``None`` on exception is now treated as "unknown / skip" rather
+  than "missing / delete").
+* Refactor ``ThumbnailCollectionCleaner.clean_up`` to reduce McCabe complexity
+  by extracting ``_build_query``, ``_process_source``, and ``_delete_thumbnail``.
+
+
 3.0.0 (2026-04-16)
 ------------------
 
