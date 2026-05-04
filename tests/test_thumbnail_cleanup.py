@@ -1,7 +1,9 @@
 import datetime as dt
 from pathlib import Path
+from unittest.mock import patch
 
 from django.conf import settings
+from django.core.files.storage import storages
 from django.core.management import call_command
 from django.test import override_settings
 from django.utils import timezone
@@ -62,6 +64,27 @@ class ThumbnailCleanupTest(test.BaseTest):
         # Verify the source reference has been deleted
         with self.assertRaises(Source.DoesNotExist):
             Source.objects.get(id=self.source.id)
+
+    def test_cleanup_command_exists_exception(self):
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        source_storage = storages['easy_thumbnails']
+        abs_source_path = str(Path(source_storage.location) / self.source.name)
+        original_exists = source_storage.exists
+
+        def mock_exists(path):
+            if path == abs_source_path:
+                raise OSError('Storage unavailable')
+            return original_exists(path)
+
+        # Run the thumbnail cleanup command mocking exception in storage.exists()
+        with patch.object(source_storage, 'exists', side_effect=mock_exists):
+            call_command('thumbnail_cleanup', verbosity=2)
+
+        # Verify the source reference and thumbnail have NOT been deleted
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
 
     def test_cleanup_dry_run(self):
         self.assertTrue(Path(self.source_image_path).exists())

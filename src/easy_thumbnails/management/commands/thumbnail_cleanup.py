@@ -42,12 +42,12 @@ class ThumbnailCollectionCleaner:
             return storage.exists(path)
         except Exception as e:
             self.stderr.write(f'Something went wrong when checking existence of {path}:')
-            self.stderr.write(e)
+            self.stderr.write(str(e))
 
     def _delete_sources_by_id(self, ids):
         Source.objects.all().filter(id__in=ids).delete()
 
-    def clean_up(
+    def clean_up(  # noqa: C901
         self,
         dry_run=False,
         verbosity=1,
@@ -99,7 +99,7 @@ class ThumbnailCollectionCleaner:
             self.sources += 1
             abs_source_path = self._get_absolute_path(source.name, source_storage)
 
-            if not self._check_if_exists(source_storage, abs_source_path):
+            if self._check_if_exists(source_storage, abs_source_path) is False:
                 if verbosity > 0:
                     self.stdout.write(f'Source not present: {abs_source_path}')
                 self.source_refs_deleted += 1
@@ -109,7 +109,7 @@ class ThumbnailCollectionCleaner:
                     self.thumbnails_deleted += 1
                     abs_thumbnail_path = self._get_absolute_path(thumb.name, storage)
 
-                    if self._check_if_exists(storage, abs_thumbnail_path):
+                    if self._check_if_exists(storage, abs_thumbnail_path) is True:
                         if not dry_run:
                             storage.delete(abs_thumbnail_path)
                         if verbosity > 0:
