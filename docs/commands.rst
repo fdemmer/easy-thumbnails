@@ -148,3 +148,94 @@ inward.
 The command reads ``settings.STORAGES`` directly. Projects still using
 the legacy ``DEFAULT_FILE_STORAGE`` string setting will encounter an
 error.
+
+.. _thumbnail_source_files:
+
+thumbnail source_files
+======================
+
+**Usage**::
+
+    python manage.py thumbnail source_files [options]
+
+Lists the file paths currently stored in every ``ThumbnailerImageField``
+across all installed apps. Useful for auditing which source images are
+tracked and for feeding into other tools.
+
+Options
+-------
+
+``-s`` / ``--summary``
+    Instead of printing one path per line, print the count of non-empty
+    values for each field, one field per line, followed by a total on
+    stderr.
+
+``--include SPEC``
+    Restrict output to fields matching *SPEC*. *SPEC* can be:
+
+    - ``app`` — matches all fields in the named app
+    - ``app.model`` — matches all fields on the named model
+    - ``app.model.field`` — matches a specific field
+
+    Wildcards (``*``, ``?``) are supported in each component.
+    May be repeated to include multiple specs.
+
+``--exclude SPEC``
+    Exclude fields matching *SPEC* from output. Same format as
+    ``--include``. May be repeated.
+
+Examples
+--------
+
+List every source path::
+
+    python manage.py thumbnail source_files
+
+Count per field (summary mode)::
+
+    python manage.py thumbnail source_files --summary
+
+Restrict to a single app::
+
+    python manage.py thumbnail source_files --include myapp
+
+.. _thumbnail_source_cleanup:
+
+thumbnail source_cleanup
+========================
+
+**Usage**::
+
+    python manage.py thumbnail source_cleanup [options]
+
+Compares every ``Source`` record in the database against the current
+values stored in ``ThumbnailerImageField`` columns across all installed
+apps. Any ``Source`` whose ``(storage_hash, name)`` pair does not match
+a field value is considered orphaned and deleted.
+
+This is useful after a ``ThumbnailerImageField`` is removed or renamed,
+or after rows are deleted directly from the database, leaving ``Source``
+records with no corresponding model field value.
+
+.. note::
+   Deleting a ``Source`` record cascades to its associated ``Thumbnail``
+   records in the database, but does **not** remove thumbnail files from
+   storage.
+
+Options
+-------
+
+``--dry-run``
+    Print the name of each ``Source`` record that would be deleted,
+    without making any changes to the database.
+
+Examples
+--------
+
+Preview what would be removed::
+
+    python manage.py thumbnail source_cleanup --dry-run
+
+Remove all orphaned ``Source`` records::
+
+    python manage.py thumbnail source_cleanup
