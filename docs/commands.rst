@@ -7,12 +7,12 @@ thumbnail database cache and files on disk.
 
 .. _thumbnail_cleanup:
 
-thumbnail_cleanup
+thumbnail cleanup
 =================
 
 **Usage**::
 
-    python manage.py thumbnail_cleanup [options]
+    python manage.py thumbnail cleanup [options]
 
 Scans every ``Source`` record in the database and checks whether the
 corresponding source image still exists on its configured storage backend.
@@ -22,10 +22,9 @@ For any source that is no longer present, the command:
 2. Removes the ``Source`` record (and its associated ``Thumbnail`` records)
    from the database via cascade delete.
 
-This is useful for keeping the database thumbnail records consistent and
-reclaiming disk space after source images have been removed outside of Django
-(e.g., direct filesystem deletion, storage bucket cleanup, or bulk
-database truncation).
+This is useful for keeping the database ``Source`` and ``Thumbnail`` records
+consistent and reclaiming disk space after image files have been removed
+outside of Django (e.g., direct filesystem deletion, storage bucket cleanup).
 
 Options
 -------
@@ -53,22 +52,22 @@ Options
 
     To target a directory, include a trailing slash::
 
-        python manage.py thumbnail_cleanup --path uploads/avatars/
+        python manage.py thumbnail cleanup --path uploads/avatars/
 
 Examples
 --------
 
 Preview what would be cleaned up without making changes::
 
-    python manage.py thumbnail_cleanup --dry-run
+    python manage.py thumbnail cleanup --dry-run
 
 Clean up only records modified in the last 7 days::
 
-    python manage.py thumbnail_cleanup --last-n-days 7
+    python manage.py thumbnail cleanup --last-n-days 7
 
 Restrict cleanup to a specific path prefix, silently::
 
-    python manage.py thumbnail_cleanup --path uploads/user_photos/ --verbosity 0
+    python manage.py thumbnail cleanup --path uploads/user_photos/ --verbosity 0
 
 Output
 ------

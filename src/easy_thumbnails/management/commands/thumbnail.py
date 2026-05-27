@@ -1,6 +1,10 @@
 import datetime as dt
 import gc
+import os
+import sys
 import time
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
 
 from django.core.files.storage import storages
@@ -16,6 +20,9 @@ from easy_thumbnails.utils import get_storage_hash
 class ThumbnailCollectionCleaner:
     """
     Remove thumbnails and DB references to non-existing source images.
+
+    Orphaned thumbnail files without a Source record are not touched.
+    Command only works DB-outward.
     """
 
     sources = 0
@@ -163,18 +170,41 @@ def queryset_iterator(queryset, chunksize=1000):
             gc.collect()
 
 
-class Command(BaseCommand):
-    help = """Deletes thumbnails that no longer have an original file."""
+@contextmanager
+def handle_broken_pipe() -> Generator[None, None, None]:
+    """
+    Prevent BrokenPipeError when the output stream is closed early, such as
+    when piping to head.
 
-    def add_arguments(self, parser):
-        parser.add_argument(
+    https://adamj.eu/tech/2025/07/20/python-fix-brokenpipeerror/
+    """
+    try:
+        yield
+        sys.stdout.flush()
+    except BrokenPipeError:
+        # Python flushes standard streams on exit; redirect remaining output
+        # to devnull to avoid another BrokenPipeError at shutdown
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+
+
+class Command(BaseCommand):
+    help = 'Manage thumbnails.'
+
+    def add_subparsers(self, subparsers):
+        cleanup_parser = subparsers.add_parser(
+            'cleanup',
+            help='Delete thumbnails that no longer have an original file.',
+        )
+        cleanup_parser.set_defaults(method=self.do_cleanup)
+        cleanup_parser.add_argument(
             '--dry-run',
             action='store_true',
             dest='dry_run',
             default=False,
             help='Dry run the execution.',
         )
-        parser.add_argument(
+        cleanup_parser.add_argument(
             '--last-n-days',
             action='store',
             dest='last_n_days',
@@ -182,7 +212,7 @@ class Command(BaseCommand):
             type=int,
             help='The number of days back in time to clean thumbnails for.',
         )
-        parser.add_argument(
+        cleanup_parser.add_argument(
             '--path',
             action='store',
             dest='cleanup_path',
@@ -190,7 +220,18 @@ class Command(BaseCommand):
             help='Specify a path to clean up.',
         )
 
-    def handle(self, *args, **options):
+    def add_arguments(self, parser):
+        subparsers = parser.add_subparsers(
+            title='sub-commands',
+            required=True,
+        )
+        self.add_subparsers(subparsers)
+
+    def handle(self, *args, method, **options):
+        with handle_broken_pipe():
+            method(*args, **options)
+
+    def do_cleanup(self, *args, **options):
         tcc = ThumbnailCollectionCleaner(self.stdout, self.stderr)
         tcc.clean_up(
             dry_run=options.get('dry_run', False),

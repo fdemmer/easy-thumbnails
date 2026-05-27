@@ -56,7 +56,7 @@ class ThumbnailCleanupTest(test.BaseTest):
         self.assertFalse(Path(self.source_image_path).exists())
 
         # Run the thumbnail cleanup command
-        call_command('thumbnail_cleanup', verbosity=2)
+        call_command('thumbnail', 'cleanup', verbosity=2)
 
         # Verify the thumbnail has been deleted
         self.assertFalse(Path(self.thumbnail_path).exists())
@@ -80,7 +80,7 @@ class ThumbnailCleanupTest(test.BaseTest):
 
         # Run the thumbnail cleanup command mocking exception in storage.exists()
         with patch.object(source_storage, 'exists', side_effect=mock_exists):
-            call_command('thumbnail_cleanup', verbosity=2)
+            call_command('thumbnail', 'cleanup', verbosity=2)
 
         # Verify the source reference and thumbnail have NOT been deleted
         self.assertTrue(Path(self.source_image_path).exists())
@@ -95,7 +95,7 @@ class ThumbnailCleanupTest(test.BaseTest):
         self.assertFalse(Path(self.source_image_path).exists())
 
         # Run the thumbnail cleanup command in dry run mode
-        call_command('thumbnail_cleanup', dry_run=True, verbosity=2)
+        call_command('thumbnail', 'cleanup', dry_run=True, verbosity=2)
 
         # Verify the thumbnail has not been deleted
         self.assertTrue(Path(self.thumbnail_path).exists())
@@ -116,7 +116,7 @@ class ThumbnailCleanupTest(test.BaseTest):
         self.assertFalse(Path(self.source_image_path).exists())
 
         # Run the thumbnail cleanup command with last_n_days parameter
-        call_command('thumbnail_cleanup', last_n_days=5, verbosity=2)
+        call_command('thumbnail', 'cleanup', last_n_days=5, verbosity=2)
 
         # Verify the thumbnail has not been deleted
         self.assertTrue(Path(self.thumbnail_path).exists())
@@ -126,7 +126,7 @@ class ThumbnailCleanupTest(test.BaseTest):
 
         # Run the thumbnail cleanup command with last_n_days parameter
         # that includes the source
-        call_command('thumbnail_cleanup', last_n_days=15, verbosity=2)
+        call_command('thumbnail', 'cleanup', last_n_days=15, verbosity=2)
 
         # Verify the thumbnail has been deleted
         self.assertFalse(Path(self.thumbnail_path).exists())
@@ -150,7 +150,7 @@ class ThumbnailCleanupTest(test.BaseTest):
         Path(source_b_image_path).unlink()
 
         # Run cleanup scoped to 'subdir/' only.
-        call_command('thumbnail_cleanup', cleanup_path='subdir/', verbosity=0)
+        call_command('thumbnail', 'cleanup', cleanup_path='subdir/', verbosity=0)
 
         # The subdir source and its thumbnail should be cleaned up.
         with self.assertRaises(Source.DoesNotExist):
@@ -170,7 +170,7 @@ class ThumbnailCleanupTest(test.BaseTest):
         self.source.save()
 
         # Run the thumbnail cleanup command
-        call_command('thumbnail_cleanup', verbosity=2)
+        call_command('thumbnail', 'cleanup', verbosity=2)
 
         # Verify the thumbnail and source still exist
         self.assertTrue(Path(self.thumbnail_path).exists())
