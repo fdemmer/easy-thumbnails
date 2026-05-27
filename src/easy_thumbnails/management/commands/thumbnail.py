@@ -1,4 +1,5 @@
 import datetime as dt
+import fnmatch
 import os
 import sys
 import time
@@ -7,11 +8,13 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
+from django.apps import apps
 from django.core.files.storage import storages
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from easy_thumbnails.conf import settings
+from easy_thumbnails.fields import ThumbnailerImageField
 from easy_thumbnails.models import Source
 from easy_thumbnails.storage import get_storage
 from easy_thumbnails.utils import get_storage_hash
@@ -214,6 +217,42 @@ def build_storage_hash_map():
     }
 
 
+def _collect_fields(field_class=ThumbnailerImageField):
+    for app_config in sorted(apps.get_app_configs(), key=lambda a: a.label):
+        for model in app_config.get_models():
+            if model._meta.proxy or not model._meta.managed:
+                continue
+            for field in sorted(model._meta.get_fields(), key=lambda f: f.name):
+                if isinstance(field, field_class):
+                    yield model, field
+
+
+def _matches(model, field, specs):
+    if not specs:
+        return True
+    app = model._meta.app_label
+    mod = model._meta.model_name
+    fld = field.name
+    for spec in specs:
+        parts = spec.lower().split('.')
+        if len(parts) == 1 and fnmatch.fnmatch(app, parts[0]):
+            return True
+        if (
+            len(parts) == 2
+            and fnmatch.fnmatch(app, parts[0])
+            and fnmatch.fnmatch(mod, parts[1])
+        ):
+            return True
+        if (
+            len(parts) == 3
+            and fnmatch.fnmatch(app, parts[0])
+            and fnmatch.fnmatch(mod, parts[1])
+            and fnmatch.fnmatch(fld, parts[2])
+        ):
+            return True
+    return False
+
+
 class Command(BaseCommand):
     help = 'Manage thumbnails.'
 
@@ -262,6 +301,40 @@ class Command(BaseCommand):
             ),
         )
 
+        files_parser = subparsers.add_parser(
+            'source_files',
+            help='List file paths stored in ThumbnailerImageField across all apps.',
+        )
+        files_parser.set_defaults(method=self.do_source_files)
+        files_parser.add_argument(
+            '-s',
+            '--summary',
+            action='store_true',
+            help='Print file counts per model field only.',
+        )
+        files_parser.add_argument(
+            '--include',
+            dest='include',
+            metavar='SPEC',
+            action='append',
+            default=[],
+            help=(
+                'Restrict output to "app" or "app.model" or "app.model.field". '
+                'May be repeated.'
+            ),
+        )
+        files_parser.add_argument(
+            '--exclude',
+            dest='exclude',
+            metavar='SPEC',
+            action='append',
+            default=[],
+            help=(
+                'Exclude "app" or "app.model" or "app.model.field" from output. '
+                'May be repeated.'
+            ),
+        )
+
     def add_arguments(self, parser):
         subparsers = parser.add_subparsers(
             title='sub-commands',
@@ -287,3 +360,43 @@ class Command(BaseCommand):
             delete_with_missing_storage=options.get('delete_with_missing_storage', False),
         )
         tcc.print_stats()
+
+    def do_source_files(self, *args, **options):
+        include = options['include']
+        exclude = options['exclude']
+        for spec in include + exclude:
+            if not 1 <= len(spec.split('.')) <= 3:
+                raise CommandError(f'Invalid filter spec: {spec!r}')
+
+        pairs = [
+            (model, field)
+            for model, field in _collect_fields()
+            if _matches(model, field, include)
+            and (not exclude or not _matches(model, field, exclude))
+        ]
+        self.stderr.write(
+            f'Found {len(pairs)} fields in {len({m for m, _ in pairs})} models.'
+        )
+        self.stderr.write('Counting non-empty values per FileField...')
+
+        if options['summary']:
+            total = 0
+            for model, field in pairs:
+                query = model.objects.exclude(
+                    **{
+                        field.name: '',
+                        f'{field.name}__isnull': True,
+                    }
+                )
+                count = query.count()
+                total += count
+                self.stdout.write(f'{count:>8} {model._meta.label}.{field.name}')
+            self.stderr.write(f'{total:>8} total')
+        else:
+            total = 0
+            for model, field in pairs:
+                for path in model.objects.values_list(field.name, flat=True).iterator():
+                    total += 1
+                    if path:
+                        self.stdout.write(path)
+            self.stderr.write(f'{total:>8} total')
