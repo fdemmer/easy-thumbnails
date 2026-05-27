@@ -27,6 +27,7 @@ class ThumbnailCollectionCleaner:
     sources = 0
     thumbnails_deleted = 0
     source_refs_deleted = 0
+    sources_missing_storage_deleted = 0
     execution_time = 0
 
     def __init__(self, stdout, stderr):
@@ -91,8 +92,18 @@ class ThumbnailCollectionCleaner:
         else:
             self.stdout.write(
                 f'Cannot determine source storage from hash ({source.storage_hash}),'
-                f' skipping source'
+                f' skipping source (use --delete-with-missing-storage to remove)'
             )
+
+    def _delete_with_missing_storage(self, query, storage_hash_map, dry_run, verbosity):
+        known_hashes = set(storage_hash_map.keys())
+        missing_query = query.exclude(storage_hash__in=known_hashes)
+        count = missing_query.count()
+        self.sources_missing_storage_deleted = count
+        if verbosity > 0:
+            self.stdout.write(f'Sources with missing storage: {count}')
+        if not dry_run:
+            missing_query.delete()
 
     def clean_up(
         self,
@@ -100,6 +111,7 @@ class ThumbnailCollectionCleaner:
         verbosity=1,
         last_n_days=0,
         cleanup_path=None,
+        delete_with_missing_storage=False,
         storage=None,
     ):
         """
@@ -117,6 +129,15 @@ class ThumbnailCollectionCleaner:
 
         sources_to_delete = []
         query = self._build_query(last_n_days, cleanup_path)
+
+        if delete_with_missing_storage:
+            self._delete_with_missing_storage(
+                query,
+                storage_hash_map,
+                dry_run,
+                verbosity,
+            )
+
         for source in queryset_iterator(query):
             source_id = self._process_source(
                 source,
@@ -142,6 +163,10 @@ class ThumbnailCollectionCleaner:
         """
         self.stdout.write(f'{timezone.now().strftime("%Y-%m-%d %H:%M "):-<48}')
         self.stdout.write(f'{"Sources checked:":<40} {self.sources:>7}')
+        self.stdout.write(
+            f'{"Sources with missing storage deleted:":<40} '
+            f'{self.sources_missing_storage_deleted:>7}'
+        )
         self.stdout.write(
             f'{"Source references deleted from DB:":<40} {self.source_refs_deleted:>7}'
         )
@@ -227,6 +252,16 @@ class Command(BaseCommand):
             type=str,
             help='Specify a path to clean up.',
         )
+        cleanup_parser.add_argument(
+            '--delete-with-missing-storage',
+            action='store_true',
+            dest='delete_with_missing_storage',
+            default=False,
+            help=(
+                'Delete Source records whose storage hash is not present in the current '
+                'STORAGES setting.'
+            ),
+        )
 
     def add_arguments(self, parser):
         subparsers = parser.add_subparsers(
@@ -250,5 +285,6 @@ class Command(BaseCommand):
             verbosity=int(options.get('verbosity', 1)),
             last_n_days=int(options.get('last_n_days', 0)),
             cleanup_path=options.get('cleanup_path'),
+            delete_with_missing_storage=options.get('delete_with_missing_storage', False),
         )
         tcc.print_stats()

@@ -54,6 +54,23 @@ Options
 
         python manage.py thumbnail cleanup --path uploads/avatars/
 
+``--delete-with-missing-storage``
+    Delete ``Source`` records (and their associated ``Thumbnail`` records)
+    whose stored storage hash cannot be matched to any alias currently in
+    Django's ``STORAGES`` setting. This is useful after a storage backend
+    has been removed from configuration, leaving behind orphaned rows that
+    would otherwise be skipped.
+
+    Can be combined with ``--dry-run`` to preview the count before
+    deleting, and with ``--last-n-days`` or ``--path`` to limit scope.
+
+    .. warning::
+       Only use this flag if you are certain the unrecognised storage hash
+       corresponds to a backend that has been intentionally removed. If a
+       storage alias is temporarily missing due to a misconfiguration,
+       running this flag will permanently delete the associated database
+       records.
+
 Examples
 --------
 
@@ -69,6 +86,14 @@ Restrict cleanup to a specific path prefix, silently::
 
     python manage.py thumbnail cleanup --path uploads/user_photos/ --verbosity 0
 
+Preview how many sources reference a removed storage backend::
+
+    python manage.py thumbnail cleanup --delete-with-missing-storage --dry-run
+
+Remove all sources tied to a removed storage backend::
+
+    python manage.py thumbnail cleanup --delete-with-missing-storage
+
 Output
 ------
 
@@ -76,6 +101,7 @@ After the scan, the command always prints a statistics summary::
 
     2026-04-16 14:32 ------------------------------
     Sources checked:                          1024
+    Sources with missing storage deleted:       12
     Source references deleted from DB:          37
     Thumbnails deleted from disk:               92
     (Completed in 4 seconds)
@@ -84,6 +110,10 @@ After the scan, the command always prints a statistics summary::
    "Thumbnails deleted from disk" counts thumbnails whose database
    entries were removed. A thumbnail file that was already absent from
    disk is still counted if its database entry is cleaned up.
+
+.. note::
+   "Sources with missing storage deleted" is only non-zero when
+   ``--delete-with-missing-storage`` is passed.
 
 Caveats
 -------
@@ -95,14 +125,13 @@ with a remote storage), the source is treated as *missing* and its
 database records will be deleted. Ensure all configured storage backends
 are reliably reachable before running against a large dataset.
 
-**Unrecognised storage hashes are skipped.**
+**Unrecognised storage hashes are skipped by default.**
 Each ``Source`` record stores a hash of the storage backend used when
 it was saved. If that hash cannot be matched to any alias currently
 in Django's ``STORAGES`` setting — for example, after a storage backend
 has been removed — the source is skipped rather than deleted. A message
-is printed to stdout. This means orphaned records from a removed storage
-alias will silently accumulate until the alias is restored or the records
-are cleaned up manually.
+is printed to stdout. Pass ``--delete-with-missing-storage`` to delete
+these records instead.
 
 **No signals are fired.**
 The command deletes ``Source`` and ``Thumbnail`` records directly via

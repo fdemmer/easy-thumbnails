@@ -1,4 +1,5 @@
 import datetime as dt
+import io
 from pathlib import Path
 from unittest.mock import patch
 
@@ -175,3 +176,47 @@ class ThumbnailCleanupTest(test.BaseTest):
         # Verify the thumbnail and source still exist
         self.assertTrue(Path(self.thumbnail_path).exists())
         self.assertIsNotNone(Source.objects.get(id=self.source.id))
+
+    def test_delete_with_missing_storage(self):
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        # Change the source's storage_hash to simulate a removed storage backend
+        self.source.storage_hash = 'unknown_storage_hash'
+        self.source.save()
+
+        call_command(
+            'thumbnail',
+            'cleanup',
+            delete_with_missing_storage=True,
+            verbosity=0,
+        )
+
+        # Source record must be deleted
+        with self.assertRaises(Source.DoesNotExist):
+            Source.objects.get(id=self.source.id)
+
+    def test_delete_with_missing_storage_dry_run(self):
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        # Change the source's storage_hash to simulate a removed storage backend
+        self.source.storage_hash = 'unknown_storage_hash'
+        self.source.save()
+
+        stdout = io.StringIO()
+        call_command(
+            'thumbnail',
+            'cleanup',
+            delete_with_missing_storage=True,
+            dry_run=True,
+            verbosity=1,
+            stdout=stdout,
+        )
+
+        # Dry run — source must still exist
+        self.assertIsNotNone(Source.objects.get(id=self.source.id))
+
+        output = stdout.getvalue()
+        self.assertIn('Dry run', output)
+        self.assertIn('Sources with missing storage: 1', output)
