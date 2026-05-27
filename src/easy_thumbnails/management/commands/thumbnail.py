@@ -2,6 +2,7 @@ import datetime as dt
 import os
 import sys
 import time
+from collections import Counter
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
@@ -24,15 +25,11 @@ class ThumbnailCollectionCleaner:
     Command only works DB-outward.
     """
 
-    sources = 0
-    thumbnails_deleted = 0
-    source_refs_deleted = 0
-    sources_missing_storage_deleted = 0
-    execution_time = 0
-
     def __init__(self, stdout, stderr):
         self.stdout = stdout
         self.stderr = stderr
+        self.counts = Counter()
+        self.execution_time = None
 
     def _get_absolute_path(self, path, storage):
         if hasattr(storage, 'location'):
@@ -65,7 +62,7 @@ class ThumbnailCollectionCleaner:
         return query
 
     def _delete_thumbnail(self, thumb, storage, dry_run, verbosity):
-        self.thumbnails_deleted += 1
+        self.counts['thumbnails_deleted'] += 1
         abs_thumbnail_path = self._get_absolute_path(thumb.name, storage)
         if self._check_if_exists(storage, abs_thumbnail_path) is True:
             if verbosity > 0:
@@ -77,13 +74,13 @@ class ThumbnailCollectionCleaner:
         source_storage_alias = storage_hash_map.get(source.storage_hash)
         source_storage = storages[source_storage_alias] if source_storage_alias else None
         if source_storage:
-            self.sources += 1
+            self.counts['sources'] += 1
             abs_source_path = self._get_absolute_path(source.name, source_storage)
             if self._check_if_exists(source_storage, abs_source_path) is False:
                 if verbosity > 0:
                     self.stdout.write(f'Source not present: {abs_source_path}')
 
-                self.source_refs_deleted += 1
+                self.counts['source_refs_deleted'] += 1
                 for thumb in source.thumbnails.all():
                     self._delete_thumbnail(thumb, storage, dry_run, verbosity)
 
@@ -99,7 +96,7 @@ class ThumbnailCollectionCleaner:
         known_hashes = set(storage_hash_map.keys())
         missing_query = query.exclude(storage_hash__in=known_hashes)
         count = missing_query.count()
-        self.sources_missing_storage_deleted = count
+        self.counts['sources_missing_storage_deleted'] = count
         if verbosity > 0:
             self.stdout.write(f'Sources with missing storage: {count}')
         if not dry_run:
@@ -162,16 +159,18 @@ class ThumbnailCollectionCleaner:
         Print statistics about the cleanup performed.
         """
         self.stdout.write(f'{timezone.now().strftime("%Y-%m-%d %H:%M "):-<48}')
-        self.stdout.write(f'{"Sources checked:":<40} {self.sources:>7}')
+        self.stdout.write(f'{"Sources checked:":<40} {self.counts["sources"]:>7}')
         self.stdout.write(
             f'{"Sources with missing storage deleted:":<40} '
-            f'{self.sources_missing_storage_deleted:>7}'
+            f'{self.counts["sources_missing_storage_deleted"]:>7}'
         )
         self.stdout.write(
-            f'{"Source references deleted from DB:":<40} {self.source_refs_deleted:>7}'
+            f'{"Source references deleted from DB:":<40} '
+            f'{self.counts["source_refs_deleted"]:>7}'
         )
         self.stdout.write(
-            f'{"Thumbnails deleted from disk:":<40} {self.thumbnails_deleted:>7}'
+            f'{"Thumbnails deleted from disk:":<40} '
+            f'{self.counts["thumbnails_deleted"]:>7}'
         )
         self.stdout.write(f'(Completed in {self.execution_time} seconds)\n')
 
