@@ -112,9 +112,7 @@ class ThumbnailCollectionCleaner:
             self.stdout.write('Dry run...')
         storage = storage if storage is not None else get_storage()
 
-        storage_hash_map = {
-            get_storage_hash(storages[alias]): alias for alias in settings.STORAGES.keys()
-        }
+        storage_hash_map = build_storage_hash_map()
 
         time_start = time.time()
 
@@ -188,10 +186,22 @@ def handle_broken_pipe() -> Generator[None, None, None]:
         os.dup2(devnull, sys.stdout.fileno())
 
 
+def build_storage_hash_map():
+    return {
+        get_storage_hash(storages[alias]): alias for alias in settings.STORAGES.keys()
+    }
+
+
 class Command(BaseCommand):
     help = 'Manage thumbnails.'
 
     def add_subparsers(self, subparsers):
+        storages_parser = subparsers.add_parser(
+            'storages',
+            help='List configured storages with their alias and storage hash.',
+        )
+        storages_parser.set_defaults(method=self.do_list_storages)
+
         cleanup_parser = subparsers.add_parser(
             'cleanup',
             help='Delete thumbnails that no longer have an original file.',
@@ -230,6 +240,10 @@ class Command(BaseCommand):
     def handle(self, *args, method, **options):
         with handle_broken_pipe():
             method(*args, **options)
+
+    def do_list_storages(self, *args, **options):
+        for storage_hash, alias in build_storage_hash_map().items():
+            self.stdout.write(f'{alias}: {storage_hash}')
 
     def do_cleanup(self, *args, **options):
         tcc = ThumbnailCollectionCleaner(self.stdout, self.stderr)
