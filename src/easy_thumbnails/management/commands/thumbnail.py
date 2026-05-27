@@ -11,6 +11,7 @@ from pathlib import Path
 from django.apps import apps
 from django.core.files.storage import storages
 from django.core.management.base import BaseCommand, CommandError
+from django.db.models import Q
 from django.utils import timezone
 
 from easy_thumbnails.conf import settings
@@ -335,6 +336,19 @@ class Command(BaseCommand):
             ),
         )
 
+        cleanup_sources_parser = subparsers.add_parser(
+            'source_cleanup',
+            help='Delete Source records with no matching ThumbnailerImageField value.',
+        )
+        cleanup_sources_parser.set_defaults(method=self.do_source_cleanup)
+        cleanup_sources_parser.add_argument(
+            '--dry-run',
+            action='store_true',
+            dest='dry_run',
+            default=False,
+            help='Preview which Source records would be deleted without deleting them.',
+        )
+
     def add_arguments(self, parser):
         subparsers = parser.add_subparsers(
             title='sub-commands',
@@ -400,3 +414,44 @@ class Command(BaseCommand):
                     if path:
                         self.stdout.write(path)
             self.stderr.write(f'{total:>8} total')
+
+    def do_source_cleanup(self, *args, **options):
+        dry_run = options['dry_run']
+
+        pairs = list(_collect_fields())
+        self.stderr.write(
+            f'Found {len(pairs)} fields in {len({m for m, _ in pairs})} models.'
+        )
+        self.stderr.write('Collecting active source file paths...')
+
+        active_sources = set()
+        for model, field in pairs:
+            storage_hash = get_storage_hash(field.storage)
+            for name in (
+                model.objects.exclude(**{field.name: '', f'{field.name}__isnull': True})
+                .values_list(field.name, flat=True)
+                .iterator()
+            ):
+                if name:
+                    active_sources.add((storage_hash, name))
+
+        self.stderr.write(f'Found {len(active_sources)} active source file paths.')
+
+        if active_sources:
+            keep = Q()
+            for storage_hash, name in active_sources:
+                keep |= Q(storage_hash=storage_hash, name=name)
+            qs = Source.objects.exclude(keep)
+        else:
+            qs = Source.objects.all()
+
+        if dry_run:
+            deleted = 0
+            for source in qs.iterator():
+                self.stdout.write(source.name)
+                deleted += 1
+        else:
+            deleted, _ = qs.delete()
+
+        action = 'Would delete' if dry_run else 'Deleted'
+        self.stderr.write(f'{action} {deleted} Source records.')

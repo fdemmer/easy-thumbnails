@@ -6,6 +6,8 @@ from django.db import models as django_models
 
 from easy_thumbnails.fields import ThumbnailerField
 from easy_thumbnails.management.commands.thumbnail import _collect_fields, _matches
+from easy_thumbnails.models import Source
+from easy_thumbnails.utils import get_storage_hash
 from tests import utils as test
 from tests.models import TestModel
 
@@ -178,3 +180,59 @@ class ThumbnailSourceFilesCommandTest(test.BaseTest):
     def test_invalid_spec_in_exclude(self):
         with self.assertRaises(CommandError):
             self._call(exclude=['a.b.c.d'])
+
+
+class ThumbnailSourceCleanupCommandTest(test.BaseTest):
+    def setUp(self):
+        super().setUp()
+        self.storage_hash = get_storage_hash(TestModel.picture.field.storage)
+
+    def _call(self, **kwargs):
+        stdout, stderr = io.StringIO(), io.StringIO()
+        call_command(
+            'thumbnail',
+            'source_cleanup',
+            stdout=stdout,
+            stderr=stderr,
+            **kwargs,
+        )
+        return stdout.getvalue(), stderr.getvalue()
+
+    def _make_source(self, name):
+        return Source.objects.create(storage_hash=self.storage_hash, name=name)
+
+    def test_empty_db_no_deletions(self):
+        _, stderr = self._call()
+        self.assertIn('0 Source records', stderr)
+        self.assertEqual(Source.objects.count(), 0)
+
+    def test_deletes_source_with_no_matching_field_value(self):
+        self._make_source('pictures/orphan.jpg')
+        self.assertEqual(Source.objects.count(), 1)
+        self._call()
+        self.assertEqual(Source.objects.count(), 0)
+
+    def test_preserves_source_with_matching_field_value(self):
+        TestModel.objects.create(picture='pictures/keep.jpg')
+        self._make_source('pictures/keep.jpg')
+        self._make_source('pictures/orphan.jpg')
+        self.assertEqual(Source.objects.count(), 2)
+        self._call()
+        self.assertEqual(Source.objects.count(), 1)
+        self.assertTrue(Source.objects.filter(name='pictures/keep.jpg').exists())
+
+    def test_dry_run_prints_but_does_not_delete(self):
+        TestModel.objects.create(picture='pictures/keep.jpg')
+        self._make_source('pictures/keep.jpg')
+        self._make_source('pictures/orphan.jpg')
+        self.assertEqual(Source.objects.count(), 2)
+        stdout, stderr = self._call(dry_run=True)
+        self.assertIn('pictures/orphan.jpg', stdout)
+        self.assertIn('Would delete', stderr)
+        self.assertEqual(Source.objects.count(), 2)
+
+    def test_stderr_reports_counts(self):
+        self._make_source('pictures/orphan.jpg')
+        _, stderr = self._call()
+        self.assertIn('Source records', stderr)
+        self.assertIn('1', stderr)
