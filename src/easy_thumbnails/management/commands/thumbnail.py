@@ -1,5 +1,4 @@
 import datetime as dt
-import gc
 import os
 import sys
 import time
@@ -152,20 +151,19 @@ class ThumbnailCollectionCleaner:
         self.stdout.write(f'(Completed in {self.execution_time} seconds)\n')
 
 
-def queryset_iterator(queryset, chunksize=1000):
-    """
-    The queryset iterator helps to keep the memory consumption down.
-    And also making it easier to process for weaker computers.
-    """
-    if queryset.exists():
-        primary_key = 0
-        last_pk = queryset.order_by('-pk')[0].pk
-        queryset = queryset.order_by('pk')
-        while primary_key < last_pk:
-            for row in queryset.filter(pk__gt=primary_key)[:chunksize]:
-                primary_key = row.pk
-                yield row
-            gc.collect()
+def queryset_iterator(query, chunk_size=1000, order_by='pk'):
+    # https://use-the-index-luke.com/sql/partial-results/fetch-next-page
+    threshold = new_threshold = 0
+    if order_by is not None:
+        query = query.order_by(order_by)
+    while True:
+        chunk = query.filter(pk__gt=threshold)[:chunk_size].iterator()
+        for row in chunk:
+            new_threshold = row.pk
+            yield row
+        if threshold == new_threshold:
+            break
+        threshold = new_threshold
 
 
 @contextmanager
