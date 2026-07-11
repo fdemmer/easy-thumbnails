@@ -492,7 +492,7 @@ class ThumbnailSVGImage(test.BaseTest):
     def test_named_file(self):
         Image = import_string('easy_thumbnails.VIL.Image')
         expected = (
-            '<svg width="30" height="30" preserveAspectRatio="xMinYMin meet"'
+            '<svg width="30pt" height="30pt" preserveAspectRatio="xMinYMin meet"'
             ' viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg" version="1.0"'
             ' fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">'
             ' <title>...</title><desc>...</desc><g id="group" transform="scale(1,-1)'
@@ -510,3 +510,15 @@ class ThumbnailSVGImage(test.BaseTest):
                 namedtmpfile.seek(0)
                 xml = path.read_text()
                 self.assertHTMLEqual(xml, expected)
+
+    def test_named_file_bare_units(self):
+        """
+        Regression test for width/height attributes without an explicit
+        unit suffix, e.g. SVG files written by easy-thumbnails before
+        dimensions were tagged with "pt" (or by third-party tools).
+        """
+        Image = import_string('easy_thumbnails.VIL.Image')
+        with Image.new('rgb', (30, 30)) as img:
+            img.canvas.svg.setAttribute('width', '30')
+            img.canvas.svg.setAttribute('height', '30')
+            self.assertEqual(img.size, (30, 30))

@@ -21,6 +21,8 @@ class Image:
             and isinstance(size[1], (int, float))
         ), 'Expected `size` as tuple with two floats or integers'
         self.canvas = renderSVG.SVGCanvas(size=size, useClip=True)
+        self.canvas.svg.setAttribute('width', f'{size[0]}pt')
+        self.canvas.svg.setAttribute('height', f'{size[1]}pt')
         self.mode = None
 
     def __enter__(self):
@@ -36,14 +38,18 @@ class Image:
     @cached_property
     def width(self):
         try:
-            return float(self.canvas.svg.getAttribute('width'))
+            return round(
+                float(self.canvas.svg.getAttribute('width').removesuffix('pt')), 6
+            )
         except ValueError:
             return self.getbbox()[2]
 
     @cached_property
     def height(self):
         try:
-            return float(self.canvas.svg.getAttribute('height'))
+            return round(
+                float(self.canvas.svg.getAttribute('height').removesuffix('pt')), 6
+            )
         except ValueError:
             return self.getbbox()[3]
 
@@ -63,8 +69,8 @@ class Image:
         """
         copy = Image()
         copy.canvas.svg = self.canvas.svg.cloneNode(True)
-        copy.canvas.svg.setAttribute('width', '{}'.format(*size))
-        copy.canvas.svg.setAttribute('height', '{1}'.format(*size))
+        copy.canvas.svg.setAttribute('width', '{}pt'.format(*size))
+        copy.canvas.svg.setAttribute('height', '{1}pt'.format(*size))
         return copy
 
     def convert(self, *args):
@@ -99,8 +105,8 @@ class Image:
                 bbox[3] = new_height
             size = box[2] - box[0], box[3] - box[1]
             copy.canvas.svg.setAttribute('viewBox', '{} {} {} {}'.format(*bbox))
-            copy.canvas.svg.setAttribute('width', '{}'.format(*size))
-            copy.canvas.svg.setAttribute('height', '{1}'.format(*size))
+            copy.canvas.svg.setAttribute('width', '{}pt'.format(*size))
+            copy.canvas.svg.setAttribute('height', '{1}pt'.format(*size))
         return copy
 
     def filter(self, *args):

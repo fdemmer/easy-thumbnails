@@ -1,6 +1,15 @@
 Changes
 =======
 
+Unreleased
+----------
+
+* Fix SVG thumbnails rendering at 0.75x the requested size when ``svglib`` >= 2.0
+  is installed: ``VIL.Image`` now writes explicit ``pt`` units on SVG
+  ``width``/``height`` attributes instead of unitless values, whose
+  interpretation changed between svglib versions.
+
+
 3.0.1 (2026-05-04)
 ------------------
 
