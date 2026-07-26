@@ -14,6 +14,7 @@ test:
     uvx --with tox-uv tox --parallel auto
 
 docs:
+    rm -rf docs/_build
     uv run --with sphinx --with-requirements docs/requirements.txt \
         sphinx-build -b html docs docs/_build/html
 
