@@ -1,0 +1,672 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usage &mdash; easy-thumbnails 3.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=b576230a"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Management Commands" href="commands.html" />
+    <link rel="prev" title="Installation" href="install.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            easy-thumbnails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#thumbnail-options">Thumbnail options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#thumbnail-aliases">Thumbnail aliases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pregeneration">Pregeneration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#easy_thumbnails.signal_handlers.generate_aliases"><code class="docutils literal notranslate"><span class="pre">generate_aliases()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#easy_thumbnails.signal_handlers.generate_aliases_global"><code class="docutils literal notranslate"><span class="pre">generate_aliases_global()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#asynchronous-pregeneration">Asynchronous Pregeneration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-aliases-for-your-third-party-app">Setting aliases for your third-party app</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#templates">Templates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#thumbnail-url-filter"><code class="docutils literal notranslate"><span class="pre">thumbnail_url</span></code> filter</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#easy_thumbnails.templatetags.thumbnail.thumbnail_url"><code class="docutils literal notranslate"><span class="pre">thumbnail_url()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#thumbnail-tag"><code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">%}</span></code> tag</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#easy_thumbnails.templatetags.thumbnail.thumbnail"><code class="docutils literal notranslate"><span class="pre">thumbnail()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#fallback-images">Fallback images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-thumbnailer-filters">Other <code class="docutils literal notranslate"><span class="pre">thumbnailer</span></code> filters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#easy_thumbnails.templatetags.thumbnail.thumbnailer"><code class="docutils literal notranslate"><span class="pre">thumbnailer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#easy_thumbnails.templatetags.thumbnail.thumbnailer_passive"><code class="docutils literal notranslate"><span class="pre">thumbnailer_passive()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#easy_thumbnails.templatetags.thumbnail.data_uri"><code class="docutils literal notranslate"><span class="pre">data_uri()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#models">Models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.fields.ThumbnailerField"><code class="docutils literal notranslate"><span class="pre">ThumbnailerField</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.fields.ThumbnailerImageField"><code class="docutils literal notranslate"><span class="pre">ThumbnailerImageField</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#forms">Forms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#easy_thumbnails.widgets.ImageClearableFileInput"><code class="docutils literal notranslate"><span class="pre">ImageClearableFileInput</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#python">Python</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#get-thumbnailer"><code class="docutils literal notranslate"><span class="pre">get_thumbnailer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#non-django-file-objects">Non-Django file objects</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#maintenance">Maintenance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Management Commands</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="svg.html">Scalable Vector Graphic Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="webp.html">WebP support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ref/files.html">Thumbnail Files and Generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/namers.html">Namers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/optimize.html">Optimizing Images using a Postprocessor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/processors.html">Image Processors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/source_generators.html">Source Generators</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">easy-thumbnails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h1>
+<p>The common way easy-thumbnails is used is via the <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">%}</span></code> template
+tag or <code class="docutils literal notranslate"><span class="pre">thumbnail_url</span></code> filter, which generates images from a model with an
+<code class="docutils literal notranslate"><span class="pre">ImageField</span></code>. The tag can also be used with media images not tied to a
+specific model by passing in the relative path instead.</p>
+<p>Custom database fields are also available for simpler access.</p>
+<p>The underlying Python code can be used for lower-level generation of thumbnail
+images.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The primary function of easy-thumbnails is to dynamically create thumbnails
+based on a source image.</p>
+<p>So whenever a thumbnail does not exist or if the source was modified
+more recently than the existing thumbnail, a new thumbnail is generated (and
+saved).</p>
+<p>Thumbnail aliases can be defined in the
+<a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_ALIASES" title="easy_thumbnails.conf.Settings.THUMBNAIL_ALIASES"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_ALIASES</span></code></a> setting, providing
+predefined thumbnail options. This also allows for generation of thumbnails
+when the source image is uploaded.</p>
+<section id="thumbnail-options">
+<h3>Thumbnail options<a class="headerlink" href="#thumbnail-options" title="Link to this heading"></a></h3>
+<p>To generate a thumbnail of a source image, you specify options which are
+used by the image processors to generate the required image.</p>
+<p><code class="docutils literal notranslate"><span class="pre">size</span></code> is a required option, and defines the bounds that the generated image
+must fit within.</p>
+<p>Other options are only provided if the given functionality is required:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">quality=&lt;N&gt;</span></code> where N is an integer between 1 and 100 specifying output
+JPEG quality. The default is 85.</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">subsampling=&lt;N&gt;</span></code> sets the JPEG color subsampling level where N is:</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> is 4:1:1 (both easy-thumbnails and PIL’s default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> is 4:2:2 (slightly crisper color borders, small increase in size)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0</span></code> is 4:4:4 (very crisp color borders, ~15% increase in size)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">autocrop</span></code> removes any unnecessary whitespace from the edges of the source
+image.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bw</span></code> converts the image to grayscale.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">replace_alpha=#colorcode</span></code> replaces any transparency layer with a solid
+color.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">crop=&lt;smart|scale|W,H&gt;</span></code> cuts the edges of the image to match the aspect
+ratio of <code class="docutils literal notranslate"><span class="pre">size</span></code> before resizing.</p>
+<ul>
+<li><p><cite>smart</cite> means the image is incrementally cropped down to the requested size
+by removing slices from edges with the least entropy.</p></li>
+<li><p><cite>scale</cite> means at least one dimension fits within the size dimensions given.</p></li>
+<li><p><cite>W,H</cite> modifies the cropping origin behavior:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">crop=&quot;0,0&quot;</span></code> will crop from the left and top edges.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">crop=&quot;-10,-0&quot;</span></code> will crop from the right edge (with a 10% offset) and
+the bottom edge.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">crop=&quot;,0&quot;</span></code> will keep the default behavior for the x axis (horizontally
+centering the image) and crop from the top edge.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>For a complete and detailed list of options, see the <a class="reference internal" href="ref/processors.html"><span class="doc">Image Processors</span></a>
+reference documentation.</p>
+<p>To change a default options level, add it to the
+<a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_OPTIONS" title="easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_OPTIONS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_DEFAULT_OPTIONS</span></code></a> setting. Be
+aware that this will change the filename for thumbnails, so existing thumbnails
+which don’t explicitly specify the new default option will have a new filename
+(and therefore be regenerated).</p>
+</section>
+</section>
+<section id="thumbnail-aliases">
+<span id="id1"></span><h2>Thumbnail aliases<a class="headerlink" href="#thumbnail-aliases" title="Link to this heading"></a></h2>
+<p>An alias is a specific set of thumbnail options.</p>
+<p>Using aliases gives you a single location to define all of your standard
+thumbnail sizes/options, and avoids repetition of thumbnail options in your
+code and templates.</p>
+<p>An alias may be available project-wide, or set to target a specific app, model
+or field.</p>
+<p>The setting is defined like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_ALIASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="o">&lt;</span><span class="n">target</span><span class="o">&gt;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="o">&lt;</span><span class="n">alias</span> <span class="n">name</span><span class="o">&gt;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">alias</span> <span class="n">options</span> <span class="n">dictionary</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="o">...</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Use the target <code class="docutils literal notranslate"><span class="pre">''</span></code> for project-wide aliases.
+Otherwise, the target should be a string which defines the scope of the
+contained aliases:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'sprocket.Widget.image'</span></code> would make the aliases available to only the
+‘image’ field of a ‘Widget’ model in an app named ‘sprocket’.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'sprocket.Widget'</span></code> would apply to any field in the ‘Widget’ model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'sprocket'</span></code> would target any field in any model in the app.</p></li>
+</ul>
+</div></blockquote>
+<section id="pregeneration">
+<h3>Pregeneration<a class="headerlink" href="#pregeneration" title="Link to this heading"></a></h3>
+<p>Some provided signal handlers (along with a new <code class="docutils literal notranslate"><span class="pre">saved_file</span></code> signal) allow
+for you to have the relevant aliases generated when a file is uploaded.</p>
+<dl class="py function" id="module-easy_thumbnails.signal_handlers">
+<dt class="sig sig-object py" id="easy_thumbnails.signal_handlers.generate_aliases">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.signal_handlers.</span></span><span class="sig-name descname"><span class="pre">generate_aliases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fieldfile</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.signal_handlers.generate_aliases" title="Link to this definition"></a></dt>
+<dd><p>A saved_file signal handler which generates thumbnails for all field,
+model, and app specific aliases matching the saved file’s field.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_thumbnails.signal_handlers.generate_aliases_global">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.signal_handlers.</span></span><span class="sig-name descname"><span class="pre">generate_aliases_global</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fieldfile</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.signal_handlers.generate_aliases_global" title="Link to this definition"></a></dt>
+<dd><p>A saved_file signal handler which generates thumbnails for all field,
+model, and app specific aliases matching the saved file’s field, also
+generating thumbnails for each project-wide alias.</p>
+</dd></dl>
+
+<p>In a module that will be executed when Django loads (such as a <code class="docutils literal notranslate"><span class="pre">models.py</span></code>
+file), register one of these signal handlers. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">easy_thumbnails.signals</span><span class="w"> </span><span class="kn">import</span> <span class="n">saved_file</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">easy_thumbnails.signal_handlers</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_aliases_global</span>
+
+<span class="n">saved_file</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">generate_aliases_global</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="asynchronous-pregeneration">
+<h3>Asynchronous Pregeneration<a class="headerlink" href="#asynchronous-pregeneration" title="Link to this heading"></a></h3>
+<p>For some use cases, it may not be necessary to have the relevant aliases
+generated at the exact moment a file is uploaded. As an alternative, the
+pregeneration task can be queued and executed by a background process.</p>
+<p>The following example uses <a class="reference external" href="http://celeryproject.org">Celery</a> to
+achieve this.</p>
+<p>models.py:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">django.dispatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">receiver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">easy_thumbnails.signals</span><span class="w"> </span><span class="kn">import</span> <span class="n">saved_file</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">myapp</span><span class="w"> </span><span class="kn">import</span> <span class="n">tasks</span>
+
+<span class="nd">@receiver</span><span class="p">(</span><span class="n">saved_file</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_thumbnails_async</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">fieldfile</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">tasks</span><span class="o">.</span><span class="n">generate_thumbnails</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span>
+        <span class="n">class_path</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="vm">__module__</span><span class="p">,</span> <span class="n">sender</span><span class="o">.</span><span class="vm">__name__</span><span class="p">),</span>
+        <span class="n">pk</span><span class="o">=</span><span class="n">fieldfile</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">pk</span><span class="p">,</span>
+        <span class="n">field</span><span class="o">=</span><span class="n">fieldfile</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>tasks.py:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">shared_task</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">easy_thumbnails.files</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_all_aliases</span>
+
+<span class="nd">@task</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_thumbnails</span><span class="p">(</span><span class="n">class_path</span><span class="p">,</span> <span class="n">pk</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
+    <span class="n">bits</span> <span class="o">=</span> <span class="n">class_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+    <span class="n">generate_all_aliases</span><span class="p">(</span>
+        <span class="nb">getattr</span><span class="p">(</span>
+            <span class="nb">getattr</span><span class="p">(</span>
+                <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bits</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])),</span> <span class="n">bits</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">pk</span><span class="p">),</span>
+            <span class="n">field</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">include_global</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>This results in a more responsive experience for the user, particularly
+when dealing with large files and/or remote storage.</p>
+</section>
+<section id="setting-aliases-for-your-third-party-app">
+<h3>Setting aliases for your third-party app<a class="headerlink" href="#setting-aliases-for-your-third-party-app" title="Link to this heading"></a></h3>
+<p>If you have a distributable app that uses easy-thumbnails and want to provide
+an alias, you can modify the aliases at runtime.</p>
+<p>For example, put something like this in a module that will execute when Django
+initializes (such as <code class="docutils literal notranslate"><span class="pre">models.py</span></code>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">easy_thumbnails.alias</span><span class="w"> </span><span class="kn">import</span> <span class="n">aliases</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;badge&#39;</span><span class="p">):</span>
+    <span class="n">aliases</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;badge&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="s1">&#39;crop&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="templates">
+<h2>Templates<a class="headerlink" href="#templates" title="Link to this heading"></a></h2>
+<p>To make the easy-thumbnail template library available for use in your template,
+use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="n">load</span> <span class="n">thumbnail</span> <span class="o">%</span><span class="p">}</span>
+</pre></div>
+</div>
+<section id="thumbnail-url-filter">
+<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">thumbnail_url</span></code> filter<a class="headerlink" href="#thumbnail-url-filter" title="Link to this heading"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_thumbnails.templatetags.thumbnail.thumbnail_url">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.templatetags.thumbnail.</span></span><span class="sig-name descname"><span class="pre">thumbnail_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alias</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.templatetags.thumbnail.thumbnail_url" title="Link to this definition"></a></dt>
+<dd><p>Return the thumbnail url for a source file using an aliased set of
+thumbnail options.</p>
+<p>If no matching alias is found, returns an empty string.</p>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">img</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;{{ person.photo|thumbnail_url:&#39;small&#39; }}&quot;</span> <span class="n">alt</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="thumbnail-tag">
+<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">%}</span></code> tag<a class="headerlink" href="#thumbnail-tag" title="Link to this heading"></a></h3>
+<p>If you want to create a thumbnail <em>without</em> providing an alias, use this tag to
+generate the thumbnail by specifying all of the required options (or <em>with</em> an
+alias name, to override/supplement the default alias options with dynamic
+content).</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_thumbnails.templatetags.thumbnail.thumbnail">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.templatetags.thumbnail.</span></span><span class="sig-name descname"><span class="pre">thumbnail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.templatetags.thumbnail.thumbnail" title="Link to this definition"></a></dt>
+<dd><p>Creates a thumbnail of an ImageField.</p>
+<p>Basic tag Syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="n">thumbnail</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="p">[</span><span class="n">size</span><span class="p">]</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="o">%</span><span class="p">}</span>
+</pre></div>
+</div>
+<p><em>source</em> must be a <code class="docutils literal notranslate"><span class="pre">File</span></code> object, usually an Image/FileField of a model
+instance.</p>
+<p><em>size</em> can either be:</p>
+<ul class="simple">
+<li><p>the name of an alias</p></li>
+<li><p>the size in the format <code class="docutils literal notranslate"><span class="pre">[width]x[height]</span></code> (for example,
+<code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">person.photo</span> <span class="pre">100x50</span> <span class="pre">%}</span></code>) or</p></li>
+<li><p>a variable containing a valid size (i.e. either a string in the
+<code class="docutils literal notranslate"><span class="pre">[width]x[height]</span></code> format or a tuple containing two integers):
+<code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">person.photo</span> <span class="pre">size_var</span> <span class="pre">%}</span></code>.</p></li>
+</ul>
+<p><em>options</em> are a space separated list of options which are used when
+processing the image to a thumbnail such as <code class="docutils literal notranslate"><span class="pre">sharpen</span></code>, <code class="docutils literal notranslate"><span class="pre">crop</span></code> and
+<code class="docutils literal notranslate"><span class="pre">quality=90</span></code>.</p>
+<p>If <em>size</em> is specified as an alias name, <em>options</em> are used to override
+and/or supplement the options defined in that alias.</p>
+<p>The thumbnail tag can also place a
+<a class="reference internal" href="ref/files.html#easy_thumbnails.files.ThumbnailFile" title="easy_thumbnails.files.ThumbnailFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThumbnailFile</span></code></a> object in the context,
+providing access to the properties of the thumbnail such as the height and
+width:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="n">thumbnail</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="p">[</span><span class="n">size</span><span class="p">]</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="k">as</span> <span class="p">[</span><span class="n">variable</span><span class="p">]</span> <span class="o">%</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">as</span> <span class="pre">[variable]</span></code> is used, the tag doesn’t output anything. Instead,
+use the variable like a standard <code class="docutils literal notranslate"><span class="pre">ImageFieldFile</span></code> object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="n">thumbnail</span> <span class="n">obj</span><span class="o">.</span><span class="n">picture</span> <span class="mi">200</span><span class="n">x200</span> <span class="n">upscale</span> <span class="k">as</span> <span class="n">thumb</span> <span class="o">%</span><span class="p">}</span>
+<span class="o">&lt;</span><span class="n">img</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;{{ thumb.url }}&quot;</span>
+     <span class="n">width</span><span class="o">=</span><span class="s2">&quot;{{ thumb.width }}&quot;</span>
+     <span class="n">height</span><span class="o">=</span><span class="s2">&quot;{{ thumb.height }}&quot;</span> <span class="o">/&gt;</span>
+</pre></div>
+</div>
+<p><strong>Debugging</strong></p>
+<p>By default, if there is an error creating the thumbnail or resolving the
+image variable then the thumbnail tag will just return an empty string (and
+if there was a context variable to be set then it will also be set to an
+empty string).</p>
+<p>For example, you will not see an error if the thumbnail could not
+be written to directory because of permissions error. To display those
+errors rather than failing silently, set <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_DEBUG</span> <span class="pre">=</span> <span class="pre">True</span></code> in
+your Django project’s settings module.</p>
+</dd></dl>
+
+<p>For a full list of options, read the <a class="reference internal" href="ref/processors.html"><span class="doc">Image Processors</span></a> reference
+documentation.</p>
+</section>
+<section id="fallback-images">
+<h3>Fallback images<a class="headerlink" href="#fallback-images" title="Link to this heading"></a></h3>
+<p>If you need to support fallback or default images at template level you can
+use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="n">thumbnail</span> <span class="nb">object</span><span class="o">.</span><span class="n">image</span><span class="o">|</span><span class="n">default</span><span class="p">:</span><span class="s1">&#39;img/default_image.png&#39;</span> <span class="mi">50</span><span class="n">x50</span> <span class="o">%</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Where the image string is relative to your default storage (usually the
+<code class="docutils literal notranslate"><span class="pre">MEDIA_ROOT</span></code> setting).</p>
+</section>
+<section id="other-thumbnailer-filters">
+<span id="thumbnailer-filters"></span><h3>Other <code class="docutils literal notranslate"><span class="pre">thumbnailer</span></code> filters<a class="headerlink" href="#other-thumbnailer-filters" title="Link to this heading"></a></h3>
+<p>There are two filters that you can use if you want to get direct access to a
+thumbnailer in your template. This can be useful when dealing with aliased
+thumbnails.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_thumbnails.templatetags.thumbnail.thumbnailer">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.templatetags.thumbnail.</span></span><span class="sig-name descname"><span class="pre">thumbnailer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.templatetags.thumbnail.thumbnailer" title="Link to this definition"></a></dt>
+<dd><p>Creates a thumbnailer from an object (usually a <code class="docutils literal notranslate"><span class="pre">FileField</span></code>).</p>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="k">with</span> <span class="n">photo</span><span class="o">=</span><span class="n">person</span><span class="o">.</span><span class="n">photo</span><span class="o">|</span><span class="n">thumbnailer</span> <span class="o">%</span><span class="p">}</span>
+<span class="p">{</span><span class="o">%</span> <span class="k">if</span> <span class="n">photo</span> <span class="o">%</span><span class="p">}</span>
+    <span class="o">&lt;</span><span class="n">a</span> <span class="n">href</span><span class="o">=</span><span class="s2">&quot;{{ photo.large.url }}&quot;</span><span class="o">&gt;</span>
+        <span class="p">{{</span> <span class="n">photo</span><span class="o">.</span><span class="n">square</span><span class="o">.</span><span class="n">tag</span> <span class="p">}}</span>
+    <span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;</span>
+<span class="p">{</span><span class="o">%</span> <span class="k">else</span> <span class="o">%</span><span class="p">}</span>
+    <span class="o">&lt;</span><span class="n">img</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;{</span><span class="si">% s</span><span class="s2">tatic &#39;template/fallback.png&#39; %}&quot;</span> <span class="n">alt</span><span class="o">=</span><span class="s2">&quot;&quot;</span> <span class="o">/&gt;</span>
+<span class="p">{</span><span class="o">%</span> <span class="n">endif</span> <span class="o">%</span><span class="p">}</span>
+<span class="p">{</span><span class="o">%</span> <span class="n">endwith</span> <span class="o">%</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>If you know what you’re doing, you can also pass the relative name:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="k">with</span> <span class="n">photo</span><span class="o">=</span><span class="n">storage</span><span class="o">|</span><span class="n">thumbnailer</span><span class="p">:</span><span class="s1">&#39;some/file.jpg&#39;</span> <span class="o">%</span><span class="p">}</span><span class="o">...</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_thumbnails.templatetags.thumbnail.thumbnailer_passive">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.templatetags.thumbnail.</span></span><span class="sig-name descname"><span class="pre">thumbnailer_passive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.templatetags.thumbnail.thumbnailer_passive" title="Link to this definition"></a></dt>
+<dd><p>Creates a thumbnailer from an object (usually a <code class="docutils literal notranslate"><span class="pre">FileFile</span></code>) that won’t
+generate new thumbnails.</p>
+<p>This is useful if you are using another process to generate the thumbnails
+rather than having them generated on the fly if they are missing.</p>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="k">with</span> <span class="n">avatar</span><span class="o">=</span><span class="n">person</span><span class="o">.</span><span class="n">avatar</span><span class="o">|</span><span class="n">thumbnailer_passive</span> <span class="o">%</span><span class="p">}</span>
+    <span class="p">{</span><span class="o">%</span> <span class="k">with</span> <span class="n">avatar_thumb</span><span class="o">=</span><span class="n">avatar</span><span class="o">.</span><span class="n">small</span> <span class="o">%</span><span class="p">}</span>
+        <span class="p">{</span><span class="o">%</span> <span class="k">if</span> <span class="n">avatar_thumb</span> <span class="o">%</span><span class="p">}</span>
+            <span class="o">&lt;</span><span class="n">img</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;{{ avatar_thumb.url }}&quot;</span> <span class="n">alt</span><span class="o">=</span><span class="s2">&quot;&quot;</span> <span class="o">/&gt;</span>
+        <span class="p">{</span><span class="o">%</span> <span class="k">else</span> <span class="o">%</span><span class="p">}</span>
+            <span class="o">&lt;</span><span class="n">img</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;{</span><span class="si">% s</span><span class="s2">tatic &#39;img/default-avatar-small.png&#39; %}&quot;</span>
+                <span class="n">alt</span><span class="o">=</span><span class="s2">&quot;&quot;</span> <span class="o">/&gt;</span>
+        <span class="p">{</span><span class="o">%</span> <span class="n">endif</span> <span class="o">%</span><span class="p">}</span>
+    <span class="p">{</span><span class="o">%</span> <span class="n">endwith</span> <span class="o">%</span><span class="p">}</span>
+<span class="p">{</span><span class="o">%</span> <span class="n">endwith</span> <span class="o">%</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<p>Finally, if you want to have an image inserted inline into the template as a
+data URI, use this filter:</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_thumbnails.templatetags.thumbnail.data_uri">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.templatetags.thumbnail.</span></span><span class="sig-name descname"><span class="pre">data_uri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnail</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.templatetags.thumbnail.data_uri" title="Link to this definition"></a></dt>
+<dd><p>This filter will return the base64 encoded data URI for a given thumbnail object.</p>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="n">thumbnail</span> <span class="n">sample_image</span> <span class="mi">25</span><span class="n">x25</span> <span class="n">crop</span> <span class="k">as</span> <span class="n">thumb</span> <span class="o">%</span><span class="p">}</span>
+<span class="o">&lt;</span><span class="n">img</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;{{ thumb|data_uri }}&quot;</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>will for instance be rendered as:</p>
+<blockquote>
+<div><p>&lt;img src=”<a class="reference external" href="data:image/png;base64,iVBORw0KGgo">data:image/png;base64,iVBORw0KGgo</a>…”&gt;</p>
+</div></blockquote>
+</dd></dl>
+
+</section>
+</section>
+<section id="models">
+<h2>Models<a class="headerlink" href="#models" title="Link to this heading"></a></h2>
+<p>You can use the <code class="docutils literal notranslate"><span class="pre">ThumbnailerField</span></code> or <code class="docutils literal notranslate"><span class="pre">ThumbnailerImageField</span></code> fields (based
+on <code class="docutils literal notranslate"><span class="pre">FileField</span></code> and <code class="docutils literal notranslate"><span class="pre">ImageField</span></code>, respectively) for easier access to
+retrieve (or generate) thumbnail images, use different storages and resize
+source images before saving.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="easy_thumbnails.fields.ThumbnailerField">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">easy_thumbnails.fields.</span></span><span class="sig-name descname"><span class="pre">ThumbnailerField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.fields.ThumbnailerField" title="Link to this definition"></a></dt>
+<dd><p>A file field which provides easier access for retrieving (and generating)
+thumbnails.</p>
+<p>To use a different file storage for thumbnails, provide the
+<code class="docutils literal notranslate"><span class="pre">thumbnail_storage</span></code> keyword argument.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="easy_thumbnails.fields.ThumbnailerImageField">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">easy_thumbnails.fields.</span></span><span class="sig-name descname"><span class="pre">ThumbnailerImageField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.fields.ThumbnailerImageField" title="Link to this definition"></a></dt>
+<dd><p>An image field which provides easier access for retrieving (and generating)
+thumbnails.</p>
+<p>To use a different file storage for thumbnails, provide the
+<code class="docutils literal notranslate"><span class="pre">thumbnail_storage</span></code> keyword argument.</p>
+<p>To thumbnail the original source image before saving, provide the
+<code class="docutils literal notranslate"><span class="pre">resize_source</span></code> keyword argument, passing it a usual thumbnail option
+dictionary. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ThumbnailerImageField</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span> <span class="n">resize_source</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">sharpen</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<section id="forms">
+<h3>Forms<a class="headerlink" href="#forms" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="easy_thumbnails.widgets.ImageClearableFileInput">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">easy_thumbnails.widgets.</span></span><span class="sig-name descname"><span class="pre">ImageClearableFileInput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnail_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.widgets.ImageClearableFileInput" title="Link to this definition"></a></dt>
+<dd><p>Use this widget to show a thumbnail of the image next to the image file.</p>
+<p>If using the admin and <a class="reference internal" href="#easy_thumbnails.fields.ThumbnailerField" title="easy_thumbnails.fields.ThumbnailerField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThumbnailerField</span></code></a>,
+you can use this widget automatically with the following code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModelAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="n">formfield_overrides</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">ThumbnailerField</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="n">ImageClearableFileInput</span><span class="p">},</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="easy_thumbnails.widgets.ImageClearableFileInput.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnail_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.widgets.ImageClearableFileInput.__init__" title="Link to this definition"></a></dt>
+<dd><p>Set up the thumbnail options for this widget.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>thumbnail_options</strong> – options used to generate the thumbnail. If no
+<code class="docutils literal notranslate"><span class="pre">size</span></code> is given, it’ll be <code class="docutils literal notranslate"><span class="pre">(80,</span> <span class="pre">80)</span></code>. If not provided at all,
+default options will be used from the
+<a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_WIDGET_OPTIONS" title="easy_thumbnails.conf.Settings.THUMBNAIL_WIDGET_OPTIONS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_WIDGET_OPTIONS</span></code></a>
+setting.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="python">
+<h2>Python<a class="headerlink" href="#python" title="Link to this heading"></a></h2>
+<p>Easy thumbnails uses a Django <code class="docutils literal notranslate"><span class="pre">File</span></code>-like object called a
+<a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer" title="easy_thumbnails.files.Thumbnailer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Thumbnailer</span></code></a> to generate thumbnail images from the source file which
+it references.</p>
+<section id="get-thumbnailer">
+<h3><code class="docutils literal notranslate"><span class="pre">get_thumbnailer</span></code><a class="headerlink" href="#get-thumbnailer" title="Link to this heading"></a></h3>
+<p>The easy way to create a <a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer" title="easy_thumbnails.files.Thumbnailer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Thumbnailer</span></code></a> instance is to use the following
+utility function:</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.files.</span></span><span class="sig-name descname"><span class="pre">get_thumbnailer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Get a <a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer" title="easy_thumbnails.files.Thumbnailer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Thumbnailer</span></code></a> for a source file.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">obj</span></code> argument is usually either one of the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">FieldFile</span></code> instance (i.e. a model instance file/image field
+property).</p></li>
+<li><p>A string, which will be used as the relative name (the source will be
+set to the default storage).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Storage</span></code> instance - the <code class="docutils literal notranslate"><span class="pre">relative_name</span></code> argument must also be
+provided.</p></li>
+</ul>
+</div></blockquote>
+<p>Or it could be:</p>
+<blockquote>
+<div><ul>
+<li><p>A file-like instance - the <code class="docutils literal notranslate"><span class="pre">relative_name</span></code> argument must also be
+provided.</p>
+<p>In this case, the thumbnailer won’t use or create a cached reference
+to the thumbnail (i.e. a new thumbnail will be created for every
+<a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Thumbnailer.get_thumbnail()</span></code></a> call).</p>
+</li>
+</ul>
+</div></blockquote>
+<p>If <code class="docutils literal notranslate"><span class="pre">obj</span></code> is a <code class="docutils literal notranslate"><span class="pre">Thumbnailer</span></code> instance, it will just be returned. If it’s
+an object with an <code class="docutils literal notranslate"><span class="pre">easy_thumbnails_thumbnailer</span></code> then the attribute is
+simply returned under the assumption it is a Thumbnailer instance)</p>
+</dd></dl>
+
+<p>Once you have an instance, you can use the <a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Thumbnailer.get_thumbnail()</span></code></a>
+method to retrieve a thumbnail, which will (by default) generate it if it
+doesn’t exist (or if the source image has been modified since it was created).</p>
+<p>For example, assuming an <code class="docutils literal notranslate"><span class="pre">aardvark.jpg</span></code> image exists in the default storage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">easy_thumbnails.files</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_thumbnailer</span>
+
+<span class="n">thumbnailer</span> <span class="o">=</span> <span class="n">get_thumbnailer</span><span class="p">(</span><span class="s1">&#39;animals/aardvark.jpg&#39;</span><span class="p">)</span>
+
+<span class="n">thumbnail_options</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;crop&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">250</span><span class="p">):</span>
+    <span class="n">thumbnail_options</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">)})</span>
+    <span class="n">thumbnailer</span><span class="o">.</span><span class="n">get_thumbnail</span><span class="p">(</span><span class="n">thumbnail_options</span><span class="p">)</span>
+
+<span class="c1"># or to get a thumbnail by alias</span>
+<span class="n">thumbnailer</span><span class="p">[</span><span class="s1">&#39;large&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="non-django-file-objects">
+<h3>Non-Django file objects<a class="headerlink" href="#non-django-file-objects" title="Link to this heading"></a></h3>
+<p>If you need to process a standard file-like object, use <a class="reference internal" href="ref/files.html#easy_thumbnails.files.get_thumbnailer" title="easy_thumbnails.files.get_thumbnailer"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_thumbnailer()</span></code></a>
+and provide a <code class="docutils literal notranslate"><span class="pre">relative_name</span></code> like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">picture</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/home/zookeeper/pictures/my_anteater.jpg&#39;</span><span class="p">)</span>
+<span class="n">thumbnailer</span> <span class="o">=</span> <span class="n">get_thumbnailer</span><span class="p">(</span><span class="n">picture</span><span class="p">,</span> <span class="n">relative_name</span><span class="o">=</span><span class="s1">&#39;animals/anteater.jpg&#39;</span><span class="p">)</span>
+<span class="n">thumb</span> <span class="o">=</span> <span class="n">thumbnailer</span><span class="o">.</span><span class="n">get_thumbnail</span><span class="p">({</span><span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)})</span>
+</pre></div>
+</div>
+<p>If you don’t even need to save the thumbnail to storage because you are
+planning on using it in some more direct way, you can use the
+<a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer.generate_thumbnail" title="easy_thumbnails.files.Thumbnailer.generate_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Thumbnailer.generate_thumbnail()</span></code></a> method.</p>
+<p>Thumbnails generated in this manner don’t use any cache reference, i.e. every
+call to <a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Thumbnailer.get_thumbnail()</span></code></a> will generate a fresh thumbnail
+image.</p>
+</section>
+</section>
+<section id="maintenance">
+<h2>Maintenance<a class="headerlink" href="#maintenance" title="Link to this heading"></a></h2>
+<p>easy-thumbnails provides a <code class="docutils literal notranslate"><span class="pre">thumbnail</span></code> management command with several
+sub-commands to help maintain the thumbnail database cache and files on
+disk. See <a class="reference internal" href="commands.html"><span class="doc">Management Commands</span></a> for the full reference. In short:</p>
+<ul class="simple">
+<li><p>To remove thumbnail files and database records for source images that
+have been deleted from storage, use the
+<a class="reference internal" href="commands.html#thumbnail-cleanup"><span class="std std-ref">thumbnail cleanup</span></a> management command.</p></li>
+<li><p>To list configured storage aliases and their storage hashes, use
+<a class="reference internal" href="commands.html#thumbnail-storages"><span class="std std-ref">thumbnail storages</span></a>.</p></li>
+<li><p>To list or audit the source files referenced by
+<code class="docutils literal notranslate"><span class="pre">ThumbnailerImageField</span></code> values across your project, use
+<a class="reference internal" href="commands.html#thumbnail-source-files"><span class="std std-ref">thumbnail source_files</span></a>.</p></li>
+<li><p>To remove <code class="docutils literal notranslate"><span class="pre">Source</span></code> database records that no longer match any
+<code class="docutils literal notranslate"><span class="pre">ThumbnailerImageField</span></code> value, use
+<a class="reference internal" href="commands.html#thumbnail-source-cleanup"><span class="std std-ref">thumbnail source_cleanup</span></a>.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="commands.html" class="btn btn-neutral float-right" title="Management Commands" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2009, Chris Beaven.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

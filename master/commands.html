@@ -1,0 +1,400 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Management Commands &mdash; easy-thumbnails 3.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=b576230a"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Scalable Vector Graphic Support" href="svg.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            easy-thumbnails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Management Commands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#thumbnail-storages">thumbnail storages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#thumbnail-cleanup">thumbnail cleanup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output">Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#caveats">Caveats</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#thumbnail-source-files">thumbnail source_files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#thumbnail-source-cleanup">thumbnail source_cleanup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="svg.html">Scalable Vector Graphic Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="webp.html">WebP support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ref/files.html">Thumbnail Files and Generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/namers.html">Namers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/optimize.html">Optimizing Images using a Postprocessor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/processors.html">Image Processors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/source_generators.html">Source Generators</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">easy-thumbnails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Management Commands</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/commands.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="management-commands">
+<h1>Management Commands<a class="headerlink" href="#management-commands" title="Link to this heading"></a></h1>
+<p>easy-thumbnails provides management commands to help maintain the
+thumbnail database cache and files on disk.</p>
+<section id="thumbnail-storages">
+<span id="id1"></span><h2>thumbnail storages<a class="headerlink" href="#thumbnail-storages" title="Link to this heading"></a></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">storages</span>
+</pre></div>
+</div>
+<p>Lists every storage alias configured in Django’s <code class="docutils literal notranslate"><span class="pre">STORAGES</span></code> setting
+together with its computed storage hash, one <code class="docutils literal notranslate"><span class="pre">&lt;alias&gt;:</span> <span class="pre">&lt;storage_hash&gt;</span></code>
+line per storage.</p>
+<p>This is useful for identifying which alias a <code class="docutils literal notranslate"><span class="pre">Source.storage_hash</span></code>
+value corresponds to, and as a prerequisite step before running
+<a class="reference internal" href="#thumbnail-cleanup"><span class="std std-ref">thumbnail cleanup –delete-with-missing-storage</span></a>.</p>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<p>List all configured storages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">storages</span>
+</pre></div>
+</div>
+<p>Example output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">default</span><span class="p">:</span> <span class="mf">275876e34</span><span class="n">cf609db8f4c1b0c56dfd4ba</span>
+<span class="n">media</span><span class="p">:</span> <span class="mf">1e5</span><span class="n">f5210a4bec7dc9a1c0e3c1c2e7f6d</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="thumbnail-cleanup">
+<span id="id2"></span><h2>thumbnail cleanup<a class="headerlink" href="#thumbnail-cleanup" title="Link to this heading"></a></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">cleanup</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Scans every <code class="docutils literal notranslate"><span class="pre">Source</span></code> record in the database and checks whether the
+corresponding source image still exists on its configured storage backend.
+For any source that is no longer present, the command:</p>
+<ol class="arabic simple">
+<li><p>Deletes each associated thumbnail files from disk.</p></li>
+<li><p>Removes the <code class="docutils literal notranslate"><span class="pre">Source</span></code> record (and its associated <code class="docutils literal notranslate"><span class="pre">Thumbnail</span></code> records)
+from the database via cascade delete.</p></li>
+</ol>
+<p>This is useful for keeping the database <code class="docutils literal notranslate"><span class="pre">Source</span></code> and <code class="docutils literal notranslate"><span class="pre">Thumbnail</span></code> records
+consistent and reclaiming disk space after image files have been removed
+outside of Django (e.g., direct filesystem deletion, storage bucket cleanup).</p>
+<section id="options">
+<h3>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h3>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">--dry-run</span></code></dt><dd><p>Report what would be deleted without making any changes to the
+database or filesystem. The statistics summary is still printed at
+the end. Use this to audit the scope of a cleanup before committing.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--last-n-days</span> <span class="pre">N</span></code></dt><dd><p>Restrict the scan to <code class="docutils literal notranslate"><span class="pre">Source</span></code> records whose <code class="docutils literal notranslate"><span class="pre">modified</span></code> date falls
+within the last <em>N</em> days (today inclusive). Records older than <em>N</em>
+days are left untouched. Default: <code class="docutils literal notranslate"><span class="pre">0</span></code> (scan all records).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">modified</span></code> field is updated each time a thumbnail is
+generated or retrieved for that source — not when the source file
+was originally uploaded. A source that was accessed recently may
+have a <code class="docutils literal notranslate"><span class="pre">modified</span></code> date much newer than its actual creation date.</p>
+</div>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--path</span> <span class="pre">PREFIX</span></code></dt><dd><p>Restrict the scan to <code class="docutils literal notranslate"><span class="pre">Source</span></code> records whose stored name begins with
+<em>PREFIX</em>. This is a literal string prefix match against the name as
+stored in the database — not a filesystem glob.</p>
+<p>To target a directory, include a trailing slash:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">cleanup</span> <span class="o">--</span><span class="n">path</span> <span class="n">uploads</span><span class="o">/</span><span class="n">avatars</span><span class="o">/</span>
+</pre></div>
+</div>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--delete-with-missing-storage</span></code></dt><dd><p>Delete <code class="docutils literal notranslate"><span class="pre">Source</span></code> records (and their associated <code class="docutils literal notranslate"><span class="pre">Thumbnail</span></code> records)
+whose stored storage hash cannot be matched to any alias currently in
+Django’s <code class="docutils literal notranslate"><span class="pre">STORAGES</span></code> setting. This is useful after a storage backend
+has been removed from configuration, leaving behind orphaned rows that
+would otherwise be skipped.</p>
+<p>Can be combined with <code class="docutils literal notranslate"><span class="pre">--dry-run</span></code> to preview the count before
+deleting, and with <code class="docutils literal notranslate"><span class="pre">--last-n-days</span></code> or <code class="docutils literal notranslate"><span class="pre">--path</span></code> to limit scope.
+Use the <a class="reference internal" href="#thumbnail-storages"><span class="std std-ref">thumbnail storages</span></a> command to
+see which storage hashes are currently recognised.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Only use this flag if you are certain the unrecognised storage hash
+corresponds to a backend that has been intentionally removed. If a
+storage alias is temporarily missing due to a misconfiguration,
+running this flag will permanently delete the associated database
+records.</p>
+</div>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h3>Examples<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<p>Preview what would be cleaned up without making changes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">cleanup</span> <span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span>
+</pre></div>
+</div>
+<p>Clean up only records modified in the last 7 days:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">cleanup</span> <span class="o">--</span><span class="n">last</span><span class="o">-</span><span class="n">n</span><span class="o">-</span><span class="n">days</span> <span class="mi">7</span>
+</pre></div>
+</div>
+<p>Restrict cleanup to a specific path prefix, silently:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">cleanup</span> <span class="o">--</span><span class="n">path</span> <span class="n">uploads</span><span class="o">/</span><span class="n">user_photos</span><span class="o">/</span> <span class="o">--</span><span class="n">verbosity</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>Preview how many sources reference a removed storage backend:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">cleanup</span> <span class="o">--</span><span class="n">delete</span><span class="o">-</span><span class="k">with</span><span class="o">-</span><span class="n">missing</span><span class="o">-</span><span class="n">storage</span> <span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span>
+</pre></div>
+</div>
+<p>Remove all sources tied to a removed storage backend:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">cleanup</span> <span class="o">--</span><span class="n">delete</span><span class="o">-</span><span class="k">with</span><span class="o">-</span><span class="n">missing</span><span class="o">-</span><span class="n">storage</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading"></a></h3>
+<p>After the scan, the command always prints a statistics summary:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2026</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">16</span> <span class="mi">14</span><span class="p">:</span><span class="mi">32</span> <span class="o">------------------------------</span>
+<span class="n">Sources</span> <span class="n">checked</span><span class="p">:</span>                          <span class="mi">1024</span>
+<span class="n">Sources</span> <span class="k">with</span> <span class="n">missing</span> <span class="n">storage</span> <span class="n">deleted</span><span class="p">:</span>       <span class="mi">12</span>
+<span class="n">Source</span> <span class="n">references</span> <span class="n">deleted</span> <span class="kn">from</span><span class="w"> </span><span class="nn">DB</span><span class="p">:</span>          <span class="mi">37</span>
+<span class="n">Thumbnails</span> <span class="n">deleted</span> <span class="kn">from</span><span class="w"> </span><span class="nn">disk</span><span class="p">:</span>               <span class="mi">92</span>
+<span class="p">(</span><span class="n">Completed</span> <span class="ow">in</span> <span class="mi">4</span> <span class="n">seconds</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>“Thumbnails deleted from disk” counts thumbnails whose database
+entries were removed. A thumbnail file that was already absent from
+disk is still counted if its database entry is cleaned up.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>“Sources with missing storage deleted” is only non-zero when
+<code class="docutils literal notranslate"><span class="pre">--delete-with-missing-storage</span></code> is passed.</p>
+</div>
+</section>
+<section id="caveats">
+<h3>Caveats<a class="headerlink" href="#caveats" title="Link to this heading"></a></h3>
+<p><strong>Storage backend must be reachable.</strong>
+The command calls <code class="docutils literal notranslate"><span class="pre">storage.exists()</span></code> for each source path. If a
+storage backend raises an exception (e.g., a transient network error
+with a remote storage), that source is treated as <em>unknown</em> rather than
+missing: the error is logged to stderr and the source is skipped, not
+deleted. Ensure all configured storage backends are reliably reachable
+before running against a large dataset, since sources affected by
+transient errors are simply left for the next run rather than cleaned up.</p>
+<p><strong>Unrecognised storage hashes are skipped by default.</strong>
+Each <code class="docutils literal notranslate"><span class="pre">Source</span></code> record stores a hash of the storage backend used when
+it was saved. If that hash cannot be matched to any alias currently
+in Django’s <code class="docutils literal notranslate"><span class="pre">STORAGES</span></code> setting — for example, after a storage backend
+has been removed — the source is skipped rather than deleted. A message
+is printed to stdout. Pass <code class="docutils literal notranslate"><span class="pre">--delete-with-missing-storage</span></code> to delete
+these records instead.</p>
+<p><strong>No signals are fired.</strong>
+The command deletes <code class="docutils literal notranslate"><span class="pre">Source</span></code> and <code class="docutils literal notranslate"><span class="pre">Thumbnail</span></code> records directly via
+<code class="docutils literal notranslate"><span class="pre">QuerySet.delete()</span></code>. Any <code class="docutils literal notranslate"><span class="pre">pre_delete</span></code> or <code class="docutils literal notranslate"><span class="pre">post_delete</span></code> signal
+handlers attached to those models in your project will not be called.</p>
+<p><strong>Orphaned thumbnail files are not removed.</strong>
+If a thumbnail file exists on disk but its <code class="docutils literal notranslate"><span class="pre">Source</span></code> record has already
+been deleted from the database, the command will not find or remove it.
+The command only works from the database outward, not from the filesystem
+inward.</p>
+<p><strong>Requires Django 4.2+ ``STORAGES`` configuration.</strong>
+The command reads <code class="docutils literal notranslate"><span class="pre">settings.STORAGES</span></code> directly. Projects still using
+the legacy <code class="docutils literal notranslate"><span class="pre">DEFAULT_FILE_STORAGE</span></code> string setting will encounter an
+error.</p>
+</section>
+</section>
+<section id="thumbnail-source-files">
+<span id="id4"></span><h2>thumbnail source_files<a class="headerlink" href="#thumbnail-source-files" title="Link to this heading"></a></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">source_files</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Lists the file paths currently stored in every <code class="docutils literal notranslate"><span class="pre">ThumbnailerImageField</span></code>
+across all installed apps. Useful for auditing which source images are
+tracked and for feeding into other tools.</p>
+<section id="id5">
+<h3>Options<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">-s</span></code> / <code class="docutils literal notranslate"><span class="pre">--summary</span></code></dt><dd><p>Instead of printing one path per line, print the count of non-empty
+values for each field, one field per line, followed by a total on
+stderr.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--include</span> <span class="pre">SPEC</span></code></dt><dd><p>Restrict output to fields matching <em>SPEC</em>. <em>SPEC</em> can be:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">app</span></code> — matches all fields in the named app</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">app.model</span></code> — matches all fields on the named model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">app.model.field</span></code> — matches a specific field</p></li>
+</ul>
+<p>Wildcards (<code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">?</span></code>) are supported in each component.
+May be repeated to include multiple specs.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--exclude</span> <span class="pre">SPEC</span></code></dt><dd><p>Exclude fields matching <em>SPEC</em> from output. Same format as
+<code class="docutils literal notranslate"><span class="pre">--include</span></code>. May be repeated.</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h3>Examples<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>List every source path:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">source_files</span>
+</pre></div>
+</div>
+<p>Count per field (summary mode):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">source_files</span> <span class="o">--</span><span class="n">summary</span>
+</pre></div>
+</div>
+<p>Restrict to a single app:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">source_files</span> <span class="o">--</span><span class="n">include</span> <span class="n">myapp</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="thumbnail-source-cleanup">
+<span id="id7"></span><h2>thumbnail source_cleanup<a class="headerlink" href="#thumbnail-source-cleanup" title="Link to this heading"></a></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">source_cleanup</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Compares every <code class="docutils literal notranslate"><span class="pre">Source</span></code> record in the database against the current
+values stored in <code class="docutils literal notranslate"><span class="pre">ThumbnailerImageField</span></code> columns across all installed
+apps. Any <code class="docutils literal notranslate"><span class="pre">Source</span></code> whose <code class="docutils literal notranslate"><span class="pre">(storage_hash,</span> <span class="pre">name)</span></code> pair does not match
+a field value is considered orphaned and deleted.</p>
+<p>This is useful after a <code class="docutils literal notranslate"><span class="pre">ThumbnailerImageField</span></code> is removed or renamed,
+or after rows are deleted directly from the database, leaving <code class="docutils literal notranslate"><span class="pre">Source</span></code>
+records with no corresponding model field value.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Deleting a <code class="docutils literal notranslate"><span class="pre">Source</span></code> record cascades to its associated <code class="docutils literal notranslate"><span class="pre">Thumbnail</span></code>
+records in the database, but does <strong>not</strong> remove thumbnail files from
+storage.</p>
+</div>
+<section id="id8">
+<h3>Options<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">--dry-run</span></code></dt><dd><p>Print the name of each <code class="docutils literal notranslate"><span class="pre">Source</span></code> record that would be deleted,
+without making any changes to the database.</p>
+</dd>
+</dl>
+</section>
+<section id="id9">
+<h3>Examples<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<p>Preview what would be removed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">source_cleanup</span> <span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span>
+</pre></div>
+</div>
+<p>Remove all orphaned <code class="docutils literal notranslate"><span class="pre">Source</span></code> records:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">source_cleanup</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="svg.html" class="btn btn-neutral float-right" title="Scalable Vector Graphic Support" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2009, Chris Beaven.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
