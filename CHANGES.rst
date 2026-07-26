@@ -1,9 +1,24 @@
 Changes
 =======
 
-Unreleased
-----------
+3.1.0 (2026-07-26)
+------------------
 
+* Rename the ``thumbnail_cleanup`` management command to a ``cleanup``
+  subcommand of a new, unified ``thumbnail`` management command. Update any
+  ``python manage.py thumbnail_cleanup`` invocations to
+  ``python manage.py thumbnail cleanup``.
+* Add ``thumbnail storages`` subcommand: lists each configured storage's
+  alias and storage hash.
+* Add ``thumbnail cleanup --delete-with-missing-storage`` option: deletes
+  ``Source`` records whose storage hash no longer matches any alias
+  configured in Django's ``STORAGES`` setting.
+* Add ``thumbnail source_files`` subcommand: lists file paths stored in
+  every ``ThumbnailerImageField`` across installed apps, with ``--summary``,
+  ``--include``, and ``--exclude`` options for filtering by app/model/field.
+* Add ``thumbnail source_cleanup`` subcommand: deletes orphaned ``Source``
+  records whose ``(storage_hash, name)`` no longer matches any
+  ``ThumbnailerImageField`` value.
 * Fix SVG thumbnails rendering at 0.75x the requested size when ``svglib`` >= 2.0
   is installed: ``VIL.Image`` now writes explicit ``pt`` units on SVG
   ``width``/``height`` attributes instead of unitless values, whose
