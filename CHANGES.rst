@@ -1,6 +1,13 @@
 Changes
 =======
 
+3.1.1 (2026-07-26)
+------------------
+
+* Update documentation links to the new GitHub Pages site and drop the
+  unused Read the Docs config.
+
+
 3.1.0 (2026-07-26)
 ------------------
 
