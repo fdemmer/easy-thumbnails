@@ -15,7 +15,7 @@ A powerful, yet easy to implement thumbnailing application for Django 4.2+
 Below is a quick summary of usage. For more comprehensive information, view the
 `full documentation`__ online or the peruse the project's ``docs`` directory.
 
-__ http://easy-thumbnails.readthedocs.org/en/latest/index.html
+__ https://fdemmer.github.io/easy-thumbnails/master/index.html
 
 
 Installation
@@ -175,4 +175,4 @@ Valid thumbnail options are determined by the "thumbnail processors" installed.
 See the `reference documentation`__ for a complete list of options provided by
 the default thumbnail processors.
 
-__ http://easy-thumbnails.readthedocs.org/en/latest/ref/processors/
+__ https://fdemmer.github.io/easy-thumbnails/master/ref/processors.html

@@ -46,6 +46,8 @@ svg = [
 
 [project.urls]
 Homepage = "https://github.com/fdemmer/easy-thumbnails"
+Documentation = "https://fdemmer.github.io/easy-thumbnails/master/"
+Changelog = "https://github.com/fdemmer/easy-thumbnails/blob/master/CHANGES.rst"
 
 [tool.setuptools.dynamic]
 version = {attr = "easy_thumbnails.__version__"}
