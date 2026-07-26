@@ -17,7 +17,7 @@ such as scaling and cropping behave like their pixel based counterparts. The con
 thumbnailed SVG images doesn't of course change, but their width/height and bounding box may be adjusted to reflect the
 desired size of the thumbnailed image. Therefore, "thumbnailed" SVG images are stored side by side with their original
 images and hence can be used by third-party apps such as
-`django-filer<https://django-filer.readthedocs.io/en/latest/>`_ without modification.
+`django-filer <https://django-filer.readthedocs.io/en/latest/>`_ without modification.
 
 Since easy-thumbnails version 2.8, you can therefore use an SVG image, just as you would use any other image.
 

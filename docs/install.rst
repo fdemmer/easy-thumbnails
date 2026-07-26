@@ -23,7 +23,7 @@ in ``svglib`` and ``reportlab``::
 
     pip install fdemmer-easy-thumbnails[svg]
 
-See :doc:`ref/svg` for details on SVG support.
+See :doc:`svg` for details on SVG support.
 
 
 Configuring your project

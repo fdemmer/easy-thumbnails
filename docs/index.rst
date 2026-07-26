@@ -22,14 +22,27 @@ application.
 
 .. toctree::
    :maxdepth: 2
-   :glob:
 
-   *
+   install
+   usage
+   commands
 
-Reference documentation:
+Features
+========
 
 .. toctree::
    :maxdepth: 1
+   :caption: Features
+
+   svg
+   webp
+
+Reference
+=========
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Reference
    :glob:
 
    ref/*
