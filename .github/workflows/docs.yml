@@ -1,0 +1,62 @@
+name: Docs
+
+on:
+  push:
+    branches:
+    - master
+  release:
+    types:
+      - published
+      - edited
+  workflow_dispatch:
+
+concurrency:
+  group: docs-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Determine target directory
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "target=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "target=master" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build docs
+        run: >
+          uv run --with sphinx --with-requirements docs/requirements.txt
+          sphinx-build -b html docs docs/_build/html
+
+      - name: Stage deploy tree
+        run: |
+          mkdir -p deploy/${{ steps.vars.outputs.target }}
+          cp -r docs/_build/html/. deploy/${{ steps.vars.outputs.target }}/
+
+      - name: Add root redirect to latest release
+        if: github.event_name == 'release'
+        run: |
+          cat > deploy/index.html <<EOF
+          <!DOCTYPE html>
+          <meta charset="utf-8">
+          <meta http-equiv="refresh" content="0; url=./${{ github.event.release.tag_name }}/">
+          <link rel="canonical" href="./${{ github.event.release.tag_name }}/">
+          EOF
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: deploy
+          keep_files: true
