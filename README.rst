@@ -18,32 +18,14 @@ Below is a quick summary of usage. For more comprehensive information, view the
 __ http://easy-thumbnails.readthedocs.org/en/latest/index.html
 
 
-Breaking News
-=============
-
-Version 2.8.0 adds support for thumbnailing SVG images when installed with the ``[svg]`` extra.
-
-Of course it doesn't make sense to thumbnail SVG images, because being in vector format they can
-scale to any size without quality of loss. However, users of easy-thumbnails may want to upload and
-use SVG images just as if they would be PNG, GIF or JPEG. They don't necessarily care about the
-format and definitely don't want to convert them to a pixel based format. What they want is to reuse
-their templates with the templatetag thumbnail and scale and crop the images to whatever their
-`<img src="..." width="..." height="...">` has been prepared for.
-
-This is done by adding an emulation layer named VIL, which aims to be compatible with the
-`PIL <https://python-pillow.org/>`_ library. All thumbnailing operations, such as scaling and
-cropping behave like pixel based images. The final filesize of such thumbnailed SVG images doesn't
-of course change, but their width/height and bounding box may be adjusted to reflect the desired
-size of the thumbnailed image.
-
-.. note:: This feature is new and experimental, hence feedback about its proper functioning in
-          third parts applications is highly appreciated.
-
-
 Installation
 ============
 
-Run ``pip install easy-thumbnails``.
+Run ``pip install fdemmer-easy-thumbnails``.
+
+Thumbnailing SVG images is supported when installed with the ``[svg]`` extra
+(``pip install fdemmer-easy-thumbnails[svg]``). See the SVG support page in
+the full documentation for details.
 
 Add ``easy_thumbnails`` to your ``INSTALLED_APPS`` setting:
 

@@ -2,39 +2,28 @@
 Installation
 ============
 
-By default, all of the image manipulation is handled by the
-`Python Imaging Library`__ (a.k.a. PIL), so you'll probably want that
-installed too.
+This fork requires Python 3.9+ and Django 4.2+. Image manipulation is
+handled by `Pillow`__ (a fork of the Python Imaging Library / PIL), which is
+installed automatically as a dependency.
 
-.. __: http://www.pythonware.com/products/pil/
+.. __: https://python-pillow.org/
 
 
 Installing easy-thumbnails
 ==========================
 
-The easiest way is to use an automatic package-installation tools like pip__.
+Install the package from `PyPI`__ with pip::
 
-.. __: http://pip.openplans.org/
+    pip install fdemmer-easy-thumbnails
 
-Simply type::
+.. __: https://pypi.python.org/pypi/fdemmer-easy-thumbnails/
 
-    pip install easy-thumbnails
+To also thumbnail SVG images, install with the ``svg`` extra, which pulls
+in ``svglib`` and ``reportlab``::
 
+    pip install fdemmer-easy-thumbnails[svg]
 
-Manual installation
--------------------
-
-If you prefer not to use an automated package installer, you can
-download a copy of easy-thumbnails and install it manually. The
-latest release package can be downloaded from `easy-thumbnail's
-listing on the Python Package Index`__.
-
-.. __: http://pypi.python.org/pypi/easy-thumbnails/
-
-Once you've downloaded the package, unpack it and run the ``setup.py``
-installation script::
-
-    python setup.py install
+See :doc:`ref/svg` for details on SVG support.
 
 
 Configuring your project

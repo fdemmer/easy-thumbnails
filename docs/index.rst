@@ -5,8 +5,11 @@ Easy Thumbnails
 .. raw:: html
 
    <p>
-     <a href="https://travis-ci.org/SmileyChris/easy-thumbnails" >
-       <img src="https://travis-ci.org/SmileyChris/easy-thumbnails.png?branch=master" alt="Build Status"/>
+     <a href="https://pypi.python.org/pypi/fdemmer-easy-thumbnails/">
+       <img src="https://img.shields.io/pypi/v/fdemmer-easy-thumbnails.svg" alt="PyPI Version"/>
+     </a>
+     <a href="https://github.com/fdemmer/easy-thumbnails/actions/workflows/main.yml">
+       <img src="https://github.com/fdemmer/easy-thumbnails/actions/workflows/main.yml/badge.svg" alt="Build Status"/>
      </a>
    </p>
 

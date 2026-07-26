@@ -153,9 +153,11 @@ Caveats
 **Storage backend must be reachable.**
 The command calls ``storage.exists()`` for each source path. If a
 storage backend raises an exception (e.g., a transient network error
-with a remote storage), the source is treated as *missing* and its
-database records will be deleted. Ensure all configured storage backends
-are reliably reachable before running against a large dataset.
+with a remote storage), that source is treated as *unknown* rather than
+missing: the error is logged to stderr and the source is skipped, not
+deleted. Ensure all configured storage backends are reliably reachable
+before running against a large dataset, since sources affected by
+transient errors are simply left for the next run rather than cleaned up.
 
 **Unrecognised storage hashes are skipped by default.**
 Each ``Source`` record stores a hash of the storage backend used when
