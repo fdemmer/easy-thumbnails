@@ -325,6 +325,18 @@ image.
 Maintenance
 ===========
 
-To remove thumbnail files and database records for source images that
-have been deleted from storage, use the
-:ref:`thumbnail_cleanup <thumbnail_cleanup>` management command.
+easy-thumbnails provides a ``thumbnail`` management command with several
+sub-commands to help maintain the thumbnail database cache and files on
+disk. See :doc:`commands` for the full reference. In short:
+
+- To remove thumbnail files and database records for source images that
+  have been deleted from storage, use the
+  :ref:`thumbnail cleanup <thumbnail_cleanup>` management command.
+- To list configured storage aliases and their storage hashes, use
+  :ref:`thumbnail storages <thumbnail_storages>`.
+- To list or audit the source files referenced by
+  ``ThumbnailerImageField`` values across your project, use
+  :ref:`thumbnail source_files <thumbnail_source_files>`.
+- To remove ``Source`` database records that no longer match any
+  ``ThumbnailerImageField`` value, use
+  :ref:`thumbnail source_cleanup <thumbnail_source_cleanup>`.

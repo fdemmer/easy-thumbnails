@@ -5,6 +5,36 @@ Management Commands
 easy-thumbnails provides management commands to help maintain the
 thumbnail database cache and files on disk.
 
+.. _thumbnail_storages:
+
+thumbnail storages
+==================
+
+**Usage**::
+
+    python manage.py thumbnail storages
+
+Lists every storage alias configured in Django's ``STORAGES`` setting
+together with its computed storage hash, one ``<alias>: <storage_hash>``
+line per storage.
+
+This is useful for identifying which alias a ``Source.storage_hash``
+value corresponds to, and as a prerequisite step before running
+:ref:`thumbnail cleanup --delete-with-missing-storage
+<thumbnail_cleanup>`.
+
+Examples
+--------
+
+List all configured storages::
+
+    python manage.py thumbnail storages
+
+Example output::
+
+    default: 275876e34cf609db8f4c1b0c56dfd4ba
+    media: 1e5f5210a4bec7dc9a1c0e3c1c2e7f6d
+
 .. _thumbnail_cleanup:
 
 thumbnail cleanup
@@ -63,6 +93,8 @@ Options
 
     Can be combined with ``--dry-run`` to preview the count before
     deleting, and with ``--last-n-days`` or ``--path`` to limit scope.
+    Use the :ref:`thumbnail storages <thumbnail_storages>` command to
+    see which storage hashes are currently recognised.
 
     .. warning::
        Only use this flag if you are certain the unrecognised storage hash
