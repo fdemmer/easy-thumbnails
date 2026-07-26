@@ -1,0 +1,302 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Processors &mdash; easy-thumbnails 3.1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=796a81b5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Settings" href="settings.html" />
+    <link rel="prev" title="Optimizing Images using a Postprocessor" href="optimize.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            easy-thumbnails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands.html">Management Commands</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../svg.html">Scalable Vector Graphic Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../webp.html">WebP support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="files.html">Thumbnail Files and Generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="namers.html">Namers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimizing Images using a Postprocessor</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Image Processors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#built-in-processors">Built-in processors</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.processors.autocrop"><code class="docutils literal notranslate"><span class="pre">autocrop()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.processors.background"><code class="docutils literal notranslate"><span class="pre">background()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.processors.colorspace"><code class="docutils literal notranslate"><span class="pre">colorspace()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.processors.filters"><code class="docutils literal notranslate"><span class="pre">filters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.processors.scale_and_crop"><code class="docutils literal notranslate"><span class="pre">scale_and_crop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-processors">Custom processors</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#create-the-processor">Create the processor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-the-processor">Use the processor</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source_generators.html">Source Generators</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">easy-thumbnails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Image Processors</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/ref/processors.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="image-processors">
+<h1>Image Processors<a class="headerlink" href="#image-processors" title="Link to this heading"></a></h1>
+<p>Easy thumbnails generates thumbnail images by passing the source image through
+a series of image processors. Each processor may alter the image, often
+dependent on the options it receives.</p>
+<p>This makes the system very flexible, as the processors an image passes through
+can be defined in <a class="reference internal" href="settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS" title="easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_PROCESSORS</span></code></a>
+and even overridden by an individual <a class="reference internal" href="files.html#easy_thumbnails.files.Thumbnailer" title="easy_thumbnails.files.Thumbnailer"><code class="xref py py-class docutils literal notranslate"><span class="pre">easy_thumbnails.files.Thumbnailer</span></code></a>
+(via the <a class="reference internal" href="files.html#easy_thumbnails.files.Thumbnailer.thumbnail_processors" title="easy_thumbnails.files.Thumbnailer.thumbnail_processors"><code class="xref py py-attr docutils literal notranslate"><span class="pre">thumbnail_processors</span></code></a>
+attribute).</p>
+<section id="built-in-processors">
+<h2>Built-in processors<a class="headerlink" href="#built-in-processors" title="Link to this heading"></a></h2>
+<p>Following is a list of the built-in processors, along with the thumbnail
+options which they use.</p>
+<dl class="py function" id="module-easy_thumbnails.processors">
+<dt class="sig sig-object py" id="easy_thumbnails.processors.autocrop">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.processors.</span></span><span class="sig-name descname"><span class="pre">autocrop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">im</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autocrop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.processors.autocrop" title="Link to this definition"></a></dt>
+<dd><p>Remove any unnecessary whitespace from the edges of the source image.</p>
+<p>This processor should be listed before <a class="reference internal" href="#easy_thumbnails.processors.scale_and_crop" title="easy_thumbnails.processors.scale_and_crop"><code class="xref py py-func docutils literal notranslate"><span class="pre">scale_and_crop()</span></code></a> so the
+whitespace is removed from the source image before it is resized.</p>
+<dl class="simple">
+<dt>autocrop</dt><dd><p>Activates the autocrop method for this image.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_thumbnails.processors.background">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.processors.</span></span><span class="sig-name descname"><span class="pre">background</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">im</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.processors.background" title="Link to this definition"></a></dt>
+<dd><p>Add borders of a certain color to make the resized image fit exactly within
+the dimensions given.</p>
+<dl class="simple">
+<dt>background</dt><dd><p>Background color to use</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_thumbnails.processors.colorspace">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.processors.</span></span><span class="sig-name descname"><span class="pre">colorspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">im</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.processors.colorspace" title="Link to this definition"></a></dt>
+<dd><p>Convert images to the correct color space.</p>
+<p>A passive option (i.e. always processed) of this method is that all images
+(unless grayscale) are converted to RGB colorspace.</p>
+<p>This processor should be listed before <a class="reference internal" href="#easy_thumbnails.processors.scale_and_crop" title="easy_thumbnails.processors.scale_and_crop"><code class="xref py py-func docutils literal notranslate"><span class="pre">scale_and_crop()</span></code></a> so palette is
+changed before the image is resized.</p>
+<dl class="simple">
+<dt>bw</dt><dd><p>Make the thumbnail grayscale (not really just black &amp; white).</p>
+</dd>
+<dt>replace_alpha</dt><dd><p>Replace any transparency layer with a solid color. For example,
+<code class="docutils literal notranslate"><span class="pre">replace_alpha='#fff'</span></code> would replace the transparency layer with
+white.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_thumbnails.processors.filters">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.processors.</span></span><span class="sig-name descname"><span class="pre">filters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">im</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sharpen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.processors.filters" title="Link to this definition"></a></dt>
+<dd><p>Pass the source image through post-processing filters.</p>
+<dl class="simple">
+<dt>sharpen</dt><dd><p>Sharpen the thumbnail image (using the PIL sharpen filter)</p>
+</dd>
+<dt>detail</dt><dd><p>Add detail to the image, like a mild <em>sharpen</em> (using the PIL
+<code class="docutils literal notranslate"><span class="pre">detail</span></code> filter).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_thumbnails.processors.scale_and_crop">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.processors.</span></span><span class="sig-name descname"><span class="pre">scale_and_crop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">im</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upscale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zoom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.processors.scale_and_crop" title="Link to this definition"></a></dt>
+<dd><p>Handle scaling and cropping the source image.</p>
+<p>Images can be scaled / cropped against a single dimension by using zero
+as the placeholder in the size. For example, <code class="docutils literal notranslate"><span class="pre">size=(100,</span> <span class="pre">0)</span></code> will cause
+the image to be resized to 100 pixels wide, keeping the aspect ratio of
+the source image.</p>
+<dl>
+<dt>crop</dt><dd><p>Crop the source image height or width to exactly match the requested
+thumbnail size (the default is to proportionally resize the source
+image to fit within the requested thumbnail size).</p>
+<p>By default, the image is centered before being cropped. To crop from
+the edges, pass a comma separated string containing the <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>
+percentage offsets (negative values go from the right/bottom). Some
+examples follow:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">crop=&quot;0,0&quot;</span></code> will crop from the left and top edges.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">crop=&quot;-10,-0&quot;</span></code> will crop from the right edge (with a 10% offset)
+and the bottom edge.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">crop=&quot;,0&quot;</span></code> will keep the default behavior for the x axis
+(horizontally centering the image) and crop from the top edge.</p></li>
+</ul>
+<p>The image can also be “smart cropped” by using <code class="docutils literal notranslate"><span class="pre">crop=&quot;smart&quot;</span></code>. The
+image is incrementally cropped down to the requested size by removing
+slices from edges with the least entropy.</p>
+<p>Finally, you can use <code class="docutils literal notranslate"><span class="pre">crop=&quot;scale&quot;</span></code> to simply scale the image so that
+at least one dimension fits within the size dimensions given (you may
+want to use the upscale option too).</p>
+</dd>
+<dt>upscale</dt><dd><p>Allow upscaling of the source image during scaling.</p>
+</dd>
+<dt>zoom</dt><dd><p>A percentage to zoom in on the scaled image. For example, a zoom of
+<code class="docutils literal notranslate"><span class="pre">40</span></code> will clip 20% off each side of the source image before
+thumbnailing.</p>
+</dd>
+<dt>target</dt><dd><p>Set the focal point as a percentage for the image if it needs to be
+cropped (defaults to <code class="docutils literal notranslate"><span class="pre">(50,</span> <span class="pre">50)</span></code>).</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">target=&quot;10,20&quot;</span></code> will set the focal point as 10% and 20%
+from the left and top of the image, respectively. If the image needs to
+be cropped, it will trim off the right and bottom edges until the focal
+point is centered.</p>
+<p>Can either be set as a two-item tuple such as <code class="docutils literal notranslate"><span class="pre">(20,</span> <span class="pre">30)</span></code> or a comma
+separated string such as <code class="docutils literal notranslate"><span class="pre">&quot;20,10&quot;</span></code>.</p>
+<p>A null value such as <code class="docutils literal notranslate"><span class="pre">(20,</span> <span class="pre">None)</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;,60&quot;</span></code> will default to 50%.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="custom-processors">
+<h2>Custom processors<a class="headerlink" href="#custom-processors" title="Link to this heading"></a></h2>
+<p>You can replace or leave out any default processor as suits your needs.
+Following is an explanation of how to create and activate a custom processor.</p>
+<p>When defining the
+<a class="reference internal" href="settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS" title="easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_PROCESSORS</span></code></a> setting, remember
+that this is the order through which the processors are run. The image received
+by a processor is the output of the previous processor.</p>
+<section id="create-the-processor">
+<h3>Create the processor<a class="headerlink" href="#create-the-processor" title="Link to this heading"></a></h3>
+<p>First create a processor like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">whizzbang_processor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">bang</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Whizz bang the source image.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">bang</span><span class="p">:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">whizz</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">image</span>
+</pre></div>
+</div>
+<p>The first argument for a processor is the source image.</p>
+<p>All other arguments are keyword arguments which relate to the list of options
+received by the thumbnail generator (including <code class="docutils literal notranslate"><span class="pre">size</span></code> and <code class="docutils literal notranslate"><span class="pre">quality</span></code>).
+Ensure you list all arguments which could be used (giving them a default value
+of <code class="docutils literal notranslate"><span class="pre">False</span></code>), as the processors arguments are introspected to generate a list
+of valid options.</p>
+<p>You must also use <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> at the end of your argument list because all
+options used to generate the thumbnail are passed to processors, not just the
+ones defined.</p>
+<p>Whether a processor actually modifies the image or not, they must always return
+an image.</p>
+</section>
+<section id="use-the-processor">
+<h3>Use the processor<a class="headerlink" href="#use-the-processor" title="Link to this heading"></a></h3>
+<p>Next, add the processor to
+<a class="reference internal" href="settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS" title="easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_PROCESSORS</span></code></a> in your settings
+module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">easy_thumbnails.conf</span><span class="w"> </span><span class="kn">import</span> <span class="n">Settings</span> <span class="k">as</span> <span class="n">easy_thumbnails_defaults</span>
+
+<span class="n">THUMBNAIL_PROCESSORS</span> <span class="o">=</span> <span class="n">easy_thumbnails_defaults</span><span class="o">.</span><span class="n">THUMBNAIL_PROCESSORS</span> <span class="o">+</span> <span class="p">(</span>
+    <span class="s1">&#39;wb_project.thumbnail_processors.whizzbang_processor&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="optimize.html" class="btn btn-neutral float-left" title="Optimizing Images using a Postprocessor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="settings.html" class="btn btn-neutral float-right" title="Settings" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2009, Chris Beaven.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
