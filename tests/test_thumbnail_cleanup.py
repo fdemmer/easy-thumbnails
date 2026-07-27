@@ -219,4 +219,4 @@ class ThumbnailCleanupTest(test.BaseTest):
 
         output = stdout.getvalue()
         self.assertIn('Dry run', output)
-        self.assertIn('Sources with missing storage: 1', output)
+        self.assertIn('Deleting 1 Source objects with unknown storage.', output)

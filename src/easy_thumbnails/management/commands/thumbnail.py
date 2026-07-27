@@ -14,6 +14,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 from django.utils import timezone
 
+from easy_thumbnails.compat import batched
 from easy_thumbnails.conf import settings
 from easy_thumbnails.fields import ThumbnailerImageField
 from easy_thumbnails.models import Source
@@ -29,9 +30,12 @@ class ThumbnailCollectionCleaner:
     Command only works DB-outward.
     """
 
-    def __init__(self, stdout, stderr):
+    def __init__(self, stdout, stderr, dry_run=True, verbosity=1):
         self.stdout = stdout
         self.stderr = stderr
+        self.dry_run = dry_run
+        self.verbosity = verbosity
+        self.storage_hash_map = build_storage_hash_map()
         self.counts = Counter()
         self.execution_time = None
 
@@ -41,17 +45,23 @@ class ThumbnailCollectionCleaner:
         else:
             return str(Path(settings.MEDIA_ROOT) / path)
 
-    def _check_if_exists(self, storage, path):
+    def _check_exists(self, storage, path):
+        """
+        Check if the given `path` exists in the `storage`.
+        """
         try:
-            return storage.exists(path)
+            exists = storage.exists(path)
+            if self.verbosity > 1:
+                self.stdout.write(f'{exists=} {type(storage).__name__} {path}')
+            return exists
         except Exception as e:
             self.stderr.write(f'Something went wrong when checking existence of {path}:')
             self.stderr.write(str(e))
 
-    def _delete_sources_by_id(self, ids):
-        Source.objects.all().filter(id__in=ids).delete()
-
     def _build_query(self, last_n_days, cleanup_path):
+        """
+        Return a queryset for Source objects with the given filters.
+        """
         query = Source.objects.all()
         if last_n_days > 0:
             today = timezone.now().date()
@@ -65,28 +75,49 @@ class ThumbnailCollectionCleaner:
             query = query.filter(name__startswith=cleanup_path)
         return query
 
-    def _delete_thumbnail(self, thumb, storage, dry_run, verbosity):
+    def _delete_with_missing_storage(self, query):
+        """
+        Delete Source objects with unknown `storage_hash` using the given `query`.
+        """
+        known_hashes = set(self.storage_hash_map.keys())
+        missing_query = query.exclude(storage_hash__in=known_hashes)
+        count = missing_query.count()
+        self.counts['sources_missing_storage_deleted'] = count
+        if self.verbosity > 0:
+            self.stdout.write(f'Deleting {count} Source objects with unknown storage.')
+        if not self.dry_run:
+            missing_query.delete()
+
+    def _delete_thumbnail(self, thumb, storage):
+        """
+        Delete thumbnail file from storage.
+        """
         self.counts['thumbnails_deleted'] += 1
         abs_thumbnail_path = self._get_absolute_path(thumb.name, storage)
-        if self._check_if_exists(storage, abs_thumbnail_path) is True:
-            if verbosity > 0:
-                self.stdout.write(f'Deleting thumbnail: {abs_thumbnail_path}')
-            if not dry_run:
+        if self._check_exists(storage, abs_thumbnail_path) is True:
+            if self.verbosity > 0:
+                self.stdout.write(f'Deleting thumbnail file: {abs_thumbnail_path}')
+            if not self.dry_run:
                 storage.delete(abs_thumbnail_path)
 
-    def _process_source(self, source, storage_hash_map, storage, dry_run, verbosity):
-        source_storage_alias = storage_hash_map.get(source.storage_hash)
+    def _process_source(self, source, thumbnail_storage):
+        """
+        Check if Source has a file in storage.
+
+        If there is NO file, delete thumbnail files and return `source.id` for deletion.
+        """
+        source_storage_alias = self.storage_hash_map.get(source.storage_hash)
         source_storage = storages[source_storage_alias] if source_storage_alias else None
         if source_storage:
             self.counts['sources'] += 1
             abs_source_path = self._get_absolute_path(source.name, source_storage)
-            if self._check_if_exists(source_storage, abs_source_path) is False:
-                if verbosity > 0:
-                    self.stdout.write(f'Source not present: {abs_source_path}')
+            if self._check_exists(source_storage, abs_source_path) is False:
+                if self.verbosity > 0:
+                    self.stdout.write(f'Source file not found: {abs_source_path}')
 
                 self.counts['source_refs_deleted'] += 1
                 for thumb in source.thumbnails.all():
-                    self._delete_thumbnail(thumb, storage, dry_run, verbosity)
+                    self._delete_thumbnail(thumb, thumbnail_storage)
 
                 return source.id
 
@@ -96,65 +127,52 @@ class ThumbnailCollectionCleaner:
                 f' skipping source (use --delete-with-missing-storage to remove)'
             )
 
-    def _delete_with_missing_storage(self, query, storage_hash_map, dry_run, verbosity):
-        known_hashes = set(storage_hash_map.keys())
-        missing_query = query.exclude(storage_hash__in=known_hashes)
-        count = missing_query.count()
-        self.counts['sources_missing_storage_deleted'] = count
-        if verbosity > 0:
-            self.stdout.write(f'Sources with missing storage: {count}')
-        if not dry_run:
-            missing_query.delete()
+    def _process_source_query(self, query):
+        thumbnail_storage = get_storage()
+        for source in queryset_iterator(query):
+            source_id = self._process_source(source, thumbnail_storage)
+            if source_id is not None:
+                yield source_id
+
+    def _delete_with_missing_source_file(self, query, batch_size=1000):
+        """
+        Delete Source objects from database (cascades to Thumbnail) in batches.
+        """
+        for source_ids in batched(self._process_source_query(query), batch_size):
+            if self.verbosity > 0:
+                self.stdout.write(f'Deleting {len(source_ids)} Source objects.')
+            if not self.dry_run:
+                Source.objects.all().filter(id__in=source_ids).delete()
 
     def clean_up(
         self,
-        dry_run=False,
-        verbosity=1,
         last_n_days=0,
         cleanup_path=None,
         delete_with_missing_storage=False,
-        storage=None,
     ):
         """
-        Iterate through sources. Delete database references to sources
-        not existing, including its corresponding thumbnails (files and
-        database references).
-        """
-        if dry_run:
-            self.stdout.write('Dry run...')
-        storage = storage if storage is not None else get_storage()
+        Clean up Source objects.
 
-        storage_hash_map = build_storage_hash_map()
+        Find and delete Source objects without files in storage or with missing storage.
+        Delete cascades to Thumbnail objects and thumbnail files are deleted from storage.
+        """
+        if self.dry_run:
+            self.stdout.write('Dry run...')
 
         time_start = time.time()
 
-        sources_to_delete = []
+        # query for Source objects
         query = self._build_query(last_n_days, cleanup_path)
 
         if delete_with_missing_storage:
-            self._delete_with_missing_storage(
-                query,
-                storage_hash_map,
-                dry_run,
-                verbosity,
-            )
+            # delete Source objects without storage
+            self._delete_with_missing_storage(query)
 
-        for source in queryset_iterator(query):
-            source_id = self._process_source(
-                source,
-                storage_hash_map,
-                storage,
-                dry_run,
-                verbosity,
-            )
-            if source_id is not None:
-                sources_to_delete.append(source_id)
-                if not dry_run and len(sources_to_delete) >= 1000:
-                    self._delete_sources_by_id(sources_to_delete)
-                    sources_to_delete = []
+        if self.verbosity > 0:
+            self.stdout.write(f'Checking storage for {query.count()} Source objects...')
 
-        if not dry_run:
-            self._delete_sources_by_id(sources_to_delete)
+        # delete Source objects without files
+        self._delete_with_missing_source_file(query)
 
         self.execution_time = round(time.time() - time_start)
 
@@ -365,10 +383,13 @@ class Command(BaseCommand):
             self.stdout.write(f'{alias}: {storage_hash}')
 
     def do_cleanup(self, *args, **options):
-        tcc = ThumbnailCollectionCleaner(self.stdout, self.stderr)
-        tcc.clean_up(
+        tcc = ThumbnailCollectionCleaner(
+            self.stdout,
+            self.stderr,
             dry_run=options.get('dry_run', False),
             verbosity=int(options.get('verbosity', 1)),
+        )
+        tcc.clean_up(
             last_n_days=int(options.get('last_n_days', 0)),
             cleanup_path=options.get('cleanup_path'),
             delete_with_missing_storage=options.get('delete_with_missing_storage', False),
