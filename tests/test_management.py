@@ -1,16 +1,29 @@
+import datetime as dt
 import io
 from pathlib import Path
+from unittest.mock import patch
 
+from django.conf import settings
+from django.core.files.storage import storages
 from django.core.management import call_command
+from django.core.management.base import CommandError
+from django.db import models as django_models
 from django.test import override_settings
+from django.utils import timezone
 
+from easy_thumbnails.fields import ThumbnailerField
+from easy_thumbnails.files import get_thumbnailer
 from easy_thumbnails.management import (
     all_thumbnails,
     delete_all_thumbnails,
     delete_thumbnails,
     thumbnails_for_file,
 )
+from easy_thumbnails.management.commands.thumbnail import _collect_fields, _matches
+from easy_thumbnails.models import Source, Thumbnail
+from easy_thumbnails.utils import get_storage_hash
 from tests import utils as test
+from tests.models import TestModel
 
 
 class ThumbnailCommandTests(test.BaseTest):
@@ -40,6 +53,440 @@ class ListStoragesCommandTest(test.BaseTest):
         self.assertEqual(aliases, ['default', 'other'])
         hashes = [line.split()[1] for line in lines]
         self.assertEqual(hashes[0], hashes[1])
+
+
+@override_settings(MEDIA_ROOT=Path(settings.MEDIA_ROOT) / 'test_media')
+class ThumbnailCleanupTest(test.BaseTest):
+    def setUp(self):
+        super().setUp()
+        self.storage = test.TemporaryStorage()
+
+        # Create a source image
+        filename = self.create_image(self.storage, 'test.jpg')
+        with self.storage.open(filename) as f:
+            self.source_image_path = f.name
+
+        # Save a test image in both storages.
+        self.thumbnailer = get_thumbnailer(self.storage, filename)
+        self.thumbnailer.generate_thumbnail({'size': (100, 100)})
+
+        self.thumbnail_name = self.thumbnailer.get_thumbnail_name({'size': (100, 100)})
+        self.thumbnail_path = self.thumbnailer.get_thumbnail({'size': (100, 100)}).path
+
+        self.source = Source.objects.get(name=filename)
+
+    def tearDown(self):
+        # Clean up files
+        Path(self.source_image_path).unlink(missing_ok=True)
+        Path(self.thumbnail_path).unlink(missing_ok=True)
+
+        # Clean up the database
+        Source.objects.all().delete()
+        Thumbnail.objects.all().delete()
+
+        # Remove test media directory if empty
+        media_root = Path(settings.MEDIA_ROOT)
+        if media_root.exists() and not any(media_root.iterdir()):
+            media_root.rmdir()
+
+    def test_cleanup_command(self):
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        # Delete the source image to simulate a missing source image
+        Path(self.source_image_path).unlink()
+        self.assertFalse(Path(self.source_image_path).exists())
+
+        # Run the thumbnail cleanup command
+        call_command('thumbnail', 'cleanup', verbosity=2)
+
+        # Verify the thumbnail has been deleted
+        self.assertFalse(Path(self.thumbnail_path).exists())
+
+        # Verify the source reference has been deleted
+        with self.assertRaises(Source.DoesNotExist):
+            Source.objects.get(id=self.source.id)
+
+    def test_cleanup_command_exists_exception(self):
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        source_storage = storages['easy_thumbnails']
+        abs_source_path = str(Path(source_storage.location) / self.source.name)
+        original_exists = source_storage.exists
+
+        def mock_exists(path):
+            if path == abs_source_path:
+                raise OSError('Storage unavailable')
+            return original_exists(path)
+
+        # Run the thumbnail cleanup command mocking exception in storage.exists()
+        with patch.object(source_storage, 'exists', side_effect=mock_exists):
+            call_command('thumbnail', 'cleanup', verbosity=2)
+
+        # Verify the source reference and thumbnail have NOT been deleted
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+    def test_cleanup_dry_run(self):
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        # Delete the source image to simulate a missing source image
+        Path(self.source_image_path).unlink()
+        self.assertFalse(Path(self.source_image_path).exists())
+
+        # Run the thumbnail cleanup command in dry run mode
+        call_command('thumbnail', 'cleanup', dry_run=True, verbosity=2)
+
+        # Verify the thumbnail has not been deleted
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        # Verify the source reference has not been deleted
+        self.assertIsNotNone(Source.objects.get(id=self.source.id))
+
+    def test_cleanup_last_n_days(self):
+        old_time = timezone.now() - dt.timedelta(days=10)
+        self.source.modified = old_time
+        self.source.save()
+
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        # Delete the source image to simulate a missing source image
+        Path(self.source_image_path).unlink()
+        self.assertFalse(Path(self.source_image_path).exists())
+
+        # Run the thumbnail cleanup command with last_n_days parameter
+        call_command('thumbnail', 'cleanup', last_n_days=5, verbosity=2)
+
+        # Verify the thumbnail has not been deleted
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        # Verify the source reference has not been deleted
+        self.assertIsNotNone(Source.objects.get(id=self.source.id))
+
+        # Run the thumbnail cleanup command with last_n_days parameter
+        # that includes the source
+        call_command('thumbnail', 'cleanup', last_n_days=15, verbosity=2)
+
+        # Verify the thumbnail has been deleted
+        self.assertFalse(Path(self.thumbnail_path).exists())
+
+        # Verify the source reference has been deleted
+        with self.assertRaises(Source.DoesNotExist):
+            Source.objects.get(id=self.source.id)
+
+    def test_cleanup_path_filter(self):
+        # Create a second source + thumbnail under a subdirectory.
+        filename_b = self.create_image(self.storage, 'subdir/b.jpg')
+        with self.storage.open(filename_b) as f:
+            source_b_image_path = f.name
+        thumbnailer_b = get_thumbnailer(self.storage, filename_b)
+        thumbnailer_b.generate_thumbnail({'size': (100, 100)})
+        thumbnail_b_path = thumbnailer_b.get_thumbnail({'size': (100, 100)}).path
+        source_b = Source.objects.get(name=filename_b)
+
+        # Delete both source files to simulate missing sources.
+        Path(self.source_image_path).unlink()
+        Path(source_b_image_path).unlink()
+
+        # Run cleanup scoped to 'subdir/' only.
+        call_command('thumbnail', 'cleanup', cleanup_path='subdir/', verbosity=0)
+
+        # The subdir source and its thumbnail should be cleaned up.
+        with self.assertRaises(Source.DoesNotExist):
+            Source.objects.get(id=source_b.id)
+        self.assertFalse(Path(thumbnail_b_path).exists())
+
+        # The top-level source is outside the path scope — it must be untouched.
+        Source.objects.get(id=self.source.id)
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+    def test_source_storage_hash_not_found(self):
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        # Change the source's storage_hash to simulate an unknown storage hash
+        self.source.storage_hash = 'unknown_storage_hash'
+        self.source.save()
+
+        # Run the thumbnail cleanup command
+        call_command('thumbnail', 'cleanup', verbosity=2)
+
+        # Verify the thumbnail and source still exist
+        self.assertTrue(Path(self.thumbnail_path).exists())
+        self.assertIsNotNone(Source.objects.get(id=self.source.id))
+
+    def test_delete_with_missing_storage(self):
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        # Change the source's storage_hash to simulate a removed storage backend
+        self.source.storage_hash = 'unknown_storage_hash'
+        self.source.save()
+
+        call_command(
+            'thumbnail',
+            'cleanup',
+            delete_with_missing_storage=True,
+            verbosity=0,
+        )
+
+        # Source record must be deleted
+        with self.assertRaises(Source.DoesNotExist):
+            Source.objects.get(id=self.source.id)
+
+    def test_delete_with_missing_storage_dry_run(self):
+        self.assertTrue(Path(self.source_image_path).exists())
+        self.assertTrue(Path(self.thumbnail_path).exists())
+
+        # Change the source's storage_hash to simulate a removed storage backend
+        self.source.storage_hash = 'unknown_storage_hash'
+        self.source.save()
+
+        stdout = io.StringIO()
+        call_command(
+            'thumbnail',
+            'cleanup',
+            delete_with_missing_storage=True,
+            dry_run=True,
+            verbosity=1,
+            stdout=stdout,
+        )
+
+        # Dry run — source must still exist
+        self.assertIsNotNone(Source.objects.get(id=self.source.id))
+
+        output = stdout.getvalue()
+        self.assertIn('Dry run', output)
+        self.assertIn('Deleting 1 Source objects with unknown storage.', output)
+
+
+class CollectFieldsTest(test.BaseTest):
+    def _pairs(self, **kwargs):
+        return list(_collect_fields(**kwargs))
+
+    def _labels(self, **kwargs):
+        return {(m._meta.label, f.name) for m, f in self._pairs(**kwargs)}
+
+    def test_default_finds_thumbnailer_image_fields(self):
+        self.assertIn(('easy_thumbnails_tests.TestModel', 'picture'), self._labels())
+
+    def test_default_excludes_plain_file_fields(self):
+        # Profile.logo is a plain FileField — not a ThumbnailerImageField
+        self.assertNotIn(('easy_thumbnails_tests.Profile', 'logo'), self._labels())
+
+    def test_default_excludes_thumbnailer_non_image_fields(self):
+        # ThumbnailerField is not a ThumbnailerImageField subclass
+        self.assertNotIn(('easy_thumbnails_tests.TestModel', 'avatar'), self._labels())
+        self.assertNotIn(('easy_thumbnails_tests.Profile', 'avatar'), self._labels())
+
+    def test_custom_field_class_file_field(self):
+        # Passing models.FileField widens the search to all file-based fields
+        labels = self._labels(field_class=django_models.FileField)
+        self.assertIn(('easy_thumbnails_tests.Profile', 'logo'), labels)
+        self.assertIn(('easy_thumbnails_tests.TestModel', 'picture'), labels)
+
+    def test_custom_field_class_thumbnailer_field(self):
+        # ThumbnailerImageField is also a ThumbnailerField subclass
+        labels = self._labels(field_class=ThumbnailerField)
+        self.assertIn(('easy_thumbnails_tests.Profile', 'avatar'), labels)
+        self.assertIn(('easy_thumbnails_tests.TestModel', 'avatar'), labels)
+        self.assertIn(('easy_thumbnails_tests.TestModel', 'picture'), labels)
+
+    def test_fields_sorted_within_each_model(self):
+        from itertools import groupby
+
+        pairs = self._pairs(field_class=django_models.FileField)
+        for _, group in groupby(
+            pairs, key=lambda p: (p[0]._meta.app_label, p[0]._meta.model_name)
+        ):
+            names = [f.name for _, f in group]
+            self.assertEqual(names, sorted(names))
+
+    def test_yields_model_field_tuples(self):
+        for model, field in self._pairs(field_class=django_models.FileField):
+            self.assertTrue(hasattr(model, '_meta'))
+            self.assertTrue(hasattr(field, 'name'))
+
+
+class MatchesTest(test.BaseTest):
+    def setUp(self):
+        super().setUp()
+        # TestModel.picture is the only ThumbnailerImageField in test models
+        self._model, self._field = next(
+            (m, f)
+            for m, f in _collect_fields()
+            if m._meta.label == 'easy_thumbnails_tests.TestModel' and f.name == 'picture'
+        )
+
+    def test_empty_specs_always_matches(self):
+        self.assertTrue(_matches(self._model, self._field, []))
+
+    def test_matches_by_app(self):
+        self.assertTrue(_matches(self._model, self._field, ['easy_thumbnails_tests']))
+
+    def test_no_match_wrong_app(self):
+        self.assertFalse(_matches(self._model, self._field, ['auth']))
+
+    def test_matches_by_app_model(self):
+        self.assertTrue(
+            _matches(self._model, self._field, ['easy_thumbnails_tests.testmodel'])
+        )
+
+    def test_no_match_wrong_model(self):
+        self.assertFalse(
+            _matches(self._model, self._field, ['easy_thumbnails_tests.profile'])
+        )
+
+    def test_matches_by_app_model_field(self):
+        self.assertTrue(
+            _matches(
+                self._model, self._field, ['easy_thumbnails_tests.testmodel.picture']
+            )
+        )
+
+    def test_no_match_wrong_field(self):
+        self.assertFalse(
+            _matches(self._model, self._field, ['easy_thumbnails_tests.testmodel.avatar'])
+        )
+
+    def test_wildcard_app(self):
+        self.assertTrue(_matches(self._model, self._field, ['easy_thumbnails*']))
+
+    def test_wildcard_model(self):
+        self.assertTrue(
+            _matches(self._model, self._field, ['easy_thumbnails_tests.test*'])
+        )
+
+    def test_wildcard_field(self):
+        self.assertTrue(
+            _matches(self._model, self._field, ['easy_thumbnails_tests.testmodel.*'])
+        )
+
+    def test_any_matching_spec_returns_true(self):
+        self.assertTrue(
+            _matches(self._model, self._field, ['auth', 'easy_thumbnails_tests'])
+        )
+
+
+class ThumbnailSourceFilesCommandTest(test.BaseTest):
+    def _call(self, **kwargs):
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        call_command('thumbnail', 'source_files', stdout=stdout, stderr=stderr, **kwargs)
+        return stdout.getvalue(), stderr.getvalue()
+
+    def test_list_mode_empty_db_no_output(self):
+        stdout, stderr = self._call()
+        self.assertEqual(stdout, '')
+        self.assertIn('total', stderr)
+
+    def test_list_mode_outputs_file_paths(self):
+        TestModel.objects.create(avatar='avatars/a.jpg', picture='pictures/p.jpg')
+        stdout, _ = self._call()
+        lines = stdout.splitlines()
+        self.assertIn('pictures/p.jpg', lines)
+
+    def test_list_mode_skips_empty_paths(self):
+        TestModel.objects.create(avatar='', picture='')
+        stdout, _ = self._call()
+        self.assertEqual(stdout, '')
+
+    def test_summary_mode_shows_field_label(self):
+        stdout, _ = self._call(summary=True)
+        self.assertIn('easy_thumbnails_tests.TestModel.picture', stdout)
+
+    def test_stderr_reports_field_and_model_counts(self):
+        _, stderr = self._call()
+        self.assertIn('fields', stderr)
+        self.assertIn('models', stderr)
+
+    def test_include_limits_to_matching_model(self):
+        stdout, _ = self._call(include=['easy_thumbnails_tests.testmodel'], summary=True)
+        self.assertIn('TestModel', stdout)
+
+    def test_include_no_match_returns_empty(self):
+        stdout, _ = self._call(include=['auth'], summary=True)
+        self.assertEqual(stdout, '')
+
+    def test_exclude_hides_matching_model(self):
+        # TestModel excluded and no other ThumbnailerImageField models, output is empty
+        stdout, _ = self._call(exclude=['easy_thumbnails_tests.testmodel'], summary=True)
+        self.assertNotIn('TestModel', stdout)
+
+    def test_include_and_exclude_combined(self):
+        stdout, _ = self._call(
+            include=['easy_thumbnails_tests'],
+            exclude=['easy_thumbnails_tests.testmodel'],
+            summary=True,
+        )
+        self.assertNotIn('TestModel', stdout)
+
+    def test_invalid_spec_too_many_parts(self):
+        with self.assertRaises(CommandError):
+            self._call(include=['too.many.parts.here'])
+
+    def test_invalid_spec_in_exclude(self):
+        with self.assertRaises(CommandError):
+            self._call(exclude=['a.b.c.d'])
+
+
+class ThumbnailSourceCleanupCommandTest(test.BaseTest):
+    def setUp(self):
+        super().setUp()
+        self.storage_hash = get_storage_hash(TestModel.picture.field.storage)
+
+    def _call(self, **kwargs):
+        stdout, stderr = io.StringIO(), io.StringIO()
+        call_command(
+            'thumbnail',
+            'source_cleanup',
+            stdout=stdout,
+            stderr=stderr,
+            **kwargs,
+        )
+        return stdout.getvalue(), stderr.getvalue()
+
+    def _make_source(self, name):
+        return Source.objects.create(storage_hash=self.storage_hash, name=name)
+
+    def test_empty_db_no_deletions(self):
+        _, stderr = self._call()
+        self.assertIn('0 Source records', stderr)
+        self.assertEqual(Source.objects.count(), 0)
+
+    def test_deletes_source_with_no_matching_field_value(self):
+        self._make_source('pictures/orphan.jpg')
+        self.assertEqual(Source.objects.count(), 1)
+        self._call()
+        self.assertEqual(Source.objects.count(), 0)
+
+    def test_preserves_source_with_matching_field_value(self):
+        TestModel.objects.create(picture='pictures/keep.jpg')
+        self._make_source('pictures/keep.jpg')
+        self._make_source('pictures/orphan.jpg')
+        self.assertEqual(Source.objects.count(), 2)
+        self._call()
+        self.assertEqual(Source.objects.count(), 1)
+        self.assertTrue(Source.objects.filter(name='pictures/keep.jpg').exists())
+
+    def test_dry_run_prints_but_does_not_delete(self):
+        TestModel.objects.create(picture='pictures/keep.jpg')
+        self._make_source('pictures/keep.jpg')
+        self._make_source('pictures/orphan.jpg')
+        self.assertEqual(Source.objects.count(), 2)
+        stdout, stderr = self._call(dry_run=True)
+        self.assertIn('pictures/orphan.jpg', stdout)
+        self.assertIn('Would delete', stderr)
+        self.assertEqual(Source.objects.count(), 2)
+
+    def test_stderr_reports_counts(self):
+        self._make_source('pictures/orphan.jpg')
+        _, stderr = self._call()
+        self.assertIn('Source records', stderr)
+        self.assertIn('1', stderr)
 
 
 class ManagementTestBase(test.BaseTest):
