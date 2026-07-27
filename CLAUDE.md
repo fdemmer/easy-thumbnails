@@ -19,6 +19,8 @@ uvx --with tox-uv tox --parallel auto
 
 Run a specific tox environment:
 ```bash
+just test py39-dj42
+# or directly:
 uvx --with tox-uv tox -e py39-dj42
 ```
 
