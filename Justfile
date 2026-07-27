@@ -18,12 +18,12 @@ docs:
     uv run --with sphinx --with-requirements docs/requirements.txt \
         sphinx-build -b html docs docs/_build/html
 
-coverage:
+coverage env="py314-dj52-svg":
     #!/usr/bin/env bash
     if [ ! -f .coverage ]; then
-        uvx --with tox-uv tox -e py314-dj52-svg
+        uvx --with tox-uv tox -e {{env}}
     fi
-    uvx --with tox-uv tox exec -e py314-dj52-svg -- coverage html
+    uvx --with tox-uv tox exec -e {{env}} -- coverage html
 
 build:
     uvx --from build pyproject-build
