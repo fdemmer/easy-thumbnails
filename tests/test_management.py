@@ -1,4 +1,8 @@
+import io
 from pathlib import Path
+
+from django.core.management import call_command
+from django.test import override_settings
 
 from easy_thumbnails.management import (
     all_thumbnails,
@@ -16,6 +20,26 @@ class ThumbnailCommandTests(test.BaseTest):
         any syntax errors.
         """
         import easy_thumbnails.management.commands.thumbnail  # NOQA
+
+
+class ListStoragesCommandTest(test.BaseTest):
+    @override_settings(
+        STORAGES={
+            'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+            'other': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        }
+    )
+    def test_same_backend_used_twice_lists_both_aliases(self):
+        # Two aliases using the same backend class share a storage hash, but
+        # each alias must still get its own line in the output.
+        stdout = io.StringIO()
+        call_command('thumbnail', 'storages', stdout=stdout)
+        lines = stdout.getvalue().splitlines()
+        self.assertEqual(len(lines), 2)
+        aliases = [line.split()[0] for line in lines]
+        self.assertEqual(aliases, ['default', 'other'])
+        hashes = [line.split()[1] for line in lines]
+        self.assertEqual(hashes[0], hashes[1])
 
 
 class ManagementTestBase(test.BaseTest):

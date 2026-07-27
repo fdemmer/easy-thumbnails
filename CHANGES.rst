@@ -1,6 +1,13 @@
 Changes
 =======
 
+Unreleased
+----------
+
+* Fix ``thumbnail storages`` command to show all storages, even when
+  multiple aliases share the same storage hash.
+
+
 3.1.1 (2026-07-26)
 ------------------
 

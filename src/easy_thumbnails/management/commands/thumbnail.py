@@ -18,7 +18,7 @@ from easy_thumbnails.compat import batched
 from easy_thumbnails.conf import settings
 from easy_thumbnails.fields import ThumbnailerImageField
 from easy_thumbnails.models import Source
-from easy_thumbnails.storage import get_storage
+from easy_thumbnails.storage import thumbnail_default_storage
 from easy_thumbnails.utils import get_storage_hash
 
 
@@ -128,7 +128,7 @@ class ThumbnailCollectionCleaner:
             )
 
     def _process_source_query(self, query):
-        thumbnail_storage = get_storage()
+        thumbnail_storage = thumbnail_default_storage
         for source in queryset_iterator(query):
             source_id = self._process_source(source, thumbnail_storage)
             if source_id is not None:
@@ -230,10 +230,15 @@ def handle_broken_pipe() -> Generator[None, None, None]:
         os.dup2(devnull, sys.stdout.fileno())
 
 
+def get_storages():
+    return [
+        (alias, type(storages[alias]).__name__, get_storage_hash(storages[alias]))
+        for alias in settings.STORAGES.keys()
+    ]
+
+
 def build_storage_hash_map():
-    return {
-        get_storage_hash(storages[alias]): alias for alias in settings.STORAGES.keys()
-    }
+    return {storage_hash: alias for alias, _, storage_hash in get_storages()}
 
 
 def _collect_fields(field_class=ThumbnailerImageField):
@@ -379,8 +384,8 @@ class Command(BaseCommand):
             method(*args, **options)
 
     def do_list_storages(self, *args, **options):
-        for storage_hash, alias in build_storage_hash_map().items():
-            self.stdout.write(f'{alias}: {storage_hash}')
+        for alias, class_name, storage_hash in get_storages():
+            self.stdout.write(f'{alias:<16} {storage_hash} {class_name}')
 
     def do_cleanup(self, *args, **options):
         tcc = ThumbnailCollectionCleaner(
