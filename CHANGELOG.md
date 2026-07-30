@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 (up to 2.x, version numbers were not strictly semantic).
 
+## [Unreleased]
+
+- Add `thumbnail regenerate` subcommand: purges cached thumbnails for all
+  `ThumbnailerImageField` sources and regenerates their configured aliases.
+  Supports `--dry-run`, `--path`, `--include-global`, `--include` and
+  `--exclude`. Errors from individual sources are reported without aborting
+  the run.
+
 ## [3.4.0rc3] - 2026-10-22
 
 - **Backwards incompatible:** Remove the `THUMBNAIL_QUALITY` setting and the
