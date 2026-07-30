@@ -21,7 +21,7 @@ from easy_thumbnails.engine import NoSourceGenerator
 from easy_thumbnails.exceptions import EasyThumbnailsError
 from easy_thumbnails.fields import ThumbnailerImageField
 from easy_thumbnails.files import generate_all_aliases
-from easy_thumbnails.models import Source
+from easy_thumbnails.models import Source, Thumbnail
 from easy_thumbnails.storage import thumbnail_default_storage
 from easy_thumbnails.utils import get_storage_hash
 
@@ -222,57 +222,101 @@ class ThumbnailRegenerator:
         self.counts = Counter()
         self.execution_time = None
 
+    def _field_query(self, model, field, path):
+        query = (
+            model.objects.select_related(None)
+            .exclude(**{field.name: '', f'{field.name}__isnull': True})
+            .only('pk', field.name)
+        )
+        if path:
+            query = query.filter(**{f'{field.name}__startswith': path})
+        return query
+
     def _iter_fieldfiles(self, pairs, path):
         for model, field in pairs:
-            query = (
-                model.objects.select_related(None)
-                .exclude(**{field.name: '', f'{field.name}__isnull': True})
-                .only('pk', field.name)
-            )
-            if path:
-                query = query.filter(**{f'{field.name}__startswith': path})
+            query = self._field_query(model, field, path)
             for instance in queryset_iterator(query):
                 fieldfile = getattr(instance, field.name)
                 if fieldfile:
                     yield fieldfile
 
+    def _estimate(self, pairs, path):
+        """
+        Report dry-run totals per (model, field) using aggregate queries,
+        instead of walking (and querying for) every matching row.
+        """
+        for model, field in pairs:
+            names = self._field_query(model, field, path).values_list(
+                field.name, flat=True
+            )
+            processed_count = names.count()
+            if not processed_count:
+                continue
+
+            source_storage_hash = get_storage_hash(field.storage)
+            thumbnail_storage_hash = get_storage_hash(
+                field.thumbnail_storage or thumbnail_default_storage
+            )
+            purge_count = Thumbnail.objects.filter(
+                storage_hash=thumbnail_storage_hash,
+                source__storage_hash=source_storage_hash,
+                source__name__in=names,
+            ).count()
+
+            target = f'{model._meta.app_label}.{model.__name__}.{field.name}'
+            resolved_aliases = aliases.all(target, include_global=self.include_global)
+
+            if self.verbosity > 1:
+                alias_names = ', '.join(resolved_aliases) if resolved_aliases else 'none'
+                self.stdout.write(
+                    f'{target}: {processed_count} source(s), '
+                    f'purge {purge_count} cached thumbnail(s), '
+                    f'regenerate {len(resolved_aliases)} alias(es): {alias_names}'
+                )
+
+            self.counts['sources_processed'] += processed_count
+            self.counts['thumbnails_purged'] += purge_count
+            self.counts['aliases_regenerated'] += processed_count * len(resolved_aliases)
+
     def _process(self, fieldfile):
         source_cache = fieldfile.get_source_cache()
-        purge_count = source_cache.thumbnails.count() if source_cache else 0
-        alias_count = len(aliases.all(fieldfile, include_global=self.include_global))
-        if self.verbosity > 1:
-            self.stdout.write(
-                f'{fieldfile.name}: {purge_count} cached thumbnail(s), '
-                f'{alias_count} alias(es) to regenerate'
-            )
+        resolved_aliases = aliases.all(fieldfile, include_global=self.include_global)
 
-        if not self.dry_run:
-            try:
-                fieldfile.delete_thumbnails(source_cache=source_cache)
-                generate_all_aliases(fieldfile, include_global=self.include_global)
-            except (OSError, EasyThumbnailsError, NoSourceGenerator) as e:
-                # OSError: unreadable/corrupt source, or a storage read/write failure.
-                # EasyThumbnailsError/NoSourceGenerator: the source generators couldn't
-                # produce an image at all.
-                # Third-party remote storage backends may raise their own non-OSError
-                # exceptions for I/O failures; those are intentionally not
-                # caught here and will abort the run.
-                self.stderr.write(f'Could not regenerate {fieldfile.name}: {e}')
-                self.counts['errors'] += 1
-                return
+        try:
+            purge_count = fieldfile.delete_thumbnails(source_cache=source_cache)
+            generate_all_aliases(fieldfile, include_global=self.include_global)
+        except (OSError, EasyThumbnailsError, NoSourceGenerator) as e:
+            # OSError: unreadable/corrupt source, or a storage read/write failure.
+            # EasyThumbnailsError/NoSourceGenerator: the source generators couldn't
+            # produce an image at all.
+            # Third-party remote storage backends may raise their own non-OSError
+            # exceptions for I/O failures; those are intentionally not
+            # caught here and will abort the run.
+            self.stderr.write(f'Could not regenerate {fieldfile.name}: {e}')
+            self.counts['errors'] += 1
+            return
+
+        if self.verbosity > 1:
+            alias_names = ', '.join(resolved_aliases) if resolved_aliases else 'none'
+            self.stdout.write(
+                f'{fieldfile.name}: '
+                f'purged {purge_count} cached thumbnail(s), '
+                f'regenerated {len(resolved_aliases)} alias(es): {alias_names}'
+            )
 
         self.counts['sources_processed'] += 1
         self.counts['thumbnails_purged'] += purge_count
-        self.counts['aliases_regenerated'] += alias_count
+        self.counts['aliases_regenerated'] += len(resolved_aliases)
 
     def regenerate(self, pairs, path=None):
-        if self.dry_run:
-            self.stdout.write('Dry run...')
-
         time_start = time.time()
 
-        for fieldfile in self._iter_fieldfiles(pairs, path):
-            self._process(fieldfile)
+        if self.dry_run:
+            self.stdout.write('Dry run...')
+            self._estimate(pairs, path)
+        else:
+            for fieldfile in self._iter_fieldfiles(pairs, path):
+                self._process(fieldfile)
 
         self.execution_time = round(time.time() - time_start)
 

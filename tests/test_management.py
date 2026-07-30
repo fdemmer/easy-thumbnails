@@ -564,6 +564,54 @@ class ThumbnailRegenerateCommandTest(test.BaseTest):
         self.assertIn('Dry run', stdout)
         self.assertEqual(Thumbnail.objects.count(), 0)
 
+    def test_dry_run_reports_same_totals_as_real_run(self):
+        # Seed a stale cached thumbnail, as in
+        # test_purges_stale_thumbnail_before_regenerating, so the dry run has
+        # a non-zero purge count to estimate.
+        stale = self.instance.picture.generate_thumbnail(
+            {'size': (50, 50), 'ALIAS': 'small'}
+        )
+        self.instance.picture.save_thumbnail(stale)
+        self.assertEqual(Thumbnail.objects.count(), 1)
+
+        dry_stdout, _ = self._call(dry_run=True)
+        self.assertIn(f'{"Sources processed:":<40} {1:>7}', dry_stdout)
+        self.assertIn(f'{"Thumbnails purged:":<40} {1:>7}', dry_stdout)
+        self.assertIn(f'{"Aliases regenerated:":<40} {1:>7}', dry_stdout)
+        # Nothing was actually touched.
+        self.assertEqual(Thumbnail.objects.count(), 1)
+
+        real_stdout, _ = self._call()
+        self.assertIn(f'{"Sources processed:":<40} {1:>7}', real_stdout)
+        self.assertIn(f'{"Thumbnails purged:":<40} {1:>7}', real_stdout)
+        self.assertIn(f'{"Aliases regenerated:":<40} {1:>7}', real_stdout)
+
+    def test_dry_run_verbosity_shows_per_field_summary(self):
+        stdout, _ = self._call(dry_run=True, verbosity=2)
+        self.assertIn(
+            'easy_thumbnails_tests.TestModel.picture: 1 source(s), '
+            'purge 0 cached thumbnail(s), regenerate 1 alias(es): small',
+            stdout,
+        )
+        # No more per-file lines - just the per-field summary above.
+        self.assertNotIn('pictures/test.jpg:', stdout)
+
+    def test_real_run_verbosity_lists_alias_names(self):
+        stdout, _ = self._call(verbosity=2)
+        self.assertIn(
+            'pictures/test.jpg: purged 0 cached thumbnail(s), '
+            'regenerated 1 alias(es): small',
+            stdout,
+        )
+
+    def test_dry_run_query_count_does_not_scale_with_row_count(self):
+        for i in range(5):
+            filename = self.create_image(self.storage, f'pictures/extra{i}.jpg')
+            TestModel.objects.create(picture=filename)
+
+        with self.assertNumQueries(2):
+            self._call(dry_run=True)
+
     def test_exclude_skips_matching_field(self):
         self._call(exclude=['easy_thumbnails_tests.testmodel'])
         self.assertEqual(Thumbnail.objects.count(), 0)
