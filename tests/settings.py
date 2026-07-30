@@ -5,6 +5,7 @@ SITE_ID = 1
 
 MEDIA_ROOT = str(Path(__file__).resolve().parent)
 MEDIA_URL = '/media/'
+STATIC_URL = '/static/'
 
 DATABASE_ENGINE = 'sqlite3'
 

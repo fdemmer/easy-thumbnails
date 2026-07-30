@@ -48,14 +48,18 @@ class ListStoragesCommandTest(test.BaseTest):
     def test_same_backend_used_twice_lists_both_aliases(self):
         # Two aliases using the same backend class share a storage hash, but
         # each alias must still get its own line in the output.
+        #
+        # Django <5.0 merges a default 'staticfiles' entry back into
+        # STORAGES even when it's fully overridden, so don't assume these
+        # are the only two aliases listed.
         stdout = io.StringIO()
         call_command('thumbnail', 'storages', stdout=stdout)
-        lines = stdout.getvalue().splitlines()
-        self.assertEqual(len(lines), 2)
-        aliases = [line.split()[0] for line in lines]
-        self.assertEqual(aliases, ['default', 'other'])
-        hashes = [line.split()[1] for line in lines]
-        self.assertEqual(hashes[0], hashes[1])
+        hashes = {
+            line.split()[0]: line.split()[1] for line in stdout.getvalue().splitlines()
+        }
+        self.assertIn('default', hashes)
+        self.assertIn('other', hashes)
+        self.assertEqual(hashes['default'], hashes['other'])
 
 
 @override_settings(MEDIA_ROOT=Path(settings.MEDIA_ROOT) / 'test_media')
