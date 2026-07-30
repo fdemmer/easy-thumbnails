@@ -248,7 +248,7 @@ class ThumbnailRegenerator:
 
         if not self.dry_run:
             try:
-                fieldfile.delete_thumbnails()
+                fieldfile.delete_thumbnails(source_cache=source_cache)
                 generate_all_aliases(fieldfile, include_global=self.include_global)
             except (OSError, EasyThumbnailsError, NoSourceGenerator) as e:
                 # OSError: unreadable/corrupt source, or a storage read/write failure.

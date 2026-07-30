@@ -723,8 +723,8 @@ class ThumbnailerFieldFile(FieldFile, Thumbnailer):
           where the source cache instance is already known.
         :returns: The number of files deleted.
         """
-        source_cache = self.get_source_cache()
         deleted = 0
+        source_cache = source_cache or self.get_source_cache()
         if source_cache:
             thumbnail_storage_hash = utils.get_storage_hash(self.thumbnail_storage)
             for thumbnail_cache in source_cache.thumbnails.all():
