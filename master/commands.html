@@ -67,6 +67,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#id9">Examples</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#thumbnail-regenerate">thumbnail regenerate</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id13">Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id14">Caveats</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -362,6 +369,106 @@ without making any changes to the database.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">source_cleanup</span>
 </pre></div>
 </div>
+</section>
+</section>
+<section id="thumbnail-regenerate">
+<span id="id10"></span><h2>thumbnail regenerate<a class="headerlink" href="#thumbnail-regenerate" title="Link to this heading"></a></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">regenerate</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Finds every non-empty <code class="docutils literal notranslate"><span class="pre">ThumbnailerImageField</span></code> value across all installed
+apps, purges any cached thumbnails for that source (database rows and
+files), then regenerates every alias configured for its field, model, or
+app via <a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_ALIASES" title="easy_thumbnails.conf.Settings.THUMBNAIL_ALIASES"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_ALIASES</span></code></a> (see
+<a class="reference internal" href="usage.html#thumbnail-aliases"><span class="std std-ref">Thumbnail aliases</span></a>).</p>
+<p>This is useful after changing an alias’s options (e.g. its <code class="docutils literal notranslate"><span class="pre">size</span></code>), since
+existing thumbnails are otherwise left in place under their old computed
+filename rather than replaced, or simply to force a bulk refresh of
+thumbnails without waiting for each one to be requested individually.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only options registered as aliases are regenerated. Ad hoc option sets
+used directly via <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">%}</span></code> that don’t match a configured
+alias are purged along with everything else, but not recreated by this
+command — they will regenerate the next time they’re requested, the
+same as if you had called
+<a class="reference internal" href="ref/files.html#easy_thumbnails.files.ThumbnailerFieldFile.delete_thumbnails" title="easy_thumbnails.files.ThumbnailerFieldFile.delete_thumbnails"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_thumbnails()</span></code></a>
+yourself.</p>
+</div>
+<section id="id11">
+<h3>Options<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">--dry-run</span></code></dt><dd><p>Report what would be purged and regenerated without making any
+changes. The statistics summary is still printed at the end.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--path</span> <span class="pre">PREFIX</span></code></dt><dd><p>Restrict regeneration to source names beginning with <em>PREFIX</em>. Same
+literal string prefix matching as <a class="reference internal" href="#thumbnail-cleanup"><span class="std std-ref">thumbnail cleanup –path</span></a>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--include-global</span></code></dt><dd><p>Also regenerate project-wide aliases (aliases registered with no
+specific target), in addition to field/model/app specific ones. This
+mirrors the difference between the
+<a class="reference internal" href="usage.html#easy_thumbnails.signal_handlers.generate_aliases" title="easy_thumbnails.signal_handlers.generate_aliases"><code class="xref py py-func docutils literal notranslate"><span class="pre">generate_aliases()</span></code></a> and
+<a class="reference internal" href="usage.html#easy_thumbnails.signal_handlers.generate_aliases_global" title="easy_thumbnails.signal_handlers.generate_aliases_global"><code class="xref py py-func docutils literal notranslate"><span class="pre">generate_aliases_global()</span></code></a>
+pregeneration signal handlers. Off by default, since global aliases
+can apply broadly across a project.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--include</span> <span class="pre">SPEC</span></code></dt><dd><p>Restrict regeneration to fields matching <em>SPEC</em>. Same <code class="docutils literal notranslate"><span class="pre">app</span></code> /
+<code class="docutils literal notranslate"><span class="pre">app.model</span></code> / <code class="docutils literal notranslate"><span class="pre">app.model.field</span></code> glob syntax as <a class="reference internal" href="#thumbnail-source-files"><span class="std std-ref">thumbnail
+source_files –include</span></a>. May be repeated.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--exclude</span> <span class="pre">SPEC</span></code></dt><dd><p>Exclude fields matching <em>SPEC</em> from regeneration. Same format as
+<code class="docutils literal notranslate"><span class="pre">--include</span></code>. May be repeated.</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h3>Examples<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<p>Preview what a full regeneration would do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">regenerate</span> <span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span>
+</pre></div>
+</div>
+<p>Regenerate thumbnails for a single app only:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">regenerate</span> <span class="o">--</span><span class="n">include</span> <span class="n">myapp</span>
+</pre></div>
+</div>
+<p>Regenerate only sources under a given path, including global aliases:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">regenerate</span> <span class="o">--</span><span class="n">path</span> <span class="n">uploads</span><span class="o">/</span><span class="n">avatars</span><span class="o">/</span> <span class="o">--</span><span class="n">include</span><span class="o">-</span><span class="k">global</span>
+</pre></div>
+</div>
+</section>
+<section id="id13">
+<h3>Output<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<p>After the run, the command always prints a statistics summary:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2026</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">16</span> <span class="mi">14</span><span class="p">:</span><span class="mi">32</span> <span class="o">------------------------------</span>
+<span class="n">Sources</span> <span class="n">processed</span><span class="p">:</span>                          <span class="mi">128</span>
+<span class="n">Thumbnails</span> <span class="n">purged</span><span class="p">:</span>                          <span class="mi">140</span>
+<span class="n">Aliases</span> <span class="n">regenerated</span><span class="p">:</span>                        <span class="mi">132</span>
+<span class="n">Errors</span><span class="p">:</span>                                        <span class="mi">0</span>
+<span class="p">(</span><span class="n">Completed</span> <span class="ow">in</span> <span class="mi">3</span> <span class="n">seconds</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>“Thumbnails purged” counts previously cached thumbnails removed per
+source (including ad hoc ones with no matching alias). “Aliases
+regenerated” counts alias thumbnails created to replace them. These
+numbers can differ, since not every purged thumbnail has a
+corresponding alias, and dry runs report what <em>would</em> happen without
+making changes.</p>
+</div>
+</section>
+<section id="id14">
+<h3>Caveats<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<p><strong>A source with an error is skipped, not fatal.</strong>
+If a source image can’t be read (e.g. the file is missing, corrupted, or
+its storage is unreachable), the error is logged to stderr and counted,
+and the command continues with the next source rather than aborting.</p>
+<p><strong>No signals are fired for the purge step.</strong>
+Thumbnails are removed directly via
+<a class="reference internal" href="ref/files.html#easy_thumbnails.files.ThumbnailerFieldFile.delete_thumbnails" title="easy_thumbnails.files.ThumbnailerFieldFile.delete_thumbnails"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_thumbnails()</span></code></a>, not
+through model <code class="docutils literal notranslate"><span class="pre">delete()</span></code>, so no <code class="docutils literal notranslate"><span class="pre">pre_delete</span></code>/<code class="docutils literal notranslate"><span class="pre">post_delete</span></code> signal
+handlers run for the removed <code class="docutils literal notranslate"><span class="pre">Thumbnail</span></code> records.</p>
 </section>
 </section>
 </section>
