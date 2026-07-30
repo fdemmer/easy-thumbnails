@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.core.files.storage import storages
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -11,6 +12,8 @@ from django.db import models as django_models
 from django.test import override_settings
 from django.utils import timezone
 
+from easy_thumbnails.alias import aliases
+from easy_thumbnails.conf import settings as thumbnail_settings
 from easy_thumbnails.fields import ThumbnailerField
 from easy_thumbnails.files import get_thumbnailer
 from easy_thumbnails.management import (
@@ -487,6 +490,157 @@ class ThumbnailSourceCleanupCommandTest(test.BaseTest):
         _, stderr = self._call()
         self.assertIn('Source records', stderr)
         self.assertIn('1', stderr)
+
+
+class ThumbnailRegenerateCommandTest(test.BaseTest):
+    def setUp(self):
+        super().setUp()
+        self.storage = test.TemporaryStorage()
+
+        # Point the only ThumbnailerImageField in the test models at our
+        # temporary storage, as done in tests/test_aliases.py.
+        self.field = TestModel._meta.get_field('picture')
+        self._original_storage = self.field.storage
+        self._original_thumbnail_storage = self.field.thumbnail_storage
+        self.field.storage = self.storage
+        self.field.thumbnail_storage = self.storage
+
+        self._original_aliases = aliases._aliases
+        thumbnail_settings.THUMBNAIL_ALIASES = {
+            'easy_thumbnails_tests.TestModel.picture': {'small': {'size': (20, 20)}},
+        }
+        aliases._aliases = {}
+        aliases.populate_from_settings()
+
+        filename = self.create_image(self.storage, 'pictures/test.jpg')
+        self.instance = TestModel.objects.create(picture=filename)
+
+    def tearDown(self):
+        aliases._aliases = self._original_aliases
+        self.field.storage = self._original_storage
+        self.field.thumbnail_storage = self._original_thumbnail_storage
+        self.storage.delete_temporary_storage()
+        super().tearDown()
+
+    def _call(self, **kwargs):
+        stdout, stderr = io.StringIO(), io.StringIO()
+        call_command('thumbnail', 'regenerate', stdout=stdout, stderr=stderr, **kwargs)
+        return stdout.getvalue(), stderr.getvalue()
+
+    def test_creates_alias_thumbnails_for_source_with_none_yet(self):
+        self.assertEqual(Thumbnail.objects.count(), 0)
+        self._call()
+        self.assertEqual(Thumbnail.objects.count(), 1)
+        thumbnail = self.instance.picture.get_thumbnail(
+            {'size': (20, 20), 'ALIAS': 'small'}, generate=False
+        )
+        self.assertIsNotNone(thumbnail)
+
+    def test_purges_stale_thumbnail_before_regenerating(self):
+        # Seed a cached thumbnail under the 'small' alias name, but with a
+        # size that no longer matches the currently configured alias.
+        stale = self.instance.picture.generate_thumbnail(
+            {'size': (50, 50), 'ALIAS': 'small'}
+        )
+        self.instance.picture.save_thumbnail(stale)
+        self.assertEqual(Thumbnail.objects.count(), 1)
+
+        self._call()
+
+        # Only the freshly generated thumbnail (matching the current alias
+        # options) should remain cached - the stale entry was purged first.
+        self.assertEqual(Thumbnail.objects.count(), 1)
+        current = self.instance.picture.get_thumbnail(
+            {'size': (20, 20), 'ALIAS': 'small'}, generate=False
+        )
+        self.assertIsNotNone(current)
+
+    def test_dry_run_makes_no_changes(self):
+        stdout, _ = self._call(dry_run=True, verbosity=2)
+        self.assertIn('Dry run', stdout)
+        self.assertEqual(Thumbnail.objects.count(), 0)
+
+    def test_exclude_skips_matching_field(self):
+        self._call(exclude=['easy_thumbnails_tests.testmodel'])
+        self.assertEqual(Thumbnail.objects.count(), 0)
+
+    def test_include_no_match_skips_everything(self):
+        self._call(include=['auth'])
+        self.assertEqual(Thumbnail.objects.count(), 0)
+
+    def test_path_filter_restricts_scope(self):
+        other_filename = self.create_image(self.storage, 'other/test2.jpg')
+        TestModel.objects.create(picture=other_filename)
+
+        self._call(path='pictures/')
+
+        self.assertEqual(Thumbnail.objects.count(), 1)
+        source = Source.objects.get()
+        self.assertEqual(source.name, 'pictures/test.jpg')
+
+    def test_include_global_also_regenerates_global_aliases(self):
+        thumbnail_settings.THUMBNAIL_ALIASES = {
+            '': {'tiny': {'size': (5, 5)}},
+            'easy_thumbnails_tests.TestModel.picture': {'small': {'size': (20, 20)}},
+        }
+        aliases._aliases = {}
+        aliases.populate_from_settings()
+
+        self._call()
+        self.assertEqual(Thumbnail.objects.count(), 1)
+
+        self._call(include_global=True)
+        self.assertEqual(Thumbnail.objects.count(), 2)
+
+    def test_missing_source_file_counts_error_and_continues(self):
+        other_filename = self.create_image(self.storage, 'pictures/missing.jpg')
+        TestModel.objects.create(picture=other_filename)
+        self.storage.delete(other_filename)
+
+        stdout, stderr = self._call()
+
+        self.assertIn('Could not regenerate', stderr)
+        self.assertIn('missing.jpg', stderr)
+        # The still-present source is processed successfully regardless.
+        self.assertEqual(
+            Thumbnail.objects.filter(source__name='pictures/test.jpg').count(), 1
+        )
+        self.assertIn(f'{"Errors:":<40} {1:>7}', stdout)
+
+    def test_corrupt_source_file_counts_error_and_continues(self):
+        # Not valid image data - PIL (and VIL) will fail to decode it, so all
+        # source generators are exhausted and NoSourceGenerator is raised.
+        corrupt_filename = self.storage.save(
+            'pictures/corrupt.jpg', ContentFile(b'not an image')
+        )
+        TestModel.objects.create(picture=corrupt_filename)
+
+        stdout, stderr = self._call()
+
+        self.assertIn('Could not regenerate', stderr)
+        self.assertIn('corrupt.jpg', stderr)
+        # The still-valid source is processed successfully regardless.
+        self.assertEqual(
+            Thumbnail.objects.filter(source__name='pictures/test.jpg').count(), 1
+        )
+        self.assertIn(f'{"Errors:":<40} {1:>7}', stdout)
+
+    def test_stats_output_format(self):
+        # First run: nothing cached yet, so nothing to purge.
+        stdout, _ = self._call()
+        self.assertIn(f'{"Sources processed:":<40} {1:>7}', stdout)
+        self.assertIn(f'{"Thumbnails purged:":<40} {0:>7}', stdout)
+        self.assertIn(f'{"Aliases regenerated:":<40} {1:>7}', stdout)
+        self.assertIn(f'{"Errors:":<40} {0:>7}', stdout)
+        self.assertIn('Completed in', stdout)
+
+        # Second run: the thumbnail cached by the first run gets purged
+        # before the alias is regenerated.
+        stdout, _ = self._call()
+        self.assertIn(f'{"Sources processed:":<40} {1:>7}', stdout)
+        self.assertIn(f'{"Thumbnails purged:":<40} {1:>7}', stdout)
+        self.assertIn(f'{"Aliases regenerated:":<40} {1:>7}', stdout)
+        self.assertIn(f'{"Errors:":<40} {0:>7}', stdout)
 
 
 class ManagementTestBase(test.BaseTest):
