@@ -10,10 +10,14 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 from django.utils import timezone
 
+from easy_thumbnails.alias import aliases
 from easy_thumbnails.compat import batched
 from easy_thumbnails.conf import settings
+from easy_thumbnails.engine import NoSourceGenerator
+from easy_thumbnails.exceptions import EasyThumbnailsError
 from easy_thumbnails.fields import ThumbnailerImageField
-from easy_thumbnails.models import Source
+from easy_thumbnails.files import generate_all_aliases
+from easy_thumbnails.models import Source, Thumbnail
 from easy_thumbnails.storage import thumbnail_default_storage
 from easy_thumbnails.utils import (
     get_storage_hash,
@@ -200,6 +204,143 @@ class ThumbnailCollectionCleaner:
         self.stdout.write(f'(Completed in {self.execution_time} seconds)\n')
 
 
+class ThumbnailRegenerator:
+    """
+    Regenerate configured alias thumbnails for existing source files.
+
+    Purges any cached thumbnails for each source, then regenerates every
+    alias configured for its field, model, or app (and optionally
+    project-wide aliases). Ad hoc option sets used directly via
+    ``{% thumbnail %}`` that don't match a configured alias are simply
+    purged, not regenerated - they'll be recreated lazily the next time
+    they're requested.
+    """
+
+    def __init__(self, stdout, stderr, dry_run=True, verbosity=1, include_global=False):
+        self.stdout = stdout
+        self.stderr = stderr
+        self.dry_run = dry_run
+        self.verbosity = verbosity
+        self.include_global = include_global
+        self.counts = Counter()
+        self.execution_time = None
+
+    def _field_query(self, model, field, path):
+        query = (
+            model.objects.filter(q_has_value(field))
+            .select_related(None)
+            .only('pk', field.name)
+        )
+        if path:
+            query = query.filter(**{f'{field.name}__startswith': path})
+        return query
+
+    def _iter_fieldfiles(self, pairs, path):
+        for model, field in pairs:
+            query = self._field_query(model, field, path)
+            for instance in queryset_iterator(query):
+                fieldfile = getattr(instance, field.name)
+                if fieldfile:
+                    yield fieldfile
+
+    def _estimate(self, pairs, path):
+        """
+        Report dry-run totals per (model, field) using aggregate queries,
+        instead of walking (and querying for) every matching row.
+        """
+        for model, field in pairs:
+            names = self._field_query(model, field, path).values_list(
+                field.name, flat=True
+            )
+            processed_count = names.count()
+            if not processed_count:
+                continue
+
+            source_storage_hash = get_storage_hash(field.storage)
+            thumbnail_storage_hash = get_storage_hash(
+                field.thumbnail_storage or thumbnail_default_storage
+            )
+            purge_count = Thumbnail.objects.filter(
+                storage_hash=thumbnail_storage_hash,
+                source__storage_hash=source_storage_hash,
+                source__name__in=names,
+            ).count()
+
+            target = f'{model._meta.app_label}.{model.__name__}.{field.name}'
+            resolved_aliases = aliases.all(target, include_global=self.include_global)
+
+            if self.verbosity > 1:
+                alias_names = ', '.join(resolved_aliases) if resolved_aliases else 'none'
+                self.stdout.write(
+                    f'{target}: {processed_count} source(s), '
+                    f'purge {purge_count} cached thumbnail(s), '
+                    f'regenerate {len(resolved_aliases)} alias(es): {alias_names}'
+                )
+
+            self.counts['sources_processed'] += processed_count
+            self.counts['thumbnails_purged'] += purge_count
+            self.counts['aliases_regenerated'] += processed_count * len(resolved_aliases)
+
+    def _process(self, fieldfile):
+        source_cache = fieldfile.get_source_cache()
+        resolved_aliases = aliases.all(fieldfile, include_global=self.include_global)
+
+        try:
+            purge_count = fieldfile.delete_thumbnails(source_cache=source_cache)
+            generate_all_aliases(fieldfile, include_global=self.include_global)
+        except (OSError, EasyThumbnailsError, NoSourceGenerator) as e:
+            # OSError: unreadable/corrupt source, or a storage read/write failure.
+            # EasyThumbnailsError/NoSourceGenerator: the source generators couldn't
+            # produce an image at all.
+            # Third-party remote storage backends may raise their own non-OSError
+            # exceptions for I/O failures; those are intentionally not
+            # caught here and will abort the run.
+            self.stderr.write(f'Could not regenerate {fieldfile.name}: {e}')
+            self.counts['errors'] += 1
+            return
+
+        if self.verbosity > 1:
+            alias_names = ', '.join(resolved_aliases) if resolved_aliases else 'none'
+            self.stdout.write(
+                f'{fieldfile.name}: '
+                f'purged {purge_count} cached thumbnail(s), '
+                f'regenerated {len(resolved_aliases)} alias(es): {alias_names}'
+            )
+
+        self.counts['sources_processed'] += 1
+        self.counts['thumbnails_purged'] += purge_count
+        self.counts['aliases_regenerated'] += len(resolved_aliases)
+
+    def regenerate(self, pairs, path=None):
+        time_start = time.time()
+
+        if self.dry_run:
+            self.stdout.write('Dry run...')
+            self._estimate(pairs, path)
+        else:
+            for fieldfile in self._iter_fieldfiles(pairs, path):
+                self._process(fieldfile)
+
+        self.execution_time = round(time.time() - time_start)
+
+    def print_stats(self):
+        """
+        Print statistics about the regeneration performed.
+        """
+        self.stdout.write(f'{timezone.now().strftime("%Y-%m-%d %H:%M "):-<48}')
+        self.stdout.write(
+            f'{"Sources processed:":<40} {self.counts["sources_processed"]:>7}'
+        )
+        self.stdout.write(
+            f'{"Thumbnails purged:":<40} {self.counts["thumbnails_purged"]:>7}'
+        )
+        self.stdout.write(
+            f'{"Aliases regenerated:":<40} {self.counts["aliases_regenerated"]:>7}'
+        )
+        self.stdout.write(f'{"Errors:":<40} {self.counts["errors"]:>7}')
+        self.stdout.write(f'(Completed in {self.execution_time} seconds)\n')
+
+
 def _collect_fields(field_class=ThumbnailerImageField):
     """
     Yield (model, field) pairs for every concrete model field of `field_class`.
@@ -335,6 +476,58 @@ class Command(BaseCommand):
             dest='dry_run',
             default=False,
             help='Preview which Source records would be deleted without deleting them.',
+        )
+
+        regenerate_parser = subparsers.add_parser(
+            'regenerate',
+            help='Purge and regenerate configured alias thumbnails for existing sources.',
+        )
+        regenerate_parser.set_defaults(method=self.do_regenerate)
+        regenerate_parser.add_argument(
+            '--dry-run',
+            action='store_true',
+            dest='dry_run',
+            default=False,
+            help='Report what would be purged/regenerated without making any changes.',
+        )
+        regenerate_parser.add_argument(
+            '--path',
+            action='store',
+            dest='path',
+            type=str,
+            help='Restrict regeneration to source names starting with this path.',
+        )
+        regenerate_parser.add_argument(
+            '--include-global',
+            action='store_true',
+            dest='include_global',
+            default=False,
+            help=(
+                'Also regenerate project-wide aliases, not just field/model/app '
+                'specific ones.'
+            ),
+        )
+        regenerate_parser.add_argument(
+            '--include',
+            dest='include',
+            metavar='SPEC',
+            action='append',
+            default=[],
+            help=(
+                'Restrict regeneration to "app" or "app.model" or "app.model.field". '
+                'May be repeated.'
+            ),
+        )
+        regenerate_parser.add_argument(
+            '--exclude',
+            dest='exclude',
+            metavar='SPEC',
+            action='append',
+            default=[],
+            help=(
+                'Exclude "app" or "app.model" or "app.model.field" from regeneration. '
+                'May be repeated.'
+            ),
         )
 
     def add_arguments(self, parser):
@@ -484,3 +677,16 @@ class Command(BaseCommand):
 
         action = 'Would delete' if dry_run else 'Deleted'
         self.stderr.write(f'{action} {deleted} Source records.')
+
+    def do_regenerate(self, *args, **options):
+        pairs = self._resolve_field_pairs(options)
+
+        regenerator = ThumbnailRegenerator(
+            self.stdout,
+            self.stderr,
+            dry_run=options.get('dry_run', False),
+            verbosity=int(options.get('verbosity', 1)),
+            include_global=options.get('include_global', False),
+        )
+        regenerator.regenerate(pairs, path=options.get('path'))
+        regenerator.print_stats()

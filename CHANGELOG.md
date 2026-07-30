@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add `thumbnail regenerate` subcommand: purges cached thumbnails for all
+  `ThumbnailerImageField` sources and regenerates their configured aliases.
+  Supports `--dry-run`, `--path`, `--include-global`, `--include` and
+  `--exclude`. Errors from individual sources are reported without aborting
+  the run.
 - Fix no-op `exclude` filter for empty/null `FileField` values in the
   `thumbnail` management command.
 

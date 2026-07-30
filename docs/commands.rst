@@ -273,3 +273,111 @@ Preview what would be removed::
 Remove all orphaned ``Source`` records::
 
     python manage.py thumbnail source_cleanup
+
+.. _thumbnail_regenerate:
+
+thumbnail regenerate
+=====================
+
+**Usage**::
+
+    python manage.py thumbnail regenerate [options]
+
+Finds every non-empty ``ThumbnailerImageField`` value across all installed
+apps, purges any cached thumbnails for that source (database rows and
+files), then regenerates every alias configured for its field, model, or
+app via :attr:`~easy_thumbnails.conf.Settings.THUMBNAIL_ALIASES` (see
+:ref:`Thumbnail aliases <thumbnail-aliases>`).
+
+This is useful after changing an alias's options (e.g. its ``size``), since
+existing thumbnails are otherwise left in place under their old computed
+filename rather than replaced, or simply to force a bulk refresh of
+thumbnails without waiting for each one to be requested individually.
+
+.. note::
+   Only options registered as aliases are regenerated. Ad hoc option sets
+   used directly via ``{% thumbnail %}`` that don't match a configured
+   alias are purged along with everything else, but not recreated by this
+   command — they will regenerate the next time they're requested, the
+   same as if you had called
+   :meth:`~easy_thumbnails.files.ThumbnailerFieldFile.delete_thumbnails`
+   yourself.
+
+Options
+-------
+
+``--dry-run``
+    Report what would be purged and regenerated without making any
+    changes. The statistics summary is still printed at the end.
+
+``--path PREFIX``
+    Restrict regeneration to source names beginning with *PREFIX*. Same
+    literal string prefix matching as :ref:`thumbnail cleanup --path
+    <thumbnail_cleanup>`.
+
+``--include-global``
+    Also regenerate project-wide aliases (aliases registered with no
+    specific target), in addition to field/model/app specific ones. This
+    mirrors the difference between the
+    :func:`~easy_thumbnails.signal_handlers.generate_aliases` and
+    :func:`~easy_thumbnails.signal_handlers.generate_aliases_global`
+    pregeneration signal handlers. Off by default, since global aliases
+    can apply broadly across a project.
+
+``--include SPEC``
+    Restrict regeneration to fields matching *SPEC*. Same ``app`` /
+    ``app.model`` / ``app.model.field`` glob syntax as :ref:`thumbnail
+    source_files --include <thumbnail_source_files>`. May be repeated.
+
+``--exclude SPEC``
+    Exclude fields matching *SPEC* from regeneration. Same format as
+    ``--include``. May be repeated.
+
+Examples
+--------
+
+Preview what a full regeneration would do::
+
+    python manage.py thumbnail regenerate --dry-run
+
+Regenerate thumbnails for a single app only::
+
+    python manage.py thumbnail regenerate --include myapp
+
+Regenerate only sources under a given path, including global aliases::
+
+    python manage.py thumbnail regenerate --path uploads/avatars/ --include-global
+
+Output
+------
+
+After the run, the command always prints a statistics summary::
+
+    2026-04-16 14:32 ------------------------------
+    Sources processed:                          128
+    Thumbnails purged:                          140
+    Aliases regenerated:                        132
+    Errors:                                        0
+    (Completed in 3 seconds)
+
+.. note::
+   "Thumbnails purged" counts previously cached thumbnails removed per
+   source (including ad hoc ones with no matching alias). "Aliases
+   regenerated" counts alias thumbnails created to replace them. These
+   numbers can differ, since not every purged thumbnail has a
+   corresponding alias, and dry runs report what *would* happen without
+   making changes.
+
+Caveats
+-------
+
+**A source with an error is skipped, not fatal.**
+If a source image can't be read (e.g. the file is missing, corrupted, or
+its storage is unreachable), the error is logged to stderr and counted,
+and the command continues with the next source rather than aborting.
+
+**No signals are fired for the purge step.**
+Thumbnails are removed directly via
+:meth:`~easy_thumbnails.files.ThumbnailerFieldFile.delete_thumbnails`, not
+through model ``delete()``, so no ``pre_delete``/``post_delete`` signal
+handlers run for the removed ``Thumbnail`` records.
