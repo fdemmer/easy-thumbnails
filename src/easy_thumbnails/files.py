@@ -95,7 +95,7 @@ def generate_all_aliases(fieldfile, include_global):
             thumbnailer.get_thumbnail(options)
 
 
-def database_get_image_dimensions(file, close=False, dimensions=None):
+def database_get_image_dimensions(file, close=False):
     """
     Returns the (width, height) of an image, given ThumbnailFile.  Set
     'close' to True to close the file at the end if it is initially in an open
@@ -105,8 +105,6 @@ def database_get_image_dimensions(file, close=False, dimensions=None):
     in the db.
     """
     storage_hash = utils.get_storage_hash(file.storage)
-    dimensions = None
-    dimensions_cache = None
     try:
         thumbnail = models.Thumbnail.objects.select_related('dimensions').get(
             storage_hash=storage_hash, name=file.name
