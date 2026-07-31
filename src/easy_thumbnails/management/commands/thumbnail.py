@@ -224,9 +224,8 @@ class ThumbnailRegenerator:
 
     def _field_query(self, model, field, path):
         query = (
-            model.objects.select_related(None)
-            .exclude(**{field.name: ''})
-            .exclude(**{f'{field.name}__isnull': True})
+            _non_empty_field_query(model, field)
+            .select_related(None)
             .only('pk', field.name)
         )
         if path:
@@ -381,6 +380,16 @@ def get_storages():
 
 def build_storage_hash_map():
     return {storage_hash: alias for alias, _, storage_hash in get_storages()}
+
+
+def _non_empty_field_query(model, field):
+    """
+    Return a queryset of `model` rows where `field` has an actual value
+    (excludes both the empty string and NULL).
+    """
+    return model.objects.exclude(**{field.name: ''}).exclude(
+        **{f'{field.name}__isnull': True}
+    )
 
 
 def _collect_fields(field_class=ThumbnailerImageField):
@@ -616,10 +625,7 @@ class Command(BaseCommand):
         if options['summary']:
             total = 0
             for model, field in pairs:
-                query = model.objects.exclude(**{field.name: ''}).exclude(
-                    **{f'{field.name}__isnull': True}
-                )
-                count = query.count()
+                count = _non_empty_field_query(model, field).count()
                 total += count
                 self.stdout.write(f'{count:>8} {model._meta.label}.{field.name}')
             self.stderr.write(f'{total:>8} total')
@@ -645,13 +651,11 @@ class Command(BaseCommand):
         for model, field in pairs:
             storage_hash = get_storage_hash(field.storage)
             for name in (
-                model.objects.exclude(**{field.name: ''})
-                .exclude(**{f'{field.name}__isnull': True})
+                _non_empty_field_query(model, field)
                 .values_list(field.name, flat=True)
                 .iterator()
             ):
-                if name:
-                    active_sources.add((storage_hash, name))
+                active_sources.add((storage_hash, name))
 
         self.stderr.write(f'Found {len(active_sources)} active source file paths.')
 
