@@ -225,7 +225,8 @@ class ThumbnailRegenerator:
     def _field_query(self, model, field, path):
         query = (
             model.objects.select_related(None)
-            .exclude(**{field.name: '', f'{field.name}__isnull': True})
+            .exclude(**{field.name: ''})
+            .exclude(**{f'{field.name}__isnull': True})
             .only('pk', field.name)
         )
         if path:
@@ -615,11 +616,8 @@ class Command(BaseCommand):
         if options['summary']:
             total = 0
             for model, field in pairs:
-                query = model.objects.exclude(
-                    **{
-                        field.name: '',
-                        f'{field.name}__isnull': True,
-                    }
+                query = model.objects.exclude(**{field.name: ''}).exclude(
+                    **{f'{field.name}__isnull': True}
                 )
                 count = query.count()
                 total += count
@@ -647,7 +645,8 @@ class Command(BaseCommand):
         for model, field in pairs:
             storage_hash = get_storage_hash(field.storage)
             for name in (
-                model.objects.exclude(**{field.name: '', f'{field.name}__isnull': True})
+                model.objects.exclude(**{field.name: ''})
+                .exclude(**{f'{field.name}__isnull': True})
                 .values_list(field.name, flat=True)
                 .iterator()
             ):

@@ -405,6 +405,13 @@ class ThumbnailSourceFilesCommandTest(test.BaseTest):
         stdout, _ = self._call(summary=True)
         self.assertIn('easy_thumbnails_tests.TestModel.picture', stdout)
 
+    def test_summary_mode_excludes_empty_and_null_values(self):
+        TestModel.objects.create(picture='')
+        TestModel.objects.create(picture=None)
+        TestModel.objects.create(picture='pictures/p.jpg')
+        stdout, _ = self._call(summary=True)
+        self.assertIn(f'{1:>8} easy_thumbnails_tests.TestModel.picture', stdout)
+
     def test_stderr_reports_field_and_model_counts(self):
         _, stderr = self._call()
         self.assertIn('fields', stderr)
@@ -478,6 +485,16 @@ class ThumbnailSourceCleanupCommandTest(test.BaseTest):
         self._call()
         self.assertEqual(Source.objects.count(), 1)
         self.assertTrue(Source.objects.filter(name='pictures/keep.jpg').exists())
+
+    def test_ignores_rows_with_empty_or_null_field_value(self):
+        # Rows without a source file must not count as "active" - otherwise
+        # an orphaned Source named '' would be incorrectly preserved.
+        TestModel.objects.create(picture='')
+        TestModel.objects.create(picture=None)
+        self._make_source('')
+        self.assertEqual(Source.objects.count(), 1)
+        self._call()
+        self.assertEqual(Source.objects.count(), 0)
 
     def test_dry_run_prints_but_does_not_delete(self):
         TestModel.objects.create(picture='pictures/keep.jpg')
@@ -585,6 +602,22 @@ class ThumbnailRegenerateCommandTest(test.BaseTest):
         self.assertIn(f'{"Sources processed:":<40} {1:>7}', real_stdout)
         self.assertIn(f'{"Thumbnails purged:":<40} {1:>7}', real_stdout)
         self.assertIn(f'{"Aliases regenerated:":<40} {1:>7}', real_stdout)
+
+    def test_dry_run_and_real_run_ignore_rows_with_empty_or_null_field(self):
+        # Rows without a source file must not be counted by either code
+        # path - `_estimate` (dry-run) and `_iter_fieldfiles` (real run) need
+        # to agree, otherwise dry-run stats lie about what a real run does.
+        TestModel.objects.create(picture='')
+        TestModel.objects.create(picture=None)
+
+        dry_stdout, _ = self._call(dry_run=True)
+        self.assertIn(f'{"Sources processed:":<40} {1:>7}', dry_stdout)
+        self.assertIn(f'{"Aliases regenerated:":<40} {1:>7}', dry_stdout)
+
+        real_stdout, _ = self._call()
+        self.assertIn(f'{"Sources processed:":<40} {1:>7}', real_stdout)
+        self.assertIn(f'{"Aliases regenerated:":<40} {1:>7}', real_stdout)
+        self.assertEqual(Thumbnail.objects.count(), 1)
 
     def test_dry_run_verbosity_shows_per_field_summary(self):
         stdout, _ = self._call(dry_run=True, verbosity=2)
