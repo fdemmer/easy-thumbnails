@@ -586,6 +586,28 @@ class Command(BaseCommand):
         with handle_broken_pipe():
             method(*args, **options)
 
+    def _resolve_field_pairs(self, options):
+        """
+        Validate --include/--exclude specs, resolve the (model, field) pairs
+        they select, and report how many were found.
+        """
+        include = options['include']
+        exclude = options['exclude']
+        for spec in include + exclude:
+            if not 1 <= len(spec.split('.')) <= 3:
+                raise CommandError(f'Invalid filter spec: {spec!r}')
+
+        pairs = [
+            (model, field)
+            for model, field in _collect_fields()
+            if _matches(model, field, include)
+            and (not exclude or not _matches(model, field, exclude))
+        ]
+        self.stderr.write(
+            f'Found {len(pairs)} fields in {len({m for m, _ in pairs})} models.'
+        )
+        return pairs
+
     def do_list_storages(self, *args, **options):
         for alias, class_name, storage_hash in get_storages():
             self.stdout.write(f'{alias:<16} {storage_hash} {class_name}')
@@ -605,21 +627,7 @@ class Command(BaseCommand):
         tcc.print_stats()
 
     def do_source_files(self, *args, **options):
-        include = options['include']
-        exclude = options['exclude']
-        for spec in include + exclude:
-            if not 1 <= len(spec.split('.')) <= 3:
-                raise CommandError(f'Invalid filter spec: {spec!r}')
-
-        pairs = [
-            (model, field)
-            for model, field in _collect_fields()
-            if _matches(model, field, include)
-            and (not exclude or not _matches(model, field, exclude))
-        ]
-        self.stderr.write(
-            f'Found {len(pairs)} fields in {len({m for m, _ in pairs})} models.'
-        )
+        pairs = self._resolve_field_pairs(options)
         self.stderr.write('Counting non-empty values per FileField...')
 
         if options['summary']:
@@ -679,21 +687,7 @@ class Command(BaseCommand):
         self.stderr.write(f'{action} {deleted} Source records.')
 
     def do_regenerate(self, *args, **options):
-        include = options['include']
-        exclude = options['exclude']
-        for spec in include + exclude:
-            if not 1 <= len(spec.split('.')) <= 3:
-                raise CommandError(f'Invalid filter spec: {spec!r}')
-
-        pairs = [
-            (model, field)
-            for model, field in _collect_fields()
-            if _matches(model, field, include)
-            and (not exclude or not _matches(model, field, exclude))
-        ]
-        self.stderr.write(
-            f'Found {len(pairs)} fields in {len({m for m, _ in pairs})} models.'
-        )
+        pairs = self._resolve_field_pairs(options)
 
         regenerator = ThumbnailRegenerator(
             self.stdout,
