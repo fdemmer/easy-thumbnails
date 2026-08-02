@@ -1,14 +1,9 @@
 import datetime as dt
 import fnmatch
-import os
-import sys
 import time
 from collections import Counter
-from collections.abc import Generator
-from contextlib import contextmanager
 from pathlib import Path
 
-from django.apps import apps
 from django.core.files.storage import storages
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
@@ -18,11 +13,15 @@ from easy_thumbnails.compat import batched
 from easy_thumbnails.conf import settings
 from easy_thumbnails.engine import NoSourceGenerator
 from easy_thumbnails.exceptions import EasyThumbnailsError
-from easy_thumbnails.fields import ThumbnailerImageField
 from easy_thumbnails.files import generate_all_aliases
 from easy_thumbnails.models import Source, Thumbnail
 from easy_thumbnails.storage import thumbnail_default_storage
-from easy_thumbnails.utils import get_storage_hash
+from easy_thumbnails.utils import (
+    collect_fields,
+    get_storage_hash,
+    handle_broken_pipe,
+    queryset_iterator,
+)
 
 
 class ThumbnailCollectionCleaner:
@@ -223,7 +222,7 @@ class ThumbnailRegenerator:
 
     def _field_query(self, model, field, path):
         query = (
-            _non_empty_field_query(model, field)
+            query_non_empty_field(model, field)
             .select_related(None)
             .only('pk', field.name)
         )
@@ -337,39 +336,6 @@ class ThumbnailRegenerator:
         self.stdout.write(f'(Completed in {self.execution_time} seconds)\n')
 
 
-def queryset_iterator(query, chunk_size=1000, order_by='pk'):
-    # https://use-the-index-luke.com/sql/partial-results/fetch-next-page
-    threshold = new_threshold = 0
-    if order_by is not None:
-        query = query.order_by(order_by)
-    while True:
-        chunk = query.filter(pk__gt=threshold)[:chunk_size].iterator()
-        for row in chunk:
-            new_threshold = row.pk
-            yield row
-        if threshold == new_threshold:
-            break
-        threshold = new_threshold
-
-
-@contextmanager
-def handle_broken_pipe() -> Generator[None, None, None]:
-    """
-    Prevent BrokenPipeError when the output stream is closed early, such as
-    when piping to head.
-
-    https://adamj.eu/tech/2025/07/20/python-fix-brokenpipeerror/
-    """
-    try:
-        yield
-        sys.stdout.flush()
-    except BrokenPipeError:
-        # Python flushes standard streams on exit; redirect remaining output
-        # to devnull to avoid another BrokenPipeError at shutdown
-        devnull = os.open(os.devnull, os.O_WRONLY)
-        os.dup2(devnull, sys.stdout.fileno())
-
-
 def get_storages():
     return [
         (alias, type(storages[alias]).__name__, get_storage_hash(storages[alias]))
@@ -381,32 +347,14 @@ def build_storage_hash_map():
     return {storage_hash: alias for alias, _, storage_hash in get_storages()}
 
 
-def _non_empty_field_query(model, field):
+def query_non_empty_field(model, field):
     """
     Return a queryset of `model` rows where `field` has an actual value
     (excludes both the empty string and NULL).
     """
-    return (
-        model.objects
-        .exclude(**{field.name: ''})
-        .exclude(**{f'{field.name}__isnull': True})
+    return model.objects.exclude(**{field.name: ''}).exclude(
+        **{f'{field.name}__isnull': True}
     )
-
-
-def collect_fields(field_class=ThumbnailerImageField):
-    """
-    Yield (model, field) pairs for every concrete model field of `field_class`.
-
-    Walks all installed apps and their non-proxy, managed models, in
-    alphabetical order by app label, model, and field name.
-    """
-    for app_config in sorted(apps.get_app_configs(), key=lambda a: a.label):
-        for model in app_config.get_models():
-            if model._meta.proxy or not model._meta.managed:
-                continue
-            for field in sorted(model._meta.get_fields(), key=lambda f: f.name):
-                if isinstance(field, field_class):
-                    yield model, field
 
 
 def _matches(model, field, specs):
@@ -656,17 +604,20 @@ class Command(BaseCommand):
         total = 0
         if options['summary']:
             for model, field in pairs:
-                count = _non_empty_field_query(model, field).count()
+                count = query_non_empty_field(model, field).count()
                 total += count
                 self.stdout.write(f'{count:>8} {model._meta.label}.{field.name}')
             self.stderr.write(f'{total:>8} total')
 
         else:
             for model, field in pairs:
-                for path in model.objects.values_list(field.name, flat=True).iterator():
+                for path in (
+                    query_non_empty_field(model, field)
+                    .values_list(field.name, flat=True)
+                    .iterator()
+                ):
                     total += 1
-                    if path:
-                        self.stdout.write(path)
+                    self.stdout.write(path)
             self.stderr.write(f'{total:>8} total')
 
     def do_source_cleanup(self, *args, **options):
@@ -692,12 +643,12 @@ class Command(BaseCommand):
         active_sources = set()
         for model, field in pairs:
             storage_hash = get_storage_hash(field.storage)
-            for name in (
-                _non_empty_field_query(model, field)
+            for path in (
+                query_non_empty_field(model, field)
                 .values_list(field.name, flat=True)
                 .iterator()
             ):
-                active_sources.add((storage_hash, name))
+                active_sources.add((storage_hash, path))
 
         self.stderr.write(
             f'Found {len(active_sources)} file paths in ThumbnailerImageFields.'
@@ -712,7 +663,7 @@ class Command(BaseCommand):
 
         deleted = 0
         if options['dry_run']:
-            self.stderr.write(f'Would delete the following Source records...')
+            self.stderr.write('Would delete the following Source records...')
             for source in orphans:
                 self.stdout.write(source.name)
                 deleted += 1

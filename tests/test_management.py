@@ -22,9 +22,9 @@ from easy_thumbnails.management import (
     delete_thumbnails,
     thumbnails_for_file,
 )
-from easy_thumbnails.management.commands.thumbnail import collect_fields, _matches
+from easy_thumbnails.management.commands.thumbnail import _matches
 from easy_thumbnails.models import Source, Thumbnail
-from easy_thumbnails.utils import get_storage_hash
+from easy_thumbnails.utils import collect_fields, get_storage_hash
 from tests import utils as test
 from tests.models import TestModel
 

@@ -1,14 +1,20 @@
 import hashlib
 import inspect
 import math
+import os
+import sys
+from collections.abc import Generator
+from contextlib import contextmanager
 
 from PIL import Image
 
+from django.apps import apps
 from django.utils import timezone
 from django.utils.functional import LazyObject
 from django.utils.module_loading import import_string
 
 from easy_thumbnails.conf import settings
+from easy_thumbnails.fields import ThumbnailerImageField
 
 
 def image_entropy(im):
@@ -168,3 +174,62 @@ def sha1_not_used_for_security(data):
     systems will raise an exception when used.
     """
     return hashlib.new('sha1', data, usedforsecurity=False)
+
+
+def queryset_iterator(query, chunk_size=1000, order_by='pk'):
+    """
+    Iterate over `query` in chunks, avoiding the cost of a large OFFSET.
+
+    Paginates using a `pk__gt` keyset cursor instead of OFFSET/LIMIT: each
+    chunk of `chunk_size` rows is fetched ordered by `order_by` (defaults to
+    `pk`; pass None to keep the queryset's own ordering), and the last row's
+    pk becomes the cursor for the next chunk. Iteration stops once a chunk
+    doesn't advance the cursor.
+
+    https://use-the-index-luke.com/sql/partial-results/fetch-next-page
+    """
+    threshold = new_threshold = 0
+    if order_by is not None:
+        query = query.order_by(order_by)
+    while True:
+        chunk = query.filter(pk__gt=threshold)[:chunk_size].iterator()
+        for row in chunk:
+            new_threshold = row.pk
+            yield row
+        if threshold == new_threshold:
+            break
+        threshold = new_threshold
+
+
+@contextmanager
+def handle_broken_pipe() -> Generator[None, None, None]:
+    """
+    Prevent BrokenPipeError when the output stream is closed early, such as
+    when piping to head.
+
+    https://adamj.eu/tech/2025/07/20/python-fix-brokenpipeerror/
+    """
+    try:
+        yield
+        sys.stdout.flush()
+    except BrokenPipeError:
+        # Python flushes standard streams on exit; redirect remaining output
+        # to devnull to avoid another BrokenPipeError at shutdown
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+
+
+def collect_fields(field_class=ThumbnailerImageField):
+    """
+    Yield (model, field) pairs for every concrete model field of `field_class`.
+
+    Walks all installed apps and their non-proxy, managed models, in
+    alphabetical order by app label, model, and field name.
+    """
+    for app_config in sorted(apps.get_app_configs(), key=lambda a: a.label):
+        for model in app_config.get_models():
+            if model._meta.proxy or not model._meta.managed:
+                continue
+            for field in sorted(model._meta.get_fields(), key=lambda f: f.name):
+                if isinstance(field, field_class):
+                    yield model, field
