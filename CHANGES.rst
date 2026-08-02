@@ -7,6 +7,10 @@ Unreleased
 * Fix ``thumbnail storages`` command to show all storages, even when
   multiple aliases share the same storage hash.
 
+* Fix ``thumbnail source_cleanup`` to avoid building a single unbounded SQL
+  ``OR`` query, which could exceed database parameter limits with large
+  numbers of active source files.
+
 
 3.1.1 (2026-07-26)
 ------------------

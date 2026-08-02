@@ -11,7 +11,6 @@ from pathlib import Path
 from django.apps import apps
 from django.core.files.storage import storages
 from django.core.management.base import BaseCommand, CommandError
-from django.db.models import Q
 from django.utils import timezone
 
 from easy_thumbnails.alias import aliases
@@ -387,12 +386,14 @@ def _non_empty_field_query(model, field):
     Return a queryset of `model` rows where `field` has an actual value
     (excludes both the empty string and NULL).
     """
-    return model.objects.exclude(**{field.name: ''}).exclude(
-        **{f'{field.name}__isnull': True}
+    return (
+        model.objects
+        .exclude(**{field.name: ''})
+        .exclude(**{f'{field.name}__isnull': True})
     )
 
 
-def _collect_fields(field_class=ThumbnailerImageField):
+def collect_fields(field_class=ThumbnailerImageField):
     for app_config in sorted(apps.get_app_configs(), key=lambda a: a.label):
         for model in app_config.get_models():
             if model._meta.proxy or not model._meta.managed:
@@ -599,7 +600,7 @@ class Command(BaseCommand):
 
         pairs = [
             (model, field)
-            for model, field in _collect_fields()
+            for model, field in collect_fields()
             if _matches(model, field, include)
             and (not exclude or not _matches(model, field, exclude))
         ]
@@ -647,13 +648,24 @@ class Command(BaseCommand):
             self.stderr.write(f'{total:>8} total')
 
     def do_source_cleanup(self, *args, **options):
-        dry_run = options['dry_run']
+        """
+        Delete Source records with no matching ThumbnailerImageField value.
 
-        pairs = list(_collect_fields())
+        Collects every ThumbnailerImageField across all models and builds the
+        set of (storage_hash, name) pairs currently referenced by them, then
+        deletes any Source record whose (storage_hash, name) isn't in that
+        set.
+
+        Deletion cascades to Thumbnail records; source and thumbnail
+        files on disk are not touched.
+
+        With --dry-run, orphans are listed instead of deleted.
+        """
+        pairs = list(collect_fields())
         self.stderr.write(
-            f'Found {len(pairs)} fields in {len({m for m, _ in pairs})} models.'
+            f'Found {len(pairs)} ThumbnailerImageField '
+            f'in {len({m for m, _ in pairs})} models.'
         )
-        self.stderr.write('Collecting active source file paths...')
 
         active_sources = set()
         for model, field in pairs:
@@ -665,26 +677,31 @@ class Command(BaseCommand):
             ):
                 active_sources.add((storage_hash, name))
 
-        self.stderr.write(f'Found {len(active_sources)} active source file paths.')
+        self.stderr.write(
+            f'Found {len(active_sources)} file paths in ThumbnailerImageFields.'
+        )
 
-        if active_sources:
-            keep = Q()
-            for storage_hash, name in active_sources:
-                keep |= Q(storage_hash=storage_hash, name=name)
-            qs = Source.objects.exclude(keep)
-        else:
-            qs = Source.objects.all()
+        query = Source.objects.only('pk', 'storage_hash', 'name')
+        orphans = (
+            source
+            for source in queryset_iterator(query, 10000)
+            if (source.storage_hash, source.name) not in active_sources
+        )
 
-        if dry_run:
-            deleted = 0
-            for source in qs.iterator():
+        deleted = 0
+        if options['dry_run']:
+            self.stderr.write(f'Would delete the following Source records...')
+            for source in orphans:
                 self.stdout.write(source.name)
                 deleted += 1
-        else:
-            deleted, _ = qs.delete()
+            self.stderr.write(f'Would have deleted {deleted} Source records.')
 
-        action = 'Would delete' if dry_run else 'Deleted'
-        self.stderr.write(f'{action} {deleted} Source records.')
+        else:
+            for batch in batched(orphans, 1000):
+                query = Source.objects.filter(pk__in=[s.pk for s in batch])
+                count, _ = query.delete()
+                deleted += count
+            self.stderr.write(f'Deleted {deleted} Source records.')
 
     def do_regenerate(self, *args, **options):
         pairs = self._resolve_field_pairs(options)

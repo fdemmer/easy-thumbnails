@@ -22,7 +22,7 @@ from easy_thumbnails.management import (
     delete_thumbnails,
     thumbnails_for_file,
 )
-from easy_thumbnails.management.commands.thumbnail import _collect_fields, _matches
+from easy_thumbnails.management.commands.thumbnail import collect_fields, _matches
 from easy_thumbnails.models import Source, Thumbnail
 from easy_thumbnails.utils import get_storage_hash
 from tests import utils as test
@@ -272,7 +272,7 @@ class ThumbnailCleanupTest(test.BaseTest):
 
 class CollectFieldsTest(test.BaseTest):
     def _pairs(self, **kwargs):
-        return list(_collect_fields(**kwargs))
+        return list(collect_fields(**kwargs))
 
     def _labels(self, **kwargs):
         return {(m._meta.label, f.name) for m, f in self._pairs(**kwargs)}
@@ -324,7 +324,7 @@ class MatchesTest(test.BaseTest):
         # TestModel.picture is the only ThumbnailerImageField in test models
         self._model, self._field = next(
             (m, f)
-            for m, f in _collect_fields()
+            for m, f in collect_fields()
             if m._meta.label == 'easy_thumbnails_tests.TestModel' and f.name == 'picture'
         )
 
@@ -511,6 +511,33 @@ class ThumbnailSourceCleanupCommandTest(test.BaseTest):
         _, stderr = self._call()
         self.assertIn('Source records', stderr)
         self.assertIn('1', stderr)
+
+    def test_deleted_count_includes_cascaded_thumbnails(self):
+        source = self._make_source('pictures/orphan.jpg')
+        Thumbnail.objects.create(
+            storage_hash=self.storage_hash,
+            name='pictures/orphan.jpg.100x100.jpg',
+            source=source,
+        )
+        _, stderr = self._call()
+        self.assertIn('Deleted 2 Source records', stderr)
+        self.assertEqual(Source.objects.count(), 0)
+        self.assertEqual(Thumbnail.objects.count(), 0)
+
+    def test_deletes_orphans_across_multiple_batches(self):
+        Source.objects.bulk_create(
+            [
+                Source(storage_hash=self.storage_hash, name=f'pictures/orphan-{i}.jpg')
+                for i in range(1500)
+            ]
+        )
+        TestModel.objects.create(picture='pictures/keep.jpg')
+        self._make_source('pictures/keep.jpg')
+        self.assertEqual(Source.objects.count(), 1501)
+        _, stderr = self._call()
+        self.assertIn('Deleted 1500 Source records', stderr)
+        self.assertEqual(Source.objects.count(), 1)
+        self.assertTrue(Source.objects.filter(name='pictures/keep.jpg').exists())
 
 
 class ThumbnailRegenerateCommandTest(test.BaseTest):
