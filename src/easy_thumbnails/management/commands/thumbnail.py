@@ -394,6 +394,12 @@ def _non_empty_field_query(model, field):
 
 
 def collect_fields(field_class=ThumbnailerImageField):
+    """
+    Yield (model, field) pairs for every concrete model field of `field_class`.
+
+    Walks all installed apps and their non-proxy, managed models, in
+    alphabetical order by app label, model, and field name.
+    """
     for app_config in sorted(apps.get_app_configs(), key=lambda a: a.label):
         for model in app_config.get_models():
             if model._meta.proxy or not model._meta.managed:
@@ -610,10 +616,20 @@ class Command(BaseCommand):
         return pairs
 
     def do_list_storages(self, *args, **options):
+        """
+        List configured storages with their alias and storage hash.
+        """
         for alias, class_name, storage_hash in get_storages():
             self.stdout.write(f'{alias:<16} {storage_hash} {class_name}')
 
     def do_cleanup(self, *args, **options):
+        """
+        Delete thumbnails that no longer have an original file.
+
+        Delegates to ThumbnailCollectionCleaner, which finds Source objects
+        with a missing source file (or unknown storage) and deletes them
+        along with their Thumbnail records and thumbnail files on disk.
+        """
         tcc = ThumbnailCollectionCleaner(
             self.stdout,
             self.stderr,
@@ -628,18 +644,24 @@ class Command(BaseCommand):
         tcc.print_stats()
 
     def do_source_files(self, *args, **options):
+        """
+        List file paths stored in ThumbnailerImageField across all apps.
+
+        With --summary, prints the non-empty value count per model field
+        instead of listing every path.
+        """
         pairs = self._resolve_field_pairs(options)
         self.stderr.write('Counting non-empty values per FileField...')
 
+        total = 0
         if options['summary']:
-            total = 0
             for model, field in pairs:
                 count = _non_empty_field_query(model, field).count()
                 total += count
                 self.stdout.write(f'{count:>8} {model._meta.label}.{field.name}')
             self.stderr.write(f'{total:>8} total')
+
         else:
-            total = 0
             for model, field in pairs:
                 for path in model.objects.values_list(field.name, flat=True).iterator():
                     total += 1
@@ -704,6 +726,14 @@ class Command(BaseCommand):
             self.stderr.write(f'Deleted {deleted} Source records.')
 
     def do_regenerate(self, *args, **options):
+        """
+        Purge and regenerate configured alias thumbnails for existing sources.
+
+        Resolves the ThumbnailerImageField/model/app pairs matching
+        --include/--exclude, then delegates to ThumbnailRegenerator to purge
+        cached thumbnails and regenerate configured aliases for each source
+        file (optionally including project-wide aliases).
+        """
         pairs = self._resolve_field_pairs(options)
 
         regenerator = ThumbnailRegenerator(
