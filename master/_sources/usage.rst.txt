@@ -340,3 +340,6 @@ disk. See :doc:`commands` for the full reference. In short:
 - To remove ``Source`` database records that no longer match any
   ``ThumbnailerImageField`` value, use
   :ref:`thumbnail source_cleanup <thumbnail_source_cleanup>`.
+- To purge and regenerate configured alias thumbnails for existing source files
+  (e.g. after changing an alias's options), use
+  :ref:`thumbnail regenerate <thumbnail_regenerate>`.
