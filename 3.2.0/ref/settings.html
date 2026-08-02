@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings &mdash; easy-thumbnails 3.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=828ea960"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Source Generators" href="source_generators.html" />
+    <link rel="prev" title="Image Processors" href="processors.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            easy-thumbnails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands.html">Management Commands</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../svg.html">Scalable Vector Graphic Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../webp.html">WebP support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="files.html">Thumbnail Files and Generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="namers.html">Namers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimizing Images using a Postprocessor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processors.html">Image Processors</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Settings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#easy_thumbnails.conf.Settings"><code class="docutils literal notranslate"><span class="pre">Settings</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_ALIASES"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_ALIASES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_BASEDIR"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_BASEDIR</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_CACHE_DIMENSIONS"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_CACHE_DIMENSIONS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_CHECK_CACHE_MISS"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_CHECK_CACHE_MISS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_DEBUG"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_DEBUG</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_OPTIONS"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_DEFAULT_OPTIONS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_STORAGE"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_DEFAULT_STORAGE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_STORAGE_ALIAS"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_DEFAULT_STORAGE_ALIAS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_EXTENSION"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_EXTENSION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_MEDIA_ROOT"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_MEDIA_ROOT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_MEDIA_URL"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_MEDIA_URL</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_NAMER"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_NAMER</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_PREFIX"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_PREFIX</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_PRESERVE_EXTENSIONS"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_PRESERVE_EXTENSIONS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_PROCESSORS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_PROGRESSIVE"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_PROGRESSIVE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_QUALITY"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_QUALITY</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_SOURCE_GENERATORS"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_SOURCE_GENERATORS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_SUBDIR"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_SUBDIR</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_TRANSPARENCY_EXTENSION"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_TRANSPARENCY_EXTENSION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.conf.Settings.THUMBNAIL_WIDGET_OPTIONS"><code class="docutils literal notranslate"><span class="pre">Settings.THUMBNAIL_WIDGET_OPTIONS</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="source_generators.html">Source Generators</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">easy-thumbnails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Settings</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/ref/settings.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="settings">
+<h1>Settings<a class="headerlink" href="#settings" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">easy_thumbnails.conf.</span></span><span class="sig-name descname"><span class="pre">Settings</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings" title="Link to this definition"></a></dt>
+<dd><p>These default settings for easy-thumbnails can be specified in your Django
+project’s settings module to alter the behaviour of easy-thumbnails.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_ALIASES">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_ALIASES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_ALIASES" title="Link to this definition"></a></dt>
+<dd><p>A dictionary of predefined alias options for different targets. See the
+<a class="reference internal" href="../usage.html#thumbnail-aliases"><span class="std std-ref">usage documentation</span></a> for details.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_BASEDIR">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_BASEDIR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_BASEDIR" title="Link to this definition"></a></dt>
+<dd><p>Save thumbnail images to a directory directly off <code class="docutils literal notranslate"><span class="pre">MEDIA_ROOT</span></code>, still
+keeping the relative directory structure of the source image.</p>
+<p>For example, using the <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">&quot;photos/1.jpg&quot;</span> <span class="pre">150x150</span> <span class="pre">%}</span></code> tag
+with a <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_BASEDIR</span></code> of <code class="docutils literal notranslate"><span class="pre">'thumbs'</span></code> would result in the
+following thumbnail filename:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MEDIA_ROOT</span> <span class="o">+</span> <span class="s1">&#39;thumbs/photos/1_jpg_150x150_q85.jpg&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_CACHE_DIMENSIONS">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_CACHE_DIMENSIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_CACHE_DIMENSIONS" title="Link to this definition"></a></dt>
+<dd><p>Save thumbnail dimensions to the database.</p>
+<p>When using remote storage backends it can be a slow process to get image
+dimensions for a thumbnailed file. This option will store them in
+the database to be recalled quickly when required. Note: the old method
+still works as a fall back.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_CHECK_CACHE_MISS">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_CHECK_CACHE_MISS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_CHECK_CACHE_MISS" title="Link to this definition"></a></dt>
+<dd><p>If this boolean setting is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, and a thumbnail cannot
+be found in the database tables, we ask the storage if it has the
+thumbnail. If it does we add the row in the database, and we don’t
+need to generate the thumbnail.</p>
+<p>Switch this to True if your easy_thumbnails_thumbnail table has been wiped
+but your storage still has the thumbnail files.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_DEBUG">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_DEBUG</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_DEBUG" title="Link to this definition"></a></dt>
+<dd><p>If this boolean setting is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, display errors creating a
+thumbnail when using the <a class="reference internal" href="../usage.html#thumbnail-tag"><span class="std std-ref">{% thumbnail %} tag</span></a> rather than failing silently.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_OPTIONS">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_DEFAULT_OPTIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_OPTIONS" title="Link to this definition"></a></dt>
+<dd><p>Set this to a dictionary of options to provide as the default for all
+thumbnail calls. For example, to make all images greyscale:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_DEFAULT_OPTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bw&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_STORAGE">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_DEFAULT_STORAGE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'easy_thumbnails.storage.ThumbnailFileSystemStorage'</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_STORAGE" title="Link to this definition"></a></dt>
+<dd><p>(DEPRECATED)
+The default Django storage for <em>saving</em> generated thumbnails.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_STORAGE_ALIAS">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_DEFAULT_STORAGE_ALIAS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'easy_thumbnails'</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_STORAGE_ALIAS" title="Link to this definition"></a></dt>
+<dd><p>Django 4.2+: The default Django storage name for <em>saving</em> generated thumbnails.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_EXTENSION">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_EXTENSION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'jpg'</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_EXTENSION" title="Link to this definition"></a></dt>
+<dd><p>The type of image to save thumbnails with no transparency layer as.</p>
+<p>Note that changing the extension will most likely cause the
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_QUALITY</span></code> setting to have no effect.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'JPEG':</span> <span class="pre">{'quality':</span> <span class="pre">85},</span> <span class="pre">'WEBP':</span> <span class="pre">{'quality':</span> <span class="pre">85}}</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS" title="Link to this definition"></a></dt>
+<dd><p>Allows customising Image.save parameters based on format, for example:
+<cite>{‘WEBP’: {‘method’: 6}}</cite></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_MEDIA_ROOT">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_MEDIA_ROOT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_MEDIA_ROOT" title="Link to this definition"></a></dt>
+<dd><p>Used by easy-thumbnail’s default storage to locate where thumbnails are
+stored on the file system.</p>
+<p>If not provided, Django’s standard <code class="docutils literal notranslate"><span class="pre">MEDIA_ROOT</span></code> setting is used.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_MEDIA_URL">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_MEDIA_URL</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_MEDIA_URL" title="Link to this definition"></a></dt>
+<dd><p>Used by easy-thumbnail’s default storage to build the absolute URL for a
+generated thumbnail.</p>
+<p>If not provided, Django’s standard <code class="docutils literal notranslate"><span class="pre">MEDIA_URL</span></code> setting is used.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_NAMER">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_NAMER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'easy_thumbnails.namers.default'</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_NAMER" title="Link to this definition"></a></dt>
+<dd><p>The function used to generate the filename for thumbnail images.</p>
+<p>Four namers are included in easy_thumbnails:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">easy_thumbnails.namers.default</span></code></dt><dd><p>Descriptive filename containing the source and options like
+<code class="docutils literal notranslate"><span class="pre">source.jpg.100x100_q80_crop_upscale.jpg</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">easy_thumbnails.namers.hashed</span></code></dt><dd><p>Short hashed filename like <code class="docutils literal notranslate"><span class="pre">1xedFtqllFo9.jpg</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">easy_thumbnails.namers.alias</span></code></dt><dd><p>Filename based on <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_ALIASES</span></code> dictionary key like
+<code class="docutils literal notranslate"><span class="pre">source.jpg.medium_large.jpg</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">easy_thumbnails.namers.source_hashed</span></code></dt><dd><p>Filename with source hashed, size, then options hashed like
+<code class="docutils literal notranslate"><span class="pre">1xedFtqllFo9_100x100_QHCa6G1l.jpg</span></code>.</p>
+</dd>
+</dl>
+<p>To write a custom namer, always catch all other keyword arguments arguments
+(with **kwargs). You have access to the following arguments:
+<code class="docutils literal notranslate"><span class="pre">thumbnailer</span></code>, <code class="docutils literal notranslate"><span class="pre">source_filename</span></code>, <code class="docutils literal notranslate"><span class="pre">thumbnail_extension</span></code> (does <em>not</em>
+include the <code class="docutils literal notranslate"><span class="pre">'.'</span></code>), <code class="docutils literal notranslate"><span class="pre">thumbnail_options</span></code>, <code class="docutils literal notranslate"><span class="pre">prepared_options</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">thumbnail_options</span></code> are a copy of the options dictionary used to
+build the thumbnail, <code class="docutils literal notranslate"><span class="pre">prepared_options</span></code> is a list of options prepared as
+text, and excluding options that shouldn’t be included in the filename.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_PREFIX">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_PREFIX</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_PREFIX" title="Link to this definition"></a></dt>
+<dd><p>Prepend thumbnail filenames with the specified prefix.</p>
+<p>For example, using the <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">&quot;photos/1.jpg&quot;</span> <span class="pre">150x150</span> <span class="pre">%}</span></code> tag with
+a <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_PREFIX</span></code> of <code class="docutils literal notranslate"><span class="pre">'thumbs_'</span></code> would result in the following
+thumbnail filename:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MEDIA_ROOT</span> <span class="o">+</span> <span class="s1">&#39;photos/thumbs_1_jpg_150x150_q85.jpg&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_PRESERVE_EXTENSIONS">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_PRESERVE_EXTENSIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_PRESERVE_EXTENSIONS" title="Link to this definition"></a></dt>
+<dd><p>To preserve specific extensions, for instance if you always want to create
+lossless PNG thumbnails from PNG sources, you can specify these extensions
+using this setting, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_PRESERVE_EXTENSIONS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;png&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>All extensions should be lowercase.</p>
+<p>Instead of a tuple, you can also set this to <code class="docutils literal notranslate"><span class="pre">True</span></code> in order to always
+preserve the original extension.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_PROCESSORS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('easy_thumbnails.processors.colorspace',</span> <span class="pre">'easy_thumbnails.processors.autocrop',</span> <span class="pre">'easy_thumbnails.processors.scale_and_crop',</span> <span class="pre">'easy_thumbnails.processors.filters',</span> <span class="pre">'easy_thumbnails.processors.background')</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS" title="Link to this definition"></a></dt>
+<dd><p>Defaults to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_PROCESSORS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;easy_thumbnails.processors.colorspace&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;easy_thumbnails.processors.autocrop&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;easy_thumbnails.processors.scale_and_crop&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;easy_thumbnails.processors.filters&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;easy_thumbnails.processors.background&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="processors.html"><span class="doc">Image Processors</span></a> through which the source image is run when you create
+a thumbnail.</p>
+<p>The order of the processors is the order in which they are sequentially
+called to process the image.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_PROGRESSIVE">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_PROGRESSIVE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_PROGRESSIVE" title="Link to this definition"></a></dt>
+<dd><p>Use progressive JPGs for thumbnails where either dimension is at least this
+many pixels.</p>
+<p>For example, a 90x90 image will be saved as a baseline JPG while a 728x90
+image will be saved as a progressive JPG.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">False</span></code> to never use progressive encoding.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_QUALITY">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_QUALITY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">85</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_QUALITY" title="Link to this definition"></a></dt>
+<dd><p>The default quality level for JPG images on a scale from 1 (worst) to 95
+(best). Technically, values up to 100 are allowed, but this is not
+recommended.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_SOURCE_GENERATORS">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_SOURCE_GENERATORS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('easy_thumbnails.source_generators.pil_image',</span> <span class="pre">'easy_thumbnails.source_generators.vil_image')</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_SOURCE_GENERATORS" title="Link to this definition"></a></dt>
+<dd><p>The <a class="reference internal" href="source_generators.html"><span class="doc">Source Generators</span></a> through which the base image is created from
+the source file.</p>
+<p>The order of the processors is the order in which they are sequentially
+tried.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_SUBDIR">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_SUBDIR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_SUBDIR" title="Link to this definition"></a></dt>
+<dd><p>Save thumbnail images to a sub-directory relative to the source image.</p>
+<p>For example, using the <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">&quot;photos/1.jpg&quot;</span> <span class="pre">150x150</span> <span class="pre">%}</span></code> tag with
+a <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_SUBDIR</span></code> of <code class="docutils literal notranslate"><span class="pre">'thumbs'</span></code> would result in the following
+thumbnail filename:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MEDIA_ROOT</span> <span class="o">+</span> <span class="s1">&#39;photos/thumbs/1_jpg_150x150_q85.jpg&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_TRANSPARENCY_EXTENSION">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_TRANSPARENCY_EXTENSION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'png'</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_TRANSPARENCY_EXTENSION" title="Link to this definition"></a></dt>
+<dd><p>The type of image to save thumbnails with a transparency layer (e.g. GIFs
+or transparent PNGs).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_WIDGET_OPTIONS">
+<span class="sig-name descname"><span class="pre">THUMBNAIL_WIDGET_OPTIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'size':</span> <span class="pre">(80,</span> <span class="pre">80)}</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_WIDGET_OPTIONS" title="Link to this definition"></a></dt>
+<dd><p>Default options for the
+<a class="reference internal" href="../usage.html#easy_thumbnails.widgets.ImageClearableFileInput" title="easy_thumbnails.widgets.ImageClearableFileInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">easy_thumbnails.widgets.ImageClearableFileInput</span></code></a> widget.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="processors.html" class="btn btn-neutral float-left" title="Image Processors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="source_generators.html" class="btn btn-neutral float-right" title="Source Generators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2009, Chris Beaven and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
