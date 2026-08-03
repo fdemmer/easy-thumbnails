@@ -1,16 +1,25 @@
 Changes
 =======
 
+Unreleased
+----------
+
+* Fix ``thumbnail source_cleanup`` to report the number of deleted
+  ``Source`` records accurately, instead of a count inflated by cascaded
+  ``Thumbnail`` deletions; the number of deleted ``Thumbnail`` records is
+  now reported separately.
+
+
 3.2.0 (2026-08-02)
 ------------------
-
-* Fix ``thumbnail storages`` command to show all storages, even when
-  multiple aliases share the same storage hash.
 
 * Add ``thumbnail regenerate`` subcommand: purges cached thumbnails and
   regenerates configured aliases for every ``ThumbnailerImageField`` value,
   with ``--dry-run``, ``--path``, ``--include-global``, ``--include``, and
   ``--exclude`` options.
+
+* Fix ``thumbnail storages`` command to show all storages, even when
+  multiple aliases share the same storage hash.
 
 * Fix ``thumbnail source_cleanup`` to avoid building a single unbounded SQL
   ``OR`` query, which could exceed database parameter limits with large

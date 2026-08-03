@@ -468,7 +468,7 @@ class ThumbnailSourceCleanupCommandTest(test.BaseTest):
 
     def test_empty_db_no_deletions(self):
         _, stderr = self._call()
-        self.assertIn('0 Source records', stderr)
+        self.assertIn('Deleted 0 Source and 0 Thumbnail records', stderr)
         self.assertEqual(Source.objects.count(), 0)
 
     def test_deletes_source_with_no_matching_field_value(self):
@@ -509,10 +509,10 @@ class ThumbnailSourceCleanupCommandTest(test.BaseTest):
     def test_stderr_reports_counts(self):
         self._make_source('pictures/orphan.jpg')
         _, stderr = self._call()
-        self.assertIn('Source records', stderr)
+        self.assertIn('Thumbnail records', stderr)
         self.assertIn('1', stderr)
 
-    def test_deleted_count_includes_cascaded_thumbnails(self):
+    def test_deleted_count_excludes_cascaded_thumbnails(self):
         source = self._make_source('pictures/orphan.jpg')
         Thumbnail.objects.create(
             storage_hash=self.storage_hash,
@@ -520,7 +520,7 @@ class ThumbnailSourceCleanupCommandTest(test.BaseTest):
             source=source,
         )
         _, stderr = self._call()
-        self.assertIn('Deleted 2 Source records', stderr)
+        self.assertIn('Deleted 1 Source and 1 Thumbnail records', stderr)
         self.assertEqual(Source.objects.count(), 0)
         self.assertEqual(Thumbnail.objects.count(), 0)
 
@@ -535,7 +535,7 @@ class ThumbnailSourceCleanupCommandTest(test.BaseTest):
         self._make_source('pictures/keep.jpg')
         self.assertEqual(Source.objects.count(), 1501)
         _, stderr = self._call()
-        self.assertIn('Deleted 1500 Source records', stderr)
+        self.assertIn('Deleted 1500 Source and 0 Thumbnail records', stderr)
         self.assertEqual(Source.objects.count(), 1)
         self.assertTrue(Source.objects.filter(name='pictures/keep.jpg').exists())
 

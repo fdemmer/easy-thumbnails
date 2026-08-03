@@ -661,20 +661,29 @@ class Command(BaseCommand):
             if (source.storage_hash, source.name) not in active_sources
         )
 
-        deleted = 0
+        counts = Counter()
         if options['dry_run']:
             self.stderr.write('Would delete the following Source records...')
             for source in orphans:
                 self.stdout.write(source.name)
-                deleted += 1
-            self.stderr.write(f'Would have deleted {deleted} Source records.')
+                counts['easy_thumbnails.Source'] += 1
+            self.stderr.write(
+                f'Would have deleted {counts["easy_thumbnails.Source"]} Source records.'
+            )
 
         else:
+            self.stdout.write('Deleting in batches...', ending='')
             for batch in batched(orphans, 1000):
                 query = Source.objects.filter(pk__in=[s.pk for s in batch])
-                count, _ = query.delete()
-                deleted += count
-            self.stderr.write(f'Deleted {deleted} Source records.')
+                self.stdout.write('.', ending='')
+                self.stdout.flush()
+                _, deleted_per_model = query.delete()
+                counts.update(deleted_per_model)
+            self.stdout.write(' done.')
+            self.stderr.write(
+                f'Deleted {counts["easy_thumbnails.Source"]} Source '
+                f'and {counts["easy_thumbnails.Thumbnail"]} Thumbnail records.'
+            )
 
     def do_regenerate(self, *args, **options):
         """
