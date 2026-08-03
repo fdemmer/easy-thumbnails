@@ -4,6 +4,10 @@ Changes
 Unreleased
 ----------
 
+* Add ``thumbnail aliases`` subcommand: lists all configured
+  ``THUMBNAIL_ALIASES`` targets (global, app, model, or field) and the
+  alias names defined on each.
+
 * Fix ``thumbnail source_cleanup`` to report the number of deleted
   ``Source`` records accurately, instead of a count inflated by cascaded
   ``Thumbnail`` deletions; the number of deleted ``Thumbnail`` records is

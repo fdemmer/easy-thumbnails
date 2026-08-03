@@ -62,6 +62,56 @@ class ListStoragesCommandTest(test.BaseTest):
         self.assertEqual(hashes['default'], hashes['other'])
 
 
+class ListAliasesCommandTest(test.BaseTest):
+    def setUp(self):
+        super().setUp()
+        self._original_aliases = aliases._aliases
+        thumbnail_settings.THUMBNAIL_ALIASES = {
+            '': {'tiny': {'size': (5, 5)}},
+            'easy_thumbnails_tests': {'sidebar': {'size': (150, 250)}},
+            'easy_thumbnails_tests.TestModel': {'medium': {'size': (300, 300)}},
+            'easy_thumbnails_tests.TestModel.picture': {
+                'small': {'size': (20, 20)},
+                'large': {'size': (400, 400)},
+            },
+        }
+        aliases._aliases = {}
+        aliases.populate_from_settings()
+
+    def tearDown(self):
+        aliases._aliases = self._original_aliases
+        super().tearDown()
+
+    def _call(self):
+        stdout = io.StringIO()
+        call_command('thumbnail', 'aliases', stdout=stdout)
+        return stdout.getvalue()
+
+    def test_lists_global_target(self):
+        self.assertRegex(self._call(), r'\*\s+tiny')
+
+    def test_lists_app_and_model_targets(self):
+        output = self._call()
+        self.assertRegex(output, r'easy_thumbnails_tests\s+sidebar')
+        self.assertRegex(output, r'easy_thumbnails_tests\.TestModel\s+medium')
+
+    def test_lists_field_target_with_sorted_alias_names(self):
+        output = self._call()
+        self.assertRegex(
+            output, r'easy_thumbnails_tests\.TestModel\.picture\s+large, small'
+        )
+
+    def test_no_colon_in_output(self):
+        self.assertNotIn(':', self._call())
+
+    def test_columns_aligned(self):
+        lines = [line for line in self._call().splitlines() if line]
+        # The alias-name column starts at the same character offset on every
+        # line, once the target-label column is padded to the longest label.
+        alias_start_offsets = {len(line) - len(line.split(None, 1)[1]) for line in lines}
+        self.assertEqual(len(alias_start_offsets), 1)
+
+
 @override_settings(MEDIA_ROOT=Path(settings.MEDIA_ROOT) / 'test_media')
 class ThumbnailCleanupTest(test.BaseTest):
     def setUp(self):

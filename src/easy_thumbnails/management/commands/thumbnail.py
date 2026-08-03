@@ -393,6 +393,12 @@ class Command(BaseCommand):
         )
         storages_parser.set_defaults(method=self.do_list_storages)
 
+        aliases_parser = subparsers.add_parser(
+            'aliases',
+            help='List configured THUMBNAIL_ALIASES targets and their alias names.',
+        )
+        aliases_parser.set_defaults(method=self.do_list_aliases)
+
         cleanup_parser = subparsers.add_parser(
             'cleanup',
             help='Delete thumbnails that no longer have an original file.',
@@ -565,10 +571,24 @@ class Command(BaseCommand):
 
     def do_list_storages(self, *args, **options):
         """
-        List configured storages with their alias and storage hash.
+        List configured STORAGES with their alias and storage hash.
         """
-        for alias, class_name, storage_hash in get_storages():
-            self.stdout.write(f'{alias:<16} {storage_hash} {class_name}')
+        rows = list(get_storages())
+        width = max((len(alias) for alias, _, _ in rows), default=0)
+        for alias, class_name, storage_hash in rows:
+            self.stdout.write(f'{alias:<{width}}  {storage_hash}  {class_name}')
+
+    def do_list_aliases(self, *args, **options):
+        """
+        List configured THUMBNAIL_ALIASES targets and their alias names.
+        """
+        rows = [
+            (target or '*', ', '.join(alias_names))
+            for target, alias_names in aliases.targets().items()
+        ]
+        width = max((len(label) for label, _ in rows), default=0)
+        for label, alias_names in rows:
+            self.stdout.write(f'{label:<{width}}  {alias_names}')
 
     def do_cleanup(self, *args, **options):
         """

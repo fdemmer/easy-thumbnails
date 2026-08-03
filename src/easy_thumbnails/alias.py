@@ -75,6 +75,24 @@ class Aliases:
             aliases.update(self._aliases.get(target_part, {}))
         return aliases
 
+    def targets(self):
+        """
+        Get a dictionary mapping each configured target to its alias names.
+
+        :returns: A dict of ``{target: [alias_name, ...]}``, sorted by
+            target and by alias name within each target. The global target
+            is represented by an empty string.
+
+        For example::
+
+            >>> aliases.targets()
+            {'': ['tiny'], 'my_app.MyModel.somefield': ['large', 'small']}
+        """
+        return {
+            target: sorted(target_aliases)
+            for target, target_aliases in sorted(self._aliases.items())
+        }
+
     def _get(self, target, alias):
         """
         Internal method to get a specific alias.

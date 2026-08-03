@@ -163,6 +163,19 @@ class AliasTest(BaseTest):
         )
 
 
+class TargetsTest(BaseTest):
+    def test_targets_groups_alias_names_by_target(self):
+        self.assertEqual(
+            aliases.targets(),
+            {
+                '': ['large', 'medium', 'small'],
+                'easy_thumbnails_tests.Profile': ['banner', 'large'],
+                'easy_thumbnails_tests.Profile.avatar': ['avatar', 'small'],
+                'other_app': ['sidebar'],
+            },
+        )
+
+
 class AliasThumbnailerTest(BaseTest):
     create_file = True
 
