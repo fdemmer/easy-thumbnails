@@ -44,7 +44,7 @@ class ThumbnailNode(Node):
         self.opts = opts
         self.context_name = context_name
 
-    def render(self, context):
+    def render(self, context):  # noqa: C901
         # Note that this isn't a global constant because we need to change the
         # value for tests.
         raise_errors = settings.THUMBNAIL_DEBUG
@@ -153,6 +153,11 @@ def thumbnail(parser, token):
     *options* are a space separated list of options which are used when
     processing the image to a thumbnail such as ``sharpen``, ``crop`` and
     ``quality=90``.
+
+    The output format of a single thumbnail can be set with
+    ``format="webp"`` or ``format="jpeg"``, overriding the extension
+    settings. JPEG does not support transparency, so for transparent sources
+    prefer WebP or add ``replace_alpha`` to choose the background color.
 
     If *size* is specified as an alias name, *options* are used to override
     and/or supplement the options defined in that alias.

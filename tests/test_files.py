@@ -179,6 +179,24 @@ class FilesTest(test.BaseTest):
         thumb = self.ext_thumbnailer.get_thumbnail({'size': (100, 100)})
         self.assertEqual(path.splitext(thumb.name)[1], '.jpg')
 
+    def test_format_option_extension(self):
+        self.ext_thumbnailer.thumbnail_extension = 'png'
+        self.ext_thumbnailer.thumbnail_preserve_extensions = True
+        for value, ext in (('webp', '.webp'), ('jpeg', '.jpg'), ('JPG', '.jpg')):
+            thumb = self.ext_thumbnailer.get_thumbnail(
+                {'size': (100, 100), 'format': value}
+            )
+            self.assertEqual(path.splitext(thumb.name)[1], ext)
+
+    def test_format_option_webp_image(self):
+        thumb = self.ext_thumbnailer.get_thumbnail({'size': (100, 100), 'format': 'webp'})
+        with Image.open(thumb.path) as im:
+            self.assertEqual(im.format, 'WEBP')
+
+    def test_format_option_invalid(self):
+        with self.assertRaises(ValueError):
+            self.ext_thumbnailer.get_thumbnail({'size': (100, 100), 'format': 'gif'})
+
     def test_subsampling(self):
         samplings = {
             0: (1, 1, 1, 1, 1, 1),

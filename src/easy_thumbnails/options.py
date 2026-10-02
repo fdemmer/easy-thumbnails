@@ -1,6 +1,9 @@
 from easy_thumbnails.conf import settings
 
 
+OUTPUT_FORMATS = ('jpg', 'webp')
+
+
 class ThumbnailOptions(dict):
     def __init__(self, *args, **kwargs):
         self._prepared_options = None
@@ -10,6 +13,18 @@ class ThumbnailOptions(dict):
                 self.setdefault(key, value)
         self.setdefault('quality', settings.THUMBNAIL_QUALITY)
         self.setdefault('subsampling', 2)
+        if self.get('format'):
+            self['format'] = self._normalize_format(self['format'])
+
+    @staticmethod
+    def _normalize_format(value):
+        fmt = str(value).lower().lstrip('.')
+        fmt = {'jpeg': 'jpg'}.get(fmt, fmt)
+        if fmt not in OUTPUT_FORMATS:
+            raise ValueError(
+                f'Unsupported thumbnail format {value!r}, expected one of: jpeg, webp'
+            )
+        return fmt
 
     def prepared_options(self):
         prepared_opts = ['{size[0]}x{size[1]}'.format(**self)]

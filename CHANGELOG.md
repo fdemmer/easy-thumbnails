@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 (up to 2.x, version numbers were not strictly semantic).
 
 
+## Unreleased
+
+- Add `format` thumbnail option (`jpeg` or `webp`) to set the output format
+  per thumbnail.
+
+
 ## [3.1.3] - 2026-10-06
 
 - Fix no-op `exclude` filter for empty/null `FileField` values in the

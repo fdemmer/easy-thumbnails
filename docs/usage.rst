@@ -39,7 +39,14 @@ must fit within.
 Other options are only provided if the given functionality is required:
 
 - ``quality=<N>`` where N is an integer between 1 and 100 specifying output
-  JPEG quality. The default is 85.
+  JPEG or WebP quality. The default is 85 (``THUMBNAIL_QUALITY``). For
+  lossless WebP it only trades encoding speed for file size, see :doc:`webp`.
+- ``format=<jpeg|webp>`` sets the output format of this thumbnail, overriding
+  ``THUMBNAIL_EXTENSION``, ``THUMBNAIL_TRANSPARENCY_EXTENSION`` and
+  ``THUMBNAIL_PRESERVE_EXTENSIONS``. Note that JPEG does not support
+  transparency: with ``format=jpeg`` the alpha channel of a transparent source
+  is discarded, so combine it with ``replace_alpha`` to choose the background
+  color. WebP preserves transparency.
 - ``subsampling=<N>`` sets the JPEG color subsampling level where N is:
     - ``2`` is 4:1:1 (both easy-thumbnails and PIL's default)
     - ``1`` is 4:2:2 (slightly crisper color borders, small increase in size)
