@@ -201,6 +201,12 @@ class ThumbnailCollectionCleaner:
 
 
 def _collect_fields(field_class=ThumbnailerImageField):
+    """
+    Yield (model, field) pairs for every concrete model field of `field_class`.
+
+    Walks all installed apps and their non-proxy, managed models, in
+    alphabetical order by app label, model, and field name.
+    """
     for app_config in sorted(apps.get_app_configs(), key=lambda a: a.label):
         for model in app_config.get_models():
             if model._meta.proxy or not model._meta.managed:
@@ -343,10 +349,25 @@ class Command(BaseCommand):
             method(*args, **options)
 
     def do_list_storages(self, *args, **options):
+        """
+        List configured storages with their alias and storage hash.
+        """
         for alias, class_name, storage_hash in get_storages():
             self.stdout.write(f'{alias:<16} {storage_hash} {class_name}')
 
     def do_cleanup(self, *args, **options):
+        """
+        Delete thumbnails that no longer have an original file.
+
+        Delegates to ThumbnailCollectionCleaner, which finds Source objects
+        whose source file no longer exists in storage and deletes them along
+        with their Thumbnail records and thumbnail files.
+
+        With --delete-with-missing-storage, Source objects with an unknown
+        storage hash are deleted from the database too (their thumbnail files
+        are not removed). Can be limited by --last-n-days and --path, and
+        with --dry-run nothing is deleted.
+        """
         tcc = ThumbnailCollectionCleaner(
             self.stdout,
             self.stderr,
@@ -361,6 +382,15 @@ class Command(BaseCommand):
         tcc.print_stats()
 
     def do_source_files(self, *args, **options):
+        """
+        List file paths stored in ThumbnailerImageField across all apps.
+
+        Fields can be narrowed down with --include/--exclude. Empty values
+        are not listed, but are included in the reported total.
+
+        With --summary, prints the non-empty value count per model field
+        instead of listing every path.
+        """
         include = options['include']
         exclude = options['exclude']
         for spec in include + exclude:
@@ -395,6 +425,19 @@ class Command(BaseCommand):
             self.stderr.write(f'{total:>8} total')
 
     def do_source_cleanup(self, *args, **options):
+        """
+        Delete Source records with no matching ThumbnailerImageField value.
+
+        Collects every ThumbnailerImageField across all models and builds the
+        set of (storage_hash, name) pairs currently referenced by them, then
+        deletes any Source record whose (storage_hash, name) isn't in that
+        set.
+
+        Deletion cascades to Thumbnail records; source and thumbnail
+        files on disk are not touched.
+
+        With --dry-run, orphans are listed instead of deleted.
+        """
         dry_run = options['dry_run']
 
         pairs = list(_collect_fields())
