@@ -241,6 +241,14 @@ def build_storage_hash_map():
     return {storage_hash: alias for alias, _, storage_hash in get_storages()}
 
 
+def _has_value_q(field):
+    """
+    Return a Q object matching rows where `field` has an actual value
+    (excludes both the empty string and NULL).
+    """
+    return ~(Q(**{field.name: ''}) | Q(**{f'{field.name}__isnull': True}))
+
+
 def _collect_fields(field_class=ThumbnailerImageField):
     for app_config in sorted(apps.get_app_configs(), key=lambda a: a.label):
         for model in app_config.get_models():
@@ -422,13 +430,7 @@ class Command(BaseCommand):
         if options['summary']:
             total = 0
             for model, field in pairs:
-                query = model.objects.exclude(
-                    **{
-                        field.name: '',
-                        f'{field.name}__isnull': True,
-                    }
-                )
-                count = query.count()
+                count = model.objects.filter(_has_value_q(field)).count()
                 total += count
                 self.stdout.write(f'{count:>8} {model._meta.label}.{field.name}')
             self.stderr.write(f'{total:>8} total')
@@ -454,12 +456,11 @@ class Command(BaseCommand):
         for model, field in pairs:
             storage_hash = get_storage_hash(field.storage)
             for name in (
-                model.objects.exclude(**{field.name: '', f'{field.name}__isnull': True})
+                model.objects.filter(_has_value_q(field))
                 .values_list(field.name, flat=True)
                 .iterator()
             ):
-                if name:
-                    active_sources.add((storage_hash, name))
+                active_sources.add((storage_hash, name))
 
         self.stderr.write(f'Found {len(active_sources)} active source file paths.')
 
