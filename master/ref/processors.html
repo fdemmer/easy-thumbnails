@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image Processors &mdash; easy-thumbnails 3.2 documentation</title>
+  <title>Image Processors &mdash; easy-thumbnails 3.1.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=828ea960"></script>
+      <script src="../_static/documentation_options.js?v=4e920bdf"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
@@ -231,10 +231,10 @@ by a processor is the output of the previous processor.</p>
 <h3>Create the processor<a class="headerlink" href="#create-the-processor" title="Link to this heading"></a></h3>
 <p>First create a processor like this:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">whizzbang_processor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">bang</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Whizz bang the source image.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">bang</span><span class="p">:</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">whizz</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">image</span>
@@ -260,7 +260,7 @@ module:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">easy_thumbnails.conf</span><span class="w"> </span><span class="kn">import</span> <span class="n">Settings</span> <span class="k">as</span> <span class="n">easy_thumbnails_defaults</span>
 
 <span class="n">THUMBNAIL_PROCESSORS</span> <span class="o">=</span> <span class="n">easy_thumbnails_defaults</span><span class="o">.</span><span class="n">THUMBNAIL_PROCESSORS</span> <span class="o">+</span> <span class="p">(</span>
-    <span class="s1">&#39;wb_project.thumbnail_processors.whizzbang_processor&#39;</span><span class="p">,</span>
+    <span class="s1">'wb_project.thumbnail_processors.whizzbang_processor'</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>

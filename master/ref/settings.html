@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Settings &mdash; easy-thumbnails 3.2 documentation</title>
+  <title>Settings &mdash; easy-thumbnails 3.1.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=828ea960"></script>
+      <script src="../_static/documentation_options.js?v=4e920bdf"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
@@ -135,7 +135,7 @@ keeping the relative directory structure of the source image.</p>
 <p>For example, using the <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">&quot;photos/1.jpg&quot;</span> <span class="pre">150x150</span> <span class="pre">%}</span></code> tag
 with a <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_BASEDIR</span></code> of <code class="docutils literal notranslate"><span class="pre">'thumbs'</span></code> would result in the
 following thumbnail filename:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MEDIA_ROOT</span> <span class="o">+</span> <span class="s1">&#39;thumbs/photos/1_jpg_150x150_q85.jpg&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MEDIA_ROOT</span> <span class="o">+</span> <span class="s1">'thumbs/photos/1_jpg_150x150_q85.jpg'</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -173,7 +173,7 @@ thumbnail when using the <a class="reference internal" href="../usage.html#thumb
 <span class="sig-name descname"><span class="pre">THUMBNAIL_DEFAULT_OPTIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_DEFAULT_OPTIONS" title="Link to this definition"></a></dt>
 <dd><p>Set this to a dictionary of options to provide as the default for all
 thumbnail calls. For example, to make all images greyscale:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_DEFAULT_OPTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bw&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_DEFAULT_OPTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'bw'</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -256,7 +256,7 @@ text, and excluding options that shouldn’t be included in the filename.</p>
 <p>For example, using the <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">&quot;photos/1.jpg&quot;</span> <span class="pre">150x150</span> <span class="pre">%}</span></code> tag with
 a <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_PREFIX</span></code> of <code class="docutils literal notranslate"><span class="pre">'thumbs_'</span></code> would result in the following
 thumbnail filename:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MEDIA_ROOT</span> <span class="o">+</span> <span class="s1">&#39;photos/thumbs_1_jpg_150x150_q85.jpg&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MEDIA_ROOT</span> <span class="o">+</span> <span class="s1">'photos/thumbs_1_jpg_150x150_q85.jpg'</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -267,7 +267,7 @@ thumbnail filename:</p>
 <dd><p>To preserve specific extensions, for instance if you always want to create
 lossless PNG thumbnails from PNG sources, you can specify these extensions
 using this setting, for example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_PRESERVE_EXTENSIONS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;png&#39;</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_PRESERVE_EXTENSIONS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'png'</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>All extensions should be lowercase.</p>
@@ -280,11 +280,11 @@ preserve the original extension.</p>
 <span class="sig-name descname"><span class="pre">THUMBNAIL_PROCESSORS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('easy_thumbnails.processors.colorspace',</span> <span class="pre">'easy_thumbnails.processors.autocrop',</span> <span class="pre">'easy_thumbnails.processors.scale_and_crop',</span> <span class="pre">'easy_thumbnails.processors.filters',</span> <span class="pre">'easy_thumbnails.processors.background')</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS" title="Link to this definition"></a></dt>
 <dd><p>Defaults to:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_PROCESSORS</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s1">&#39;easy_thumbnails.processors.colorspace&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;easy_thumbnails.processors.autocrop&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;easy_thumbnails.processors.scale_and_crop&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;easy_thumbnails.processors.filters&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;easy_thumbnails.processors.background&#39;</span><span class="p">,</span>
+    <span class="s1">'easy_thumbnails.processors.colorspace'</span><span class="p">,</span>
+    <span class="s1">'easy_thumbnails.processors.autocrop'</span><span class="p">,</span>
+    <span class="s1">'easy_thumbnails.processors.scale_and_crop'</span><span class="p">,</span>
+    <span class="s1">'easy_thumbnails.processors.filters'</span><span class="p">,</span>
+    <span class="s1">'easy_thumbnails.processors.background'</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -328,7 +328,7 @@ tried.</p>
 <p>For example, using the <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">&quot;photos/1.jpg&quot;</span> <span class="pre">150x150</span> <span class="pre">%}</span></code> tag with
 a <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_SUBDIR</span></code> of <code class="docutils literal notranslate"><span class="pre">'thumbs'</span></code> would result in the following
 thumbnail filename:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MEDIA_ROOT</span> <span class="o">+</span> <span class="s1">&#39;photos/thumbs/1_jpg_150x150_q85.jpg&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MEDIA_ROOT</span> <span class="o">+</span> <span class="s1">'photos/thumbs/1_jpg_150x150_q85.jpg'</span>
 </pre></div>
 </div>
 </dd></dl>

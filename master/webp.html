@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebP support &mdash; easy-thumbnails 3.2 documentation</title>
+  <title>WebP support &mdash; easy-thumbnails 3.1.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=828ea960"></script>
+      <script src="_static/documentation_options.js?v=4e920bdf"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -102,7 +102,7 @@ configuration beyond a couple of settings.</p>
 <p>The output format is chosen from the thumbnail’s file extension. To make
 WebP the default output format project-wide, set
 <a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_EXTENSION" title="easy_thumbnails.conf.Settings.THUMBNAIL_EXTENSION"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_EXTENSION</span></code></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_EXTENSION</span> <span class="o">=</span> <span class="s1">&#39;webp&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_EXTENSION</span> <span class="o">=</span> <span class="s1">'webp'</span>
 </pre></div>
 </div>
 <p>If you only want to convert <em>some</em> sources to WebP (e.g. keep JPEG sources
@@ -110,7 +110,7 @@ as JPEG but re-encode PNGs losslessly), leave <code class="docutils literal notr
 default and use
 <a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_PRESERVE_EXTENSIONS" title="easy_thumbnails.conf.Settings.THUMBNAIL_PRESERVE_EXTENSIONS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_PRESERVE_EXTENSIONS</span></code></a>
 instead:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_PRESERVE_EXTENSIONS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;webp&#39;</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_PRESERVE_EXTENSIONS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'webp'</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>This preserves WebP sources as WebP thumbnails while other formats still
@@ -122,8 +122,8 @@ fall back to <code class="docutils literal notranslate"><span class="pre">THUMBN
 <a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS" title="easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code></a>, which
 already ships a default entry:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_IMAGE_SAVE_OPTIONS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;WEBP&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;quality&#39;</span><span class="p">:</span> <span class="mi">85</span><span class="p">,</span>
+    <span class="s1">'WEBP'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'quality'</span><span class="p">:</span> <span class="mi">85</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">}</span>
 </pre></div>
