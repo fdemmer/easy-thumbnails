@@ -1,11 +1,18 @@
 Changes
 =======
 
-Unreleased
-----------
+3.1.2 (2026-10-03)
+------------------
 
 * Fix ``thumbnail storages`` command to show all storages, even when
-  multiple aliases share the same storage hash.
+  multiple aliases share the same storage hash. Output is now column-aligned
+  and includes the storage class name.
+* Fix ``ThumbnailerFieldFile.delete_thumbnails()`` ignoring the
+  ``source_cache`` argument.
+* Remove unused ``dimensions`` argument from ``database_get_image_dimensions()``.
+* Refactor ``thumbnail cleanup``: Source deletion is batched via
+  ``itertools.batched`` (backported for Python < 3.12), messages are reworded,
+  and ``-v2`` logs each storage existence check.
 
 
 3.1.1 (2026-07-26)
