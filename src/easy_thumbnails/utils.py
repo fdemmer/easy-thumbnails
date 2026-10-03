@@ -1,9 +1,15 @@
 import hashlib
 import inspect
 import math
+import os
+import sys
+from collections.abc import Generator
+from contextlib import contextmanager
 
 from PIL import Image
 
+from django.core.files.storage import storages
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.functional import LazyObject
 from django.utils.module_loading import import_string
@@ -68,6 +74,23 @@ def get_storage_hash(storage):
         storage_cls = storage.__class__
         storage = f'{storage_cls.__module__}.{storage_cls.__name__}'
     return md5_not_used_for_security(storage.encode('utf8')).hexdigest()
+
+
+def get_storages():
+    """
+    Return an (alias, class name, storage hash) tuple for each configured storage.
+    """
+    return [
+        (alias, type(storage := storages[alias]).__name__, get_storage_hash(storage))
+        for alias in settings.STORAGES
+    ]
+
+
+def get_storage_hash_map():
+    """
+    Return a dict mapping each configured storage hash to its alias.
+    """
+    return {storage_hash: alias for alias, _, storage_hash in get_storages()}
 
 
 def is_transparent(image):
@@ -168,3 +191,48 @@ def sha1_not_used_for_security(data):
     systems will raise an exception when used.
     """
     return hashlib.new('sha1', data, usedforsecurity=False)
+
+
+def q_has_value(field):
+    """
+    Return a Q object matching rows where `field` has an actual value
+    (excludes both the empty string and NULL).
+    """
+    return ~(Q(**{field.name: ''}) | Q(**{f'{field.name}__isnull': True}))
+
+
+def queryset_iterator(query, chunk_size=2000):
+    """
+    Iterate over a queryset in chunks using keyset pagination on the primary
+    key, which avoids the cost of large OFFSETs and keeps memory use bounded.
+
+    https://use-the-index-luke.com/sql/partial-results/fetch-next-page
+    """
+    threshold = new_threshold = 0
+    query = query.order_by('pk')
+    while True:
+        chunk = query.filter(pk__gt=threshold)[:chunk_size].iterator(chunk_size)
+        for row in chunk:
+            new_threshold = row.pk
+            yield row
+        if threshold == new_threshold:
+            break
+        threshold = new_threshold
+
+
+@contextmanager
+def handle_broken_pipe() -> Generator[None, None, None]:
+    """
+    Prevent BrokenPipeError when the output stream is closed early, such as
+    when piping to head.
+
+    https://adamj.eu/tech/2025/07/20/python-fix-brokenpipeerror/
+    """
+    try:
+        yield
+        sys.stdout.flush()
+    except BrokenPipeError:
+        # Python flushes standard streams on exit; redirect remaining output
+        # to devnull to avoid another BrokenPipeError at shutdown
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())

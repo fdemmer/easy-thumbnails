@@ -1,11 +1,7 @@
 import datetime as dt
 import fnmatch
-import os
-import sys
 import time
 from collections import Counter
-from collections.abc import Generator
-from contextlib import contextmanager
 from pathlib import Path
 
 from django.apps import apps
@@ -19,7 +15,14 @@ from easy_thumbnails.conf import settings
 from easy_thumbnails.fields import ThumbnailerImageField
 from easy_thumbnails.models import Source
 from easy_thumbnails.storage import thumbnail_default_storage
-from easy_thumbnails.utils import get_storage_hash
+from easy_thumbnails.utils import (
+    get_storage_hash,
+    get_storage_hash_map,
+    get_storages,
+    handle_broken_pipe,
+    q_has_value,
+    queryset_iterator,
+)
 
 
 class ThumbnailCollectionCleaner:
@@ -35,7 +38,7 @@ class ThumbnailCollectionCleaner:
         self.stderr = stderr
         self.dry_run = dry_run
         self.verbosity = verbosity
-        self.storage_hash_map = build_storage_hash_map()
+        self.storage_hash_map = get_storage_hash_map()
         self.counts = Counter()
         self.execution_time = None
 
@@ -195,58 +198,6 @@ class ThumbnailCollectionCleaner:
             f'{self.counts["thumbnails_deleted"]:>7}'
         )
         self.stdout.write(f'(Completed in {self.execution_time} seconds)\n')
-
-
-def queryset_iterator(query, chunk_size=1000, order_by='pk'):
-    # https://use-the-index-luke.com/sql/partial-results/fetch-next-page
-    threshold = new_threshold = 0
-    if order_by is not None:
-        query = query.order_by(order_by)
-    while True:
-        chunk = query.filter(pk__gt=threshold)[:chunk_size].iterator()
-        for row in chunk:
-            new_threshold = row.pk
-            yield row
-        if threshold == new_threshold:
-            break
-        threshold = new_threshold
-
-
-@contextmanager
-def handle_broken_pipe() -> Generator[None, None, None]:
-    """
-    Prevent BrokenPipeError when the output stream is closed early, such as
-    when piping to head.
-
-    https://adamj.eu/tech/2025/07/20/python-fix-brokenpipeerror/
-    """
-    try:
-        yield
-        sys.stdout.flush()
-    except BrokenPipeError:
-        # Python flushes standard streams on exit; redirect remaining output
-        # to devnull to avoid another BrokenPipeError at shutdown
-        devnull = os.open(os.devnull, os.O_WRONLY)
-        os.dup2(devnull, sys.stdout.fileno())
-
-
-def get_storages():
-    return [
-        (alias, type(storages[alias]).__name__, get_storage_hash(storages[alias]))
-        for alias in settings.STORAGES.keys()
-    ]
-
-
-def build_storage_hash_map():
-    return {storage_hash: alias for alias, _, storage_hash in get_storages()}
-
-
-def _has_value_q(field):
-    """
-    Return a Q object matching rows where `field` has an actual value
-    (excludes both the empty string and NULL).
-    """
-    return ~(Q(**{field.name: ''}) | Q(**{f'{field.name}__isnull': True}))
 
 
 def _collect_fields(field_class=ThumbnailerImageField):
@@ -430,7 +381,7 @@ class Command(BaseCommand):
         if options['summary']:
             total = 0
             for model, field in pairs:
-                count = model.objects.filter(_has_value_q(field)).count()
+                count = model.objects.filter(q_has_value(field)).count()
                 total += count
                 self.stdout.write(f'{count:>8} {model._meta.label}.{field.name}')
             self.stderr.write(f'{total:>8} total')
@@ -456,7 +407,7 @@ class Command(BaseCommand):
         for model, field in pairs:
             storage_hash = get_storage_hash(field.storage)
             for name in (
-                model.objects.filter(_has_value_q(field))
+                model.objects.filter(q_has_value(field))
                 .values_list(field.name, flat=True)
                 .iterator()
             ):
