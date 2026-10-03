@@ -72,8 +72,10 @@
         {% for image in images %}
             <li>
                 <picture>
+                    <source media="(min-width: 800px)" type="image/avif" srcset="{{ image.image.preview_large_avif.url }}">
                     <source media="(min-width: 800px)" type="image/webp" srcset="{{ image.image.preview_large_webp.url }}">
                     <source media="(min-width: 800px)" srcset="{{ image.image.preview_large.url }}">
+                    <source type="image/avif" srcset="{{ image.image.preview_avif.url }}">
                     <source type="image/webp" srcset="{{ image.image.preview_webp.url }}">
                     <img src="{{ image.image.preview.url }}" srcset="{{ image.image.preview.url }}" alt="{{ image.title }}">
                 </picture>

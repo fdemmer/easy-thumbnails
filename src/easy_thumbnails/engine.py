@@ -69,8 +69,12 @@ def save_pil_image(image, destination=None, filename=None, **options):
             # of pillow avoid the MAXBLOCK limitation.
             pass
     else:
-        if format != 'WEBP' and 'quality' in options:
+        if format not in ('WEBP', 'AVIF') and 'quality' in options:
             options.pop('quality')
+        if format == 'AVIF' and not isinstance(options.get('subsampling'), str):
+            # The integer JPEG subsampling level is not valid for AVIF, which
+            # expects a string like '4:2:0'.
+            options.pop('subsampling', None)
     if not saved:
         image.save(destination, format=format, **options)
     if hasattr(destination, 'seek'):

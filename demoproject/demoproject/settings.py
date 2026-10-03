@@ -71,6 +71,12 @@ THUMBNAIL_ALIASES = {
             'upscale': True,
             'format': 'webp',
         },
+        'preview_avif': {
+            'size': (640, 256),
+            'crop': True,
+            'upscale': True,
+            'format': 'avif',
+        },
         'preview_large': {
             'size': (1280, 512),
             'crop': True,
@@ -81,6 +87,12 @@ THUMBNAIL_ALIASES = {
             'crop': True,
             'upscale': True,
             'format': 'webp',
+        },
+        'preview_large_avif': {
+            'size': (1280, 512),
+            'crop': True,
+            'upscale': True,
+            'format': 'avif',
         },
     },
 }

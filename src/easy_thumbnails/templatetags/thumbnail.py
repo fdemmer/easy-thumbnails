@@ -155,7 +155,7 @@ def thumbnail(parser, token):
     ``quality=90``.
 
     The output format of a single thumbnail can be set with
-    ``format="webp"`` or ``format="jpeg"``, overriding the extension
+    ``format="webp"``, ``format="avif"`` or ``format="jpeg"``, overriding the extension
     settings. JPEG does not support transparency, so for transparent sources
     prefer WebP or add ``replace_alpha`` to choose the background color.
 

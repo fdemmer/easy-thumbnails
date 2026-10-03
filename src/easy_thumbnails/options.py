@@ -1,7 +1,7 @@
 from easy_thumbnails.conf import settings
 
 
-OUTPUT_FORMATS = ('jpg', 'webp')
+OUTPUT_FORMATS = ('jpg', 'webp', 'avif')
 
 
 class ThumbnailOptions(dict):
@@ -22,7 +22,8 @@ class ThumbnailOptions(dict):
         fmt = {'jpeg': 'jpg'}.get(fmt, fmt)
         if fmt not in OUTPUT_FORMATS:
             raise ValueError(
-                f'Unsupported thumbnail format {value!r}, expected one of: jpeg, webp'
+                f'Unsupported thumbnail format {value!r}, '
+                f'expected one of: jpeg, webp, avif'
             )
         return fmt
 

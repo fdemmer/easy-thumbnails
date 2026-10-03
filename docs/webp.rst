@@ -31,7 +31,7 @@ Choosing the format per thumbnail
 ==================================
 
 The ``format`` thumbnail option sets the output format for a single
-thumbnail, either ``webp`` or ``jpeg``. It takes precedence over
+thumbnail: ``webp``, ``avif`` or ``jpeg``. It takes precedence over
 ``THUMBNAIL_EXTENSION``, ``THUMBNAIL_TRANSPARENCY_EXTENSION`` and
 ``THUMBNAIL_PRESERVE_EXTENSIONS``::
 
@@ -48,6 +48,17 @@ The option can also be used in
    with an alpha channel discards the transparency; add ``replace_alpha`` (for
    example ``replace_alpha="#fff"``) to control the background color. WebP
    keeps transparency, so it is the better choice for transparent sources.
+
+Checking supported formats
+---------------------------
+
+WebP and AVIF support depends on how Pillow was built (the official wheels
+include both). To check what your installation supports::
+
+    python -c "from PIL import features; print(features.check('webp'), features.check('avif'))"
+
+``python -m PIL`` prints a full report of the supported codecs, features and
+their library versions.
 
 Encoder options
 ================

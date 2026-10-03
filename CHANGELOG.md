@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Add `format` thumbnail option (`jpeg` or `webp`) to set the output format
+- Add `format` thumbnail option (`jpeg`, `webp` or `avif`) to set the output format
   per thumbnail.
 
 
