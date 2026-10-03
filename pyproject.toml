@@ -47,11 +47,11 @@ svg = [
 [project.urls]
 Homepage = "https://github.com/fdemmer/easy-thumbnails"
 Documentation = "https://fdemmer.github.io/easy-thumbnails/master/"
-Changelog = "https://github.com/fdemmer/easy-thumbnails/blob/master/CHANGES.rst"
+Changelog = "https://github.com/fdemmer/easy-thumbnails/blob/master/CHANGELOG.md"
 
 [tool.setuptools.dynamic]
 version = {attr = "easy_thumbnails.__version__"}
-readme = {file = ["README.rst", "CHANGES.rst"], content-type = "text/x-rst"}
+readme = {file = ["README.md", "CHANGELOG.md"], content-type = "text/markdown"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
