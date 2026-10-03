@@ -4,6 +4,60 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Easy Thumbnails Demo</title>
+    <style>
+        ul.images {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+        ul.images li {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        ul.images picture {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+        ul.images img {
+            max-width: 100%;
+            height: auto;
+        }
+        ul.images p {
+            grid-column: 2;
+            margin: 0;
+            text-align: center;
+        }
+        ul.images a {
+            grid-column: 3;
+            justify-self: end;
+            font-size: 0.8rem;
+            color: #888;
+            text-decoration: none;
+        }
+        ul.images a:hover {
+            color: #333;
+            text-decoration: underline;
+        }
+        /* matches the large <source> breakpoint: show large previews at full size */
+        @media (min-width: 800px) {
+            ul.images {
+                grid-template-columns: 1fr;
+            }
+            ul.images li {
+                justify-self: start;
+            }
+        }
+    </style>
 </head>
 <body>
     <h1>Upload an Image</h1>
@@ -14,13 +68,15 @@
     </form>
 
     <h2>Uploaded Images</h2>
-    <ul>
+    <ul class="images">
         {% for image in images %}
             <li>
-                <img src="{{ image.image.preview.url }}"
-                     srcset="{{ image.image.preview.url }} 640w, {{ image.image.preview_large.url }} 1280w"
-                     sizes="(min-width: 800px) 1280px, 640px"
-                     alt="{{ image.title }}">
+                <picture>
+                    <source media="(min-width: 800px)" type="image/webp" srcset="{{ image.image.preview_large_webp.url }}">
+                    <source media="(min-width: 800px)" srcset="{{ image.image.preview_large.url }}">
+                    <source type="image/webp" srcset="{{ image.image.preview_webp.url }}">
+                    <img src="{{ image.image.preview.url }}" srcset="{{ image.image.preview.url }}" alt="{{ image.title }}">
+                </picture>
                 <p>{{ image.title }}</p>
                 <a href="{% url 'edit_image' image.pk %}">Edit</a>
             </li>

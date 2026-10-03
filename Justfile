@@ -27,6 +27,10 @@ coverage env="py314-dj52-svg":
     fi
     uvx --with tox-uv tox exec -e {{env}} -- coverage html
 
+demo *args="runserver":
+    uv run --extra svg python demoproject/manage.py migrate
+    uv run --extra svg python demoproject/manage.py {{args}}
+
 docs:
     rm -rf docs/_build
     uv run --with sphinx --with-requirements docs/requirements.txt \
