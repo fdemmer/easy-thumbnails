@@ -418,6 +418,10 @@ class ThumbnailSourceFilesCommandTest(test.BaseTest):
         stdout, _ = self._call(include=['easy_thumbnails_tests.testmodel'], summary=True)
         self.assertIn('TestModel', stdout)
 
+    def test_invalid_spec_raises(self):
+        with self.assertRaises(CommandError):
+            self._call(include=['a.b.c.d'])
+
     def test_include_no_match_returns_empty(self):
         stdout, _ = self._call(include=['auth'], summary=True)
         self.assertEqual(stdout, '')

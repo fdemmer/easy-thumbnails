@@ -348,6 +348,28 @@ class Command(BaseCommand):
         with handle_broken_pipe():
             method(*args, **options)
 
+    def _resolve_field_pairs(self, options):
+        """
+        Validate --include/--exclude specs, resolve the (model, field) pairs
+        they select, and report how many were found.
+        """
+        include = options['include']
+        exclude = options['exclude']
+        for spec in include + exclude:
+            if not 1 <= len(spec.split('.')) <= 3:
+                raise CommandError(f'Invalid filter spec: {spec!r}')
+
+        pairs = [
+            (model, field)
+            for model, field in _collect_fields()
+            if _matches(model, field, include)
+            and (not exclude or not _matches(model, field, exclude))
+        ]
+        self.stderr.write(
+            f'Found {len(pairs)} fields in {len({m for m, _ in pairs})} models.'
+        )
+        return pairs
+
     def do_list_storages(self, *args, **options):
         """
         List configured storages with their alias and storage hash.
@@ -391,21 +413,7 @@ class Command(BaseCommand):
         With --summary, prints the non-empty value count per model field
         instead of listing every path.
         """
-        include = options['include']
-        exclude = options['exclude']
-        for spec in include + exclude:
-            if not 1 <= len(spec.split('.')) <= 3:
-                raise CommandError(f'Invalid filter spec: {spec!r}')
-
-        pairs = [
-            (model, field)
-            for model, field in _collect_fields()
-            if _matches(model, field, include)
-            and (not exclude or not _matches(model, field, exclude))
-        ]
-        self.stderr.write(
-            f'Found {len(pairs)} fields in {len({m for m, _ in pairs})} models.'
-        )
+        pairs = self._resolve_field_pairs(options)
         self.stderr.write('Counting non-empty values per FileField...')
 
         if options['summary']:
