@@ -11,6 +11,8 @@ from django.db import models as django_models
 from django.test import override_settings
 from django.utils import timezone
 
+from easy_thumbnails.alias import aliases
+from easy_thumbnails.conf import settings as thumbnail_settings
 from easy_thumbnails.fields import ThumbnailerField
 from easy_thumbnails.files import get_thumbnailer
 from easy_thumbnails.management import (
@@ -722,3 +724,77 @@ class DeleteAllThumbnailsTest(ManagementTestBase):
         self.assertEqual(count, 1)
         self.assertFalse(top.exists())
         self.assertTrue(sub.exists())
+
+
+class ThumbnailPurgeCommandTest(test.BaseTest):
+    def setUp(self):
+        super().setUp()
+        thumbnail_settings.THUMBNAIL_ALIASES = {
+            '': {
+                'small': {'size': (20, 20)},
+                'large': {'size': (50, 50)},
+            },
+        }
+        aliases.populate_from_settings()
+        self.addCleanup(aliases.populate_from_settings)
+
+        field = TestModel._meta.get_field('picture')
+        self.storage = field.storage
+        name = self.create_image(self.storage, 'pictures/purge.jpg')
+        self.addCleanup(self.storage.delete, name)
+
+        self.instance = TestModel.objects.create(avatar='avatars/a.jpg', picture=name)
+        self.thumbnailer = get_thumbnailer(self.instance.picture)
+        self.small = self.thumbnailer.get_thumbnail({'size': (20, 20), 'ALIAS': 'small'})
+        self.large = self.thumbnailer.get_thumbnail({'size': (50, 50), 'ALIAS': 'large'})
+
+    def _call(self, **kwargs):
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        call_command('thumbnail', 'purge', stdout=stdout, stderr=stderr, **kwargs)
+        return stdout.getvalue(), stderr.getvalue()
+
+    def _exists(self, thumbnail):
+        return self.thumbnailer.thumbnail_storage.exists(thumbnail.name)
+
+    def test_purge_all_keeps_source(self):
+        self.assertEqual(Thumbnail.objects.count(), 2)
+        self._call()
+        self.assertEqual(Thumbnail.objects.count(), 0)
+        self.assertEqual(Source.objects.count(), 1)
+        self.assertFalse(self._exists(self.small))
+        self.assertFalse(self._exists(self.large))
+
+    def test_dry_run_deletes_nothing(self):
+        stdout, _ = self._call(dry_run=True)
+        self.assertIn('would be purged', stdout)
+        self.assertEqual(Thumbnail.objects.count(), 2)
+        self.assertTrue(self._exists(self.small))
+        self.assertTrue(self._exists(self.large))
+
+    def test_alias_filter(self):
+        self._call(alias=['small'])
+        self.assertEqual(Thumbnail.objects.count(), 1)
+        self.assertFalse(self._exists(self.small))
+        self.assertTrue(self._exists(self.large))
+
+    def test_unknown_alias_raises(self):
+        with self.assertRaises(CommandError):
+            self._call(alias=['nope'])
+        self.assertEqual(Thumbnail.objects.count(), 2)
+
+    def test_exclude_skips_field(self):
+        self._call(exclude=['easy_thumbnails_tests.testmodel.picture'])
+        self.assertEqual(Thumbnail.objects.count(), 2)
+
+    def test_include_other_app_purges_nothing(self):
+        self._call(include=['auth'])
+        self.assertEqual(Thumbnail.objects.count(), 2)
+
+    def test_include_matching_model_purges(self):
+        self._call(include=['easy_thumbnails_tests.testmodel'])
+        self.assertEqual(Thumbnail.objects.count(), 0)
+
+    def test_include_matching_field_purges(self):
+        self._call(include=['easy_thumbnails_tests.testmodel.picture'])
+        self.assertEqual(Thumbnail.objects.count(), 0)

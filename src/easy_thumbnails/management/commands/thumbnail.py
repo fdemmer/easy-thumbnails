@@ -10,6 +10,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 from django.utils import timezone
 
+from easy_thumbnails.alias import aliases
 from easy_thumbnails.compat import batched
 from easy_thumbnails.conf import settings
 from easy_thumbnails.fields import ThumbnailerImageField
@@ -337,6 +338,52 @@ class Command(BaseCommand):
             help='Preview which Source records would be deleted without deleting them.',
         )
 
+        purge_parser = subparsers.add_parser(
+            'purge',
+            help='Delete thumbnails (files and database records, keep Source).',
+        )
+        purge_parser.set_defaults(method=self.do_purge)
+        purge_parser.add_argument(
+            '--dry-run',
+            action='store_true',
+            dest='dry_run',
+            default=False,
+            help='Report what would be purged without deleting anything.',
+        )
+        purge_parser.add_argument(
+            '--alias',
+            dest='alias',
+            metavar='NAME',
+            action='append',
+            default=[],
+            help=(
+                'Only purge thumbnails of this alias (THUMBNAIL_ALIASES). '
+                'May be repeated. Purges all thumbnails if not given.'
+            ),
+        )
+        purge_parser.add_argument(
+            '--include',
+            dest='include',
+            metavar='SPEC',
+            action='append',
+            default=[],
+            help=(
+                'Restrict purging to "app" or "app.model" or "app.model.field". '
+                'May be repeated.'
+            ),
+        )
+        purge_parser.add_argument(
+            '--exclude',
+            dest='exclude',
+            metavar='SPEC',
+            action='append',
+            default=[],
+            help=(
+                'Exclude "app" or "app.model" or "app.model.field" from purging. '
+                'May be repeated.'
+            ),
+        )
+
     def add_arguments(self, parser):
         subparsers = parser.add_subparsers(
             title='sub-commands',
@@ -484,3 +531,106 @@ class Command(BaseCommand):
 
         action = 'Would delete' if dry_run else 'Deleted'
         self.stderr.write(f'{action} {deleted} Source records.')
+
+    def _check_alias_names(self, alias_names, pairs):
+        """
+        Raise CommandError if an alias is not configured for any selected field.
+        """
+        if alias_names:
+            known = set()
+            for model, field in pairs:
+                target = f'{model._meta.app_label}.{model.__name__}.{field.name}'
+                known.update(aliases.all(target, include_global=True))
+            unknown = sorted(set(alias_names) - known)
+            if unknown:
+                raise CommandError(f'Unknown alias: {", ".join(unknown)}')
+
+    def _purge_queryset(self, fieldfile, source_cache, alias_names):
+        """
+        Return the Thumbnail records of `source_cache` to purge: those in the
+        current thumbnail storage, limited to the given aliases if any.
+
+        Records don't store their alias, so thumbnails are matched by the name
+        the namer generates for the current alias options.
+        """
+        storage_hash = get_storage_hash(fieldfile.thumbnail_storage)
+        thumbnails = source_cache.thumbnails.filter(storage_hash=storage_hash)
+        if not alias_names:
+            return thumbnails
+
+        all_aliases = aliases.all(fieldfile, include_global=True)
+        names = set()
+        for alias_name in alias_names:
+            # redundant check after _check_alias_names
+            if alias_name not in all_aliases:
+                continue
+            options = {**all_aliases[alias_name], 'ALIAS': alias_name}
+            for transparent in (False, True):
+                names.add(fieldfile.get_thumbnail_name(options, transparent=transparent))
+
+        return thumbnails.filter(name__in=names)
+
+    def do_purge(self, *args, **options):
+        """
+        Delete thumbnails of existing sources, but keep the Source records.
+
+        For every non-empty ThumbnailerImageField value the cached Thumbnail
+        records are deleted together with their files in the thumbnail
+        storage (which can be a remote storage). Thumbnails stored using a
+        different storage than the one currently configured are skipped.
+
+        Fields can be narrowed down with --include/--exclude.
+
+        With --alias, only thumbnails of the given aliases are purged;
+        they are identified by the thumbnail name the configured namer generates
+        for the current alias options.
+
+        Without --alias, all thumbnails are purged. Name matching misses thumbnails
+        generated when the namer, prefix, basedir/subdir or alias options change,
+        and aliases with identical options share thumbnails.
+
+        With --dry-run, only reports what would be purged.
+        """
+        dry_run = options['dry_run']
+        alias_names = options['alias']
+        verbosity = int(options.get('verbosity', 1))
+
+        pairs = self._resolve_field_pairs(options)
+        self._check_alias_names(alias_names, pairs)
+
+        if dry_run:
+            self.stdout.write('Dry run...')
+
+        counts = Counter()
+        time_start = time.time()
+        for model, field in pairs:
+            query = model.objects.filter(q_has_value(field)).only('pk', field.name)
+            for instance in queryset_iterator(query):
+                fieldfile = getattr(instance, field.name)
+                source_cache = fieldfile.get_source_cache()
+                if source_cache is None:
+                    continue
+                counts['sources'] += 1
+
+                thumbnails = self._purge_queryset(fieldfile, source_cache, alias_names)
+
+                for thumbnail in thumbnails:
+                    if verbosity > 1:
+                        self.stdout.write(f'{thumbnail.name}')
+                    if not dry_run:
+                        try:
+                            fieldfile.thumbnail_storage.delete(thumbnail.name)
+                        except OSError as e:
+                            self.stderr.write(f'Could not delete {thumbnail.name}: {e}')
+                            counts['errors'] += 1
+                            continue
+                        thumbnail.delete()
+                    counts['thumbnails'] += 1
+
+        execution_time = round(time.time() - time_start)
+        self.stdout.write(f'{timezone.now().strftime("%Y-%m-%d %H:%M "):-<48}')
+        self.stdout.write(f'{"Sources processed:":<40} {counts["sources"]:>7}')
+        label = 'Thumbnails that would be purged:' if dry_run else 'Thumbnails purged:'
+        self.stdout.write(f'{label:<40} {counts["thumbnails"]:>7}')
+        self.stdout.write(f'{"Errors:":<40} {counts["errors"]:>7}')
+        self.stdout.write(f'(Completed in {execution_time} seconds)\n')
