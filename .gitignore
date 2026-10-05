@@ -13,3 +13,4 @@ reports/*
 .idea
 .coverage
 coverage.xml
+uv.lock
