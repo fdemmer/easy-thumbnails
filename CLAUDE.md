@@ -52,6 +52,10 @@ just publish-test    # upload to TestPyPI
 just publish         # upload to PyPI (requires clean working tree)
 ```
 
+## Commit messages
+
+Do not use Conventional Commits. Follow the existing history: a short, capitalized, imperative subject line without type/scope prefix or trailing period (e.g. "Fix no-op exclude filter for empty/null FileField values", "Add docstrings for command methods").
+
 ## Architecture
 
 ### Thumbnail generation pipeline
