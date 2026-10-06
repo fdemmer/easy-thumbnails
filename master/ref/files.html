@@ -218,9 +218,47 @@ generated thumbnail will be saved too.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="easy_thumbnails.files.Thumbnailer.get_thumbnail_name">
 <span class="sig-name descname"><span class="pre">get_thumbnail_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnail_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transparent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail_name" title="Link to this definition"></a></dt>
-<dd><p>Return a thumbnail filename for the given <code class="docutils literal notranslate"><span class="pre">thumbnail_options</span></code>
-dictionary and <code class="docutils literal notranslate"><span class="pre">source_name</span></code> (which defaults to the File’s <code class="docutils literal notranslate"><span class="pre">name</span></code>
-if not provided).</p>
+<dd><p>Return the storage-relative path for a thumbnail of this file.</p>
+<p>The path has the form
+<code class="docutils literal notranslate"><span class="pre">&lt;basedir&gt;/&lt;source</span> <span class="pre">dir&gt;/&lt;subdir&gt;/&lt;prefix&gt;&lt;namer</span> <span class="pre">output&gt;</span></code>.</p>
+<p>Arguments:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">thumbnail_options</span></code></dt><dd><p>Dict or <code class="docutils literal notranslate"><span class="pre">ThumbnailOptions</span></code> of thumbnail options (e.g.
+<code class="docutils literal notranslate"><span class="pre">{'size':</span> <span class="pre">(100,</span> <span class="pre">100),</span> <span class="pre">'crop':</span> <span class="pre">True}</span></code>). Normalised through
+<code class="docutils literal notranslate"><span class="pre">get_options()</span></code>, so the default quality is added if missing.
+Its prepared form is passed to the namer and substituted for
+<code class="docutils literal notranslate"><span class="pre">%(opts)s</span></code> in basedir/subdir.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">transparent</span></code></dt><dd><p>If true, the transparency extension is used for the file
+extension instead of the regular one (unless the source
+extension is preserved). <code class="docutils literal notranslate"><span class="pre">get_existing_thumbnail()</span></code> calls
+this with both values to look up either variant.</p>
+</dd>
+</dl>
+<p>Derived from the file itself:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">self.name</span></code>: its parent directory is mirrored in the result
+(with the source storage <code class="docutils literal notranslate"><span class="pre">location</span></code> prefix and leading slashes
+removed; remote storages without <code class="docutils literal notranslate"><span class="pre">location</span></code> are used as is),
+its file name is passed to the namer, and its lowercased
+extension decides whether the extension is preserved.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">self.source_storage</span></code>: only for its optional <code class="docutils literal notranslate"><span class="pre">location</span></code>.</p></li>
+</ul>
+<p>Derived from settings (thumbnailer attributes <code class="docutils literal notranslate"><span class="pre">thumbnail_*</span></code>,
+defaulting to the <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_*</span></code> settings):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">THUMBNAIL_BASEDIR</span></code> / <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_SUBDIR</span></code>: directories before
+and after the source directory; <code class="docutils literal notranslate"><span class="pre">%(opts)s</span></code> is replaced by the
+prepared options joined with <code class="docutils literal notranslate"><span class="pre">_</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">THUMBNAIL_PREFIX</span></code>: prepended to the file name.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">THUMBNAIL_NAMER</span></code>: dotted path or callable producing the file
+name, see <code class="docutils literal notranslate"><span class="pre">easy_thumbnails.namers</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">THUMBNAIL_EXTENSION</span></code>, <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_TRANSPARENCY_EXTENSION</span></code>:
+output extension (falls back to <code class="docutils literal notranslate"><span class="pre">jpg</span></code> if empty).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">THUMBNAIL_PRESERVE_EXTENSIONS</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> or a list of source
+extensions that keep their own extension.</p></li>
+</ul>
+<p>Returns the path as a string; it is not checked for existence.</p>
 </dd></dl>
 
 <dl class="py method">
