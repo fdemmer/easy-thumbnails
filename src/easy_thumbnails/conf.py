@@ -320,7 +320,12 @@ class Settings(AppSettings):
     }
     """
     Allows customising Image.save parameters based on format, for example:
-    `{'WEBP': {'method': 6}}`
+    `{'WEBP': {'method': 6}}` or, for lossless WebP,
+    `{'WEBP': {'lossless': True}}`.
+
+    Note that the ``quality`` thumbnail option is always passed explicitly and
+    takes precedence over a ``quality`` entry here; use ``THUMBNAIL_QUALITY``
+    to change the default quality. See :doc:`/webp` for details.
     """
 
 

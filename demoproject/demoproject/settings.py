@@ -65,10 +65,34 @@ THUMBNAIL_ALIASES = {
             'crop': True,
             'upscale': True,
         },
+        'preview_webp': {
+            'size': (640, 256),
+            'crop': True,
+            'upscale': True,
+            'format': 'webp',
+        },
+        'preview_avif': {
+            'size': (640, 256),
+            'crop': True,
+            'upscale': True,
+            'format': 'avif',
+        },
         'preview_large': {
             'size': (1280, 512),
             'crop': True,
             'upscale': True,
+        },
+        'preview_large_webp': {
+            'size': (1280, 512),
+            'crop': True,
+            'upscale': True,
+            'format': 'webp',
+        },
+        'preview_large_avif': {
+            'size': (1280, 512),
+            'crop': True,
+            'upscale': True,
+            'format': 'avif',
         },
     },
 }

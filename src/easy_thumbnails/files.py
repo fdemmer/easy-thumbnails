@@ -510,7 +510,9 @@ class Thumbnailer(File):
 
         source_extension = source_file_path.suffix[1:].lower()
         preserve_extensions = self.thumbnail_preserve_extensions
-        if (
+        if thumbnail_options.get('format'):
+            extension = thumbnail_options['format']
+        elif (
             preserve_extensions is True
             or isinstance(preserve_extensions, (list, tuple))
             and source_extension in preserve_extensions
