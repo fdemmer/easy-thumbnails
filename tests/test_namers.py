@@ -61,6 +61,18 @@ class Alias(TestCase):
         self.assertEqual(filename, 'source.jpg.medium_large.jpg')
 
 
+class AliasOrSize(TestCase):
+    def test_size_fallback(self):
+        filename = namers.alias_or_size(
+            thumbnailer=FakeThumbnailer(),
+            prepared_options=['800x600', 'q80', 'crop', 'upscale'],
+            thumbnail_options={'size': (800, 600)},
+            source_filename='source.jpg',
+            thumbnail_extension='jpg',
+        )
+        self.assertEqual(filename, 'source.800x600.jpg')
+
+
 class SourceHashed(TestCase):
     def test_basic(self):
         filename = namers.source_hashed(

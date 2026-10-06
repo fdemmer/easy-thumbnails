@@ -1,5 +1,5 @@
 import base64
-from pathlib import Path
+from pathlib import PurePath
 
 from easy_thumbnails.utils import sha1_not_used_for_security
 
@@ -17,7 +17,7 @@ def default(
         '%(opts)s' in thumbnailer.thumbnail_basedir
         or '%(opts)s' in thumbnailer.thumbnail_subdir
     ):
-        if thumbnail_extension != Path(source_filename).suffix[1:]:
+        if thumbnail_extension != PurePath(source_filename).suffix[1:]:
             filename_parts.append(thumbnail_extension)
     else:
         filename_parts.extend(['_'.join(prepared_options), thumbnail_extension])
@@ -37,6 +37,22 @@ def alias(thumbnailer, thumbnail_options, source_filename, thumbnail_extension, 
             thumbnail_extension,
         ]
     )
+
+
+def alias_or_size(
+    thumbnailer, thumbnail_options, source_filename, thumbnail_extension, **kwargs
+):
+    """
+    Generate filename based on thumbnail alias name (option `THUMBNAIL_ALIASES`).
+    If no alias is available only the size will be used (as it is a required option).
+    The source file suffix/extension is removed from the name.
+
+    For example: `source.medium_large.jpg` or `source.800x600.jpg`
+    """
+    source = PurePath(source_filename)
+    size = 'x'.join(map(str, thumbnail_options['size']))
+    alias_name = thumbnail_options.get('ALIAS', size)
+    return '.'.join([source.stem, alias_name, thumbnail_extension])
 
 
 def hashed(source_filename, prepared_options, thumbnail_extension, **kwargs):
