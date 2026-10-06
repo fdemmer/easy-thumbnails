@@ -15,8 +15,8 @@ thumbnail storages
     python manage.py thumbnail storages
 
 Lists every storage alias configured in Django's ``STORAGES`` setting
-together with its computed storage hash, one ``<alias>: <storage_hash>``
-line per storage.
+together with its computed storage hash and storage class name, one
+column-aligned ``<alias> <storage_hash> <class_name>`` line per storage.
 
 This is useful for identifying which alias a ``Source.storage_hash``
 value corresponds to, and as a prerequisite step before running
@@ -32,8 +32,16 @@ List all configured storages::
 
 Example output::
 
-    default: 275876e34cf609db8f4c1b0c56dfd4ba
-    media: 1e5f5210a4bec7dc9a1c0e3c1c2e7f6d
+    default          0d677af76ca5bf5575d614e04932c3a4 FileSystemStorage
+    staticfiles      0d677af76ca5bf5575d614e04932c3a4 FileSystemStorage
+    easy_thumbnails  0d677af76ca5bf5575d614e04932c3a4 FileSystemStorage
+
+.. note::
+   The hash is derived only from the storage's class (module and name),
+   not from its location or options. Storages of the same class (as above)
+   therefore produce identical hashes, and a ``Source.storage_hash`` cannot
+   be attributed to just one of them. :ref:`thumbnail cleanup
+   <thumbnail_cleanup>` resolves such a hash to the last matching alias.
 
 .. _thumbnail_cleanup:
 
