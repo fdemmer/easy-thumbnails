@@ -10,6 +10,13 @@ clean:
     rm -rf *.egg-info
     rm -f .coverage
 
+run *args:
+    uv run --extra svg demoproject/manage.py {{args}}
+
+serve *args:
+    just run migrate
+    just run runserver {{args}}
+
 test env="":
     uvx --with tox-uv tox {{ if env == "" { "--parallel auto" } else { "-e " + env } }}
 

@@ -14,3 +14,4 @@ reports/*
 .coverage
 coverage.xml
 uv.lock
+.venv
