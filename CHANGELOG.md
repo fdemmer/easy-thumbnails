@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 (up to 2.x, version numbers were not strictly semantic).
 
+## [Unreleased]
+
+- The `format` option is no longer included in `prepared_options` passed to
+  namers, since it already determines the thumbnail file extension. Thumbnail
+  names no longer contain a `format-<ext>` part.
+- Add tests and a docstring for `ThumbnailOptions.prepared_options`.
+
+
 ## [3.3.0] - 2026-10-06
 
 - Add `format` thumbnail option (`jpeg`, `webp` or `avif`) to set the output format

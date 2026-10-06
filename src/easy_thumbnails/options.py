@@ -3,16 +3,20 @@ from easy_thumbnails.conf import settings
 
 OUTPUT_FORMATS = ('jpg', 'webp', 'avif')
 
+# Chroma subsampling constants for JPEG used by Pillow
+JPEG_CSS_444 = 0
+JPEG_CSS_422 = 1
+JPEG_CSS_420 = 2
+
 
 class ThumbnailOptions(dict):
     def __init__(self, *args, **kwargs):
-        self._prepared_options = None
         super().__init__(*args, **kwargs)
         if settings.THUMBNAIL_DEFAULT_OPTIONS:
             for key, value in settings.THUMBNAIL_DEFAULT_OPTIONS.items():
                 self.setdefault(key, value)
         self.setdefault('quality', settings.THUMBNAIL_QUALITY)
-        self.setdefault('subsampling', 2)
+        self.setdefault('subsampling', JPEG_CSS_420)
         if self.get('format'):
             self['format'] = self._normalize_format(self['format'])
 
@@ -28,12 +32,35 @@ class ThumbnailOptions(dict):
         return fmt
 
     def prepared_options(self):
+        """
+        Return the options as a list of strings used to name the thumbnail.
+
+        The first item is the size (``'100x50'``), the second the quality and
+        non-default subsampling (``'q85'``, ``'q85ss0'``), followed by the
+        remaining options in key order: ``key`` for ``True``, ``key-value``
+        otherwise (sequences are comma-joined).
+
+        Falsy values and uppercase keys are skipped, they don't affect the filename.
+        The ``format`` key is skipped too: it already determines the file
+        extension, so it is not repeated in the name.
+
+        This is only used for naming: ``Thumbnailer.get_thumbnail_name`` joins
+        the list with ``_`` for the ``%(opts)s`` basedir/subdir templates and
+        passes it to the namer as ``prepared_options``.
+
+        Image generation does not use it; the processors, source generators
+        and ``engine.save_pil_image`` read the full options dict.
+
+        The size must stay the first item, since the ``source_hashed`` namer
+        relies on it!
+        """
+        hidden_keys = ['format', 'quality', 'size', 'subsampling']
         prepared_opts = ['{size[0]}x{size[1]}'.format(**self)]
 
         opts_text = ''
         if 'quality' in self:
             opts_text += 'q{quality}'.format(**self)
-        if 'subsampling' in self and str(self['subsampling']) != '2':
+        if 'subsampling' in self and str(self['subsampling']) != f'{JPEG_CSS_420}':
             opts_text += 'ss{subsampling}'.format(**self)
         prepared_opts.append(opts_text)
 
@@ -43,7 +70,7 @@ class ThumbnailOptions(dict):
                 # use of prepared options is to generate the filename -- these
                 # options don't alter the filename).
                 continue
-            if not value or key in ['size', 'quality', 'subsampling']:
+            if not value or key in hidden_keys:
                 continue
             if value is True:
                 prepared_opts.append(key)

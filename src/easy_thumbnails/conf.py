@@ -195,6 +195,7 @@ class Settings(AppSettings):
     Instead of a tuple, you can also set this to ``True`` in order to always
     preserve the original extension.
     """
+
     THUMBNAIL_TRANSPARENCY_EXTENSION = 'png'
     """
     The type of image to save thumbnails with a transparency layer (e.g. GIFs
