@@ -120,8 +120,8 @@ thumbnail database cache and files on disk.</p>
 </pre></div>
 </div>
 <p>Lists every storage alias configured in Django’s <code class="docutils literal notranslate"><span class="pre">STORAGES</span></code> setting
-together with its computed storage hash, one <code class="docutils literal notranslate"><span class="pre">&lt;alias&gt;:</span> <span class="pre">&lt;storage_hash&gt;</span></code>
-line per storage.</p>
+together with its computed storage hash and storage class name, one
+column-aligned <code class="docutils literal notranslate"><span class="pre">&lt;alias&gt;</span> <span class="pre">&lt;storage_hash&gt;</span> <span class="pre">&lt;class_name&gt;</span></code> line per storage.</p>
 <p>This is useful for identifying which alias a <code class="docutils literal notranslate"><span class="pre">Source.storage_hash</span></code>
 value corresponds to, and as a prerequisite step before running
 <a class="reference internal" href="#thumbnail-cleanup"><span class="std std-ref">thumbnail cleanup –delete-with-missing-storage</span></a>.</p>
@@ -132,9 +132,17 @@ value corresponds to, and as a prerequisite step before running
 </pre></div>
 </div>
 <p>Example output:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">default</span><span class="p">:</span> <span class="mf">275876e34</span><span class="n">cf609db8f4c1b0c56dfd4ba</span>
-<span class="n">media</span><span class="p">:</span> <span class="mf">1e5</span><span class="n">f5210a4bec7dc9a1c0e3c1c2e7f6d</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">default</span>          <span class="mi">0</span><span class="n">d677af76ca5bf5575d614e04932c3a4</span> <span class="n">FileSystemStorage</span>
+<span class="n">staticfiles</span>      <span class="mi">0</span><span class="n">d677af76ca5bf5575d614e04932c3a4</span> <span class="n">FileSystemStorage</span>
+<span class="n">easy_thumbnails</span>  <span class="mi">0</span><span class="n">d677af76ca5bf5575d614e04932c3a4</span> <span class="n">FileSystemStorage</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The hash is derived only from the storage’s class (module and name),
+not from its location or options. Storages of the same class (as above)
+therefore produce identical hashes, and a <code class="docutils literal notranslate"><span class="pre">Source.storage_hash</span></code> cannot
+be attributed to just one of them. <a class="reference internal" href="#thumbnail-cleanup"><span class="std std-ref">thumbnail cleanup</span></a> resolves such a hash to the last matching alias.</p>
 </div>
 </section>
 </section>
