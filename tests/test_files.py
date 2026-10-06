@@ -265,6 +265,14 @@ class FilesTest(test.BaseTest):
             'test.jpg.50x50_q85_crop-smart_target-10,10_upscale.jpg',
         )
 
+    def test_get_thumbnail_name_strips_location_prefix_only(self):
+        location = self.thumbnailer.source_storage.location
+        self.thumbnailer.name = f'{location}/sub{location}/test.jpg'
+        self.assertEqual(
+            self.thumbnailer.get_thumbnail_name({'size': (50, 50)}),
+            f'sub{location}/test.jpg.50x50_q85.jpg'.lstrip('/'),
+        )
+
     def test_default_options_setting(self):
         settings.THUMBNAIL_DEFAULT_OPTIONS = {'crop': True}
         opts = {'size': (50, 50)}

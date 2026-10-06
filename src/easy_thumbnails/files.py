@@ -504,7 +504,7 @@ class Thumbnailer(File):
         # remote storages do not have the location attribute
         if hasattr(self.source_storage, 'location'):
             # remove storage location
-            path = path.replace(self.source_storage.location, '')
+            path = path.removeprefix(self.source_storage.location)
         # remove leading slash if present
         path = path.lstrip('/')
 

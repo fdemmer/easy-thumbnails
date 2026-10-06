@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix no-op `exclude` filter for empty/null `FileField` values in the
   `thumbnail` management command.
+- Fix thumbnail names removing the storage location from anywhere in the
+  source path instead of only from its start.
 
 
 ## [3.1.2] - 2026-10-03
