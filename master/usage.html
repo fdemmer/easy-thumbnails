@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Usage &mdash; easy-thumbnails 3.1.3 documentation</title>
+  <title>Usage &mdash; easy-thumbnails 3.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=eaea8fc6"></script>
+      <script src="_static/documentation_options.js?v=26f62d79"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -162,17 +162,24 @@ used by the image processors to generate the required image.</p>
 <p><code class="docutils literal notranslate"><span class="pre">size</span></code> is a required option, and defines the bounds that the generated image
 must fit within.</p>
 <p>Other options are only provided if the given functionality is required:</p>
-<ul class="simple">
+<ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">quality=&lt;N&gt;</span></code> where N is an integer between 1 and 100 specifying output
-JPEG quality. The default is 85.</p></li>
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">subsampling=&lt;N&gt;</span></code> sets the JPEG color subsampling level where N is:</dt><dd><ul>
+JPEG or WebP quality. The default is 85 (<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_QUALITY</span></code>). For
+lossless WebP it only trades encoding speed for file size, see <a class="reference internal" href="webp.html"><span class="doc">WebP support</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">format=&lt;jpeg|webp|avif&gt;</span></code> sets the output format of this thumbnail, overriding
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_EXTENSION</span></code>, <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_TRANSPARENCY_EXTENSION</span></code> and
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_PRESERVE_EXTENSIONS</span></code>. Note that JPEG does not support
+transparency: with <code class="docutils literal notranslate"><span class="pre">format=jpeg</span></code> the alpha channel of a transparent source
+is discarded, so combine it with <code class="docutils literal notranslate"><span class="pre">replace_alpha</span></code> to choose the background
+color. WebP and AVIF preserve transparency.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">subsampling=&lt;N&gt;</span></code> sets the JPEG color subsampling level where N is:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> is 4:1:1 (both easy-thumbnails and PIL’s default)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> is 4:2:2 (slightly crisper color borders, small increase in size)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">0</span></code> is 4:4:4 (very crisp color borders, ~15% increase in size)</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">autocrop</span></code> removes any unnecessary whitespace from the edges of the source
 image.</p></li>
@@ -181,7 +188,7 @@ image.</p></li>
 color.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">crop=&lt;smart|scale|W,H&gt;</span></code> cuts the edges of the image to match the aspect
 ratio of <code class="docutils literal notranslate"><span class="pre">size</span></code> before resizing.</p>
-<ul>
+<ul class="simple">
 <li><p><cite>smart</cite> means the image is incrementally cropped down to the requested size
 by removing slices from edges with the least entropy.</p></li>
 <li><p><cite>scale</cite> means at least one dimension fits within the size dimensions given.</p></li>
@@ -369,6 +376,10 @@ instance.</p>
 <p><em>options</em> are a space separated list of options which are used when
 processing the image to a thumbnail such as <code class="docutils literal notranslate"><span class="pre">sharpen</span></code>, <code class="docutils literal notranslate"><span class="pre">crop</span></code> and
 <code class="docutils literal notranslate"><span class="pre">quality=90</span></code>.</p>
+<p>The output format of a single thumbnail can be set with
+<code class="docutils literal notranslate"><span class="pre">format=&quot;webp&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">format=&quot;avif&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">format=&quot;jpeg&quot;</span></code>, overriding the extension
+settings. JPEG does not support transparency, so for transparent sources
+prefer WebP or add <code class="docutils literal notranslate"><span class="pre">replace_alpha</span></code> to choose the background color.</p>
 <p>If <em>size</em> is specified as an alias name, <em>options</em> are used to override
 and/or supplement the options defined in that alias.</p>
 <p>The thumbnail tag can also place a

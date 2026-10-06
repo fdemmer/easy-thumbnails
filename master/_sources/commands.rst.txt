@@ -281,3 +281,66 @@ Preview what would be removed::
 Remove all orphaned ``Source`` records::
 
     python manage.py thumbnail source_cleanup
+
+.. _thumbnail_purge:
+
+thumbnail purge
+===============
+
+**Usage**::
+
+    python manage.py thumbnail purge [options]
+
+Deletes generated thumbnails of existing sources: the ``Thumbnail`` records
+and their files in the thumbnail storage (remote storages like S3 work too).
+``Source`` records are kept, so thumbnails are simply regenerated on demand
+the next time they are requested.
+
+Only thumbnails stored using the currently configured thumbnail storage are
+purged.
+
+If a thumbnail file cannot be deleted (``OSError``), the error is reported,
+its ``Thumbnail`` record is kept and it is counted in the ``Errors`` line of
+the summary, which also shows the number of sources processed and thumbnails
+purged.
+
+Options
+-------
+
+``--dry-run``
+    Report how many thumbnails would be purged without deleting anything.
+
+``--alias NAME``
+    Only purge thumbnails of this alias (see ``THUMBNAIL_ALIASES``). May be
+    repeated. Without it, all thumbnails are purged. Thumbnails are matched
+    by the name the configured ``THUMBNAIL_NAMER`` generates for the *current*
+    alias options, so thumbnails generated from an earlier alias definition
+    are not matched. The same applies if ``THUMBNAIL_NAMER``,
+    ``THUMBNAIL_PREFIX``, ``THUMBNAIL_BASEDIR`` or ``THUMBNAIL_SUBDIR``
+    changed after the thumbnails were generated. Aliases with identical
+    options share one thumbnail, so purging one purges the other.
+    With the ``alias`` namer, thumbnails not generated through an alias are
+    all named ``source..ext`` and cannot be told apart. An unknown alias name
+    is an error; names are only checked against the fields selected by
+    ``--include``/``--exclude``, and fields not defining the alias are left
+    untouched.
+
+``--include SPEC`` / ``--exclude SPEC``
+    Restrict purging to ``app``, ``app.model`` or ``app.model.field``
+    (wildcards allowed). May be repeated.
+
+Examples
+--------
+
+Preview purging everything::
+
+    python manage.py thumbnail purge --dry-run
+
+Purge all thumbnails of one model::
+
+    python manage.py thumbnail purge --include myapp.article
+
+Purge two aliases everywhere except one field::
+
+    python manage.py thumbnail purge --alias small --alias large \
+        --exclude myapp.article.cover

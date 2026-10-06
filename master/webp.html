@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebP support &mdash; easy-thumbnails 3.1.3 documentation</title>
+  <title>WebP support &mdash; easy-thumbnails 3.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=eaea8fc6"></script>
+      <script src="_static/documentation_options.js?v=26f62d79"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -52,7 +52,15 @@
 <li class="toctree-l1"><a class="reference internal" href="svg.html">Scalable Vector Graphic Support</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">WebP support</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#generating-webp-thumbnails">Generating WebP thumbnails</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#encoder-options">Encoder options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#choosing-the-format-per-thumbnail">Choosing the format per thumbnail</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#checking-supported-formats">Checking supported formats</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#encoder-options">Encoder options</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#lossy-compression-default">Lossy compression (default)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lossless-compression">Lossless compression</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#browser-support">Browser support</a></li>
 </ul>
 </li>
@@ -116,20 +124,85 @@ instead:</p>
 <p>This preserves WebP sources as WebP thumbnails while other formats still
 fall back to <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_EXTENSION</span></code>.</p>
 </section>
+<section id="choosing-the-format-per-thumbnail">
+<h2>Choosing the format per thumbnail<a class="headerlink" href="#choosing-the-format-per-thumbnail" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">format</span></code> thumbnail option sets the output format for a single
+thumbnail: <code class="docutils literal notranslate"><span class="pre">webp</span></code>, <code class="docutils literal notranslate"><span class="pre">avif</span></code> or <code class="docutils literal notranslate"><span class="pre">jpeg</span></code>. It takes precedence over
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_EXTENSION</span></code>, <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_TRANSPARENCY_EXTENSION</span></code> and
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_PRESERVE_EXTENSIONS</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="n">thumbnail</span> <span class="n">person</span><span class="o">.</span><span class="n">photo</span> <span class="mi">200</span><span class="n">x200</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"webp"</span> <span class="o">%</span><span class="p">}</span>
+
+<span class="n">thumbnailer</span><span class="o">.</span><span class="n">get_thumbnail</span><span class="p">({</span><span class="s1">'size'</span><span class="p">:</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="s1">'format'</span><span class="p">:</span> <span class="s1">'webp'</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>The option can also be used in
+<a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_ALIASES" title="easy_thumbnails.conf.Settings.THUMBNAIL_ALIASES"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_ALIASES</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>JPEG has no transparency support. Requesting <code class="docutils literal notranslate"><span class="pre">format=jpeg</span></code> for a source
+with an alpha channel discards the transparency; add <code class="docutils literal notranslate"><span class="pre">replace_alpha</span></code> (for
+example <code class="docutils literal notranslate"><span class="pre">replace_alpha=&quot;#fff&quot;</span></code>) to control the background color. WebP
+keeps transparency, so it is the better choice for transparent sources.</p>
+</div>
+<section id="checking-supported-formats">
+<h3>Checking supported formats<a class="headerlink" href="#checking-supported-formats" title="Link to this heading"></a></h3>
+<p>WebP and AVIF support depends on how Pillow was built (the official wheels
+include both). To check what your installation supports:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s2">"from PIL import features; print(features.check('webp'), features.check('avif'))"</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">PIL</span></code> prints a full report of the supported codecs, features and
+their library versions.</p>
+</section>
+</section>
 <section id="encoder-options">
 <h2>Encoder options<a class="headerlink" href="#encoder-options" title="Link to this heading"></a></h2>
-<p>WebP save options (such as <code class="docutils literal notranslate"><span class="pre">quality</span></code> or <code class="docutils literal notranslate"><span class="pre">method</span></code>) are configured via
-<a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS" title="easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code></a>, which
-already ships a default entry:</p>
+<p>Additional WebP save options are configured via
+<a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS" title="easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code></a>, a
+dictionary keyed by Pillow format name (<code class="docutils literal notranslate"><span class="pre">'WEBP'</span></code>, <code class="docutils literal notranslate"><span class="pre">'JPEG'</span></code>). Every keyword
+accepted by Pillow’s <a class="reference external" href="https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#webp">WebP plugin</a>
+can be set here and is passed to <code class="docutils literal notranslate"><span class="pre">Image.save()</span></code> for each WebP thumbnail.</p>
+<section id="lossy-compression-default">
+<h3>Lossy compression (default)<a class="headerlink" href="#lossy-compression-default" title="Link to this heading"></a></h3>
+<p>WebP thumbnails are lossy unless configured otherwise. The <code class="docutils literal notranslate"><span class="pre">quality</span></code> (0-100,
+higher is better and larger) is controlled like for JPEG: with the
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_QUALITY</span></code> setting or the <code class="docutils literal notranslate"><span class="pre">quality</span></code> thumbnail option, for example
+<code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">photo</span> <span class="pre">200x200</span> <span class="pre">format=&quot;webp&quot;</span> <span class="pre">quality=70</span> <span class="pre">%}</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">quality</span></code> thumbnail option is always passed explicitly when saving, so
+it takes precedence over a <code class="docutils literal notranslate"><span class="pre">'quality'</span></code> entry in
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code>. Use <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_QUALITY</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_DEFAULT_OPTIONS</span></code>) to change the default quality.</p>
+</div>
+<p>Other useful lossy options are <code class="docutils literal notranslate"><span class="pre">method</span></code> (0-6, slower encoding gives smaller
+files, Pillow’s default is 4) and <code class="docutils literal notranslate"><span class="pre">alpha_quality</span></code> (0-100, quality of the
+transparency layer):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_IMAGE_SAVE_OPTIONS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">'WEBP'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">'quality'</span><span class="p">:</span> <span class="mi">85</span><span class="p">,</span>
+        <span class="s1">'method'</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Any keyword accepted by Pillow’s WebP plugin (e.g. <code class="docutils literal notranslate"><span class="pre">lossless</span></code>, <code class="docutils literal notranslate"><span class="pre">method</span></code>)
-can be added here.</p>
+</section>
+<section id="lossless-compression">
+<h3>Lossless compression<a class="headerlink" href="#lossless-compression" title="Link to this heading"></a></h3>
+<p>To encode all WebP thumbnails losslessly, set <code class="docutils literal notranslate"><span class="pre">lossless</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_IMAGE_SAVE_OPTIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'WEBP'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'lossless'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In lossless mode <code class="docutils literal notranslate"><span class="pre">quality</span></code> no longer affects image fidelity (the image is
+always pixel-exact), but trades encoding speed for file size: higher values
+compress more slowly. Lossless WebP suits graphics, logos and screenshots;
+for photographs it usually produces much larger files than lossy WebP.</p>
+<p><code class="docutils literal notranslate"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code> applies to <em>all</em> WebP thumbnails; there is no
+per-thumbnail <code class="docutils literal notranslate"><span class="pre">lossless</span></code> switch.</p>
+</section>
 </section>
 <section id="browser-support">
 <h2>Browser support<a class="headerlink" href="#browser-support" title="Link to this heading"></a></h2>

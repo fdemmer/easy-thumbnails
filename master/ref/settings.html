@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Settings &mdash; easy-thumbnails 3.1.3 documentation</title>
+  <title>Settings &mdash; easy-thumbnails 3.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=eaea8fc6"></script>
+      <script src="../_static/documentation_options.js?v=26f62d79"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
@@ -203,7 +203,11 @@ The default Django storage for <em>saving</em> generated thumbnails.</p>
 <dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS">
 <span class="sig-name descname"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'JPEG':</span> <span class="pre">{'quality':</span> <span class="pre">85},</span> <span class="pre">'WEBP':</span> <span class="pre">{'quality':</span> <span class="pre">85}}</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS" title="Link to this definition"></a></dt>
 <dd><p>Allows customising Image.save parameters based on format, for example:
-<cite>{‘WEBP’: {‘method’: 6}}</cite></p>
+<cite>{‘WEBP’: {‘method’: 6}}</cite> or, for lossless WebP,
+<cite>{‘WEBP’: {‘lossless’: True}}</cite>.</p>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">quality</span></code> thumbnail option is always passed explicitly and
+takes precedence over a <code class="docutils literal notranslate"><span class="pre">quality</span></code> entry here; use <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_QUALITY</span></code>
+to change the default quality. See <a class="reference internal" href="../webp.html"><span class="doc">WebP support</span></a> for details.</p>
 </dd></dl>
 
 <dl class="py attribute">
