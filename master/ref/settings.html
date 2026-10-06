@@ -244,13 +244,7 @@ generated thumbnail.</p>
 <code class="docutils literal notranslate"><span class="pre">1xedFtqllFo9_100x100_QHCa6G1l.jpg</span></code>.</p>
 </dd>
 </dl>
-<p>To write a custom namer, always catch all other keyword arguments arguments
-(with **kwargs). You have access to the following arguments:
-<code class="docutils literal notranslate"><span class="pre">thumbnailer</span></code>, <code class="docutils literal notranslate"><span class="pre">source_filename</span></code>, <code class="docutils literal notranslate"><span class="pre">thumbnail_extension</span></code> (does <em>not</em>
-include the <code class="docutils literal notranslate"><span class="pre">'.'</span></code>), <code class="docutils literal notranslate"><span class="pre">thumbnail_options</span></code>, <code class="docutils literal notranslate"><span class="pre">prepared_options</span></code>.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">thumbnail_options</span></code> are a copy of the options dictionary used to
-build the thumbnail, <code class="docutils literal notranslate"><span class="pre">prepared_options</span></code> is a list of options prepared as
-text, and excluding options that shouldn’t be included in the filename.</p>
+<p>To write your own namer, see <a class="reference internal" href="namers.html"><span class="doc">Namers</span></a>.</p>
 </dd></dl>
 
 <dl class="py attribute">
