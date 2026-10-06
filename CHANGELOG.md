@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `thumbnail` management command.
 - Fix thumbnail names removing the storage location from anywhere in the
   source path instead of only from its start.
+- The source distribution now includes the `demoproject` (not the wheel).
 
 
 ## [3.1.2] - 2026-10-03

@@ -1,5 +1,5 @@
-# mainapp/views.py
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .forms import TestImageForm
 from .models import TestImage
@@ -27,3 +27,10 @@ def edit_image(request, pk):
     else:
         form = TestImageForm(instance=image)
     return render(request, 'mainapp/edit_image.html', {'form': form, 'image': image})
+
+
+@require_POST
+def delete_image(request, pk):
+    image = get_object_or_404(TestImage, pk=pk)
+    image.delete()
+    return redirect('index')

@@ -3,3 +3,8 @@ include README.md
 include CHANGELOG.md
 graft docs
 prune docs/_build
+graft demoproject
+prune demoproject/media/images
+prune demoproject/media/thumbs
+exclude demoproject/db.sqlite3
+global-exclude __pycache__ *.py[cod]

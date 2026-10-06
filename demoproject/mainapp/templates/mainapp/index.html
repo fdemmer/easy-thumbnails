@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Easy Thumbnails Demo</title>
 </head>
 <body>
     <h1>Upload an Image</h1>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ form.as_div }}
         <button type="submit">Upload</button>
     </form>
 
@@ -15,7 +17,10 @@
     <ul>
         {% for image in images %}
             <li>
-                <img src="{{ image.image.url }}" alt="{{ image.title }}" style="max-height: 200px;">
+                <img src="{{ image.image.preview.url }}"
+                     srcset="{{ image.image.preview.url }} 640w, {{ image.image.preview_large.url }} 1280w"
+                     sizes="(min-width: 800px) 1280px, 640px"
+                     alt="{{ image.title }}">
                 <p>{{ image.title }}</p>
                 <a href="{% url 'edit_image' image.pk %}">Edit</a>
             </li>
