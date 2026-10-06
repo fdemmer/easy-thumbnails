@@ -452,9 +452,50 @@ class Thumbnailer(File):
 
     def get_thumbnail_name(self, thumbnail_options, transparent=False):
         """
-        Return a thumbnail filename for the given ``thumbnail_options``
-        dictionary and ``source_name`` (which defaults to the File's ``name``
-        if not provided).
+        Return the storage-relative path for a thumbnail of this file.
+
+        The path has the form
+        ``<basedir>/<source dir>/<subdir>/<prefix><namer output>``.
+
+        Arguments:
+
+        ``thumbnail_options``
+            Dict or ``ThumbnailOptions`` of thumbnail options (e.g.
+            ``{'size': (100, 100), 'crop': True}``). Normalised through
+            ``get_options()``, so the default quality is added if missing.
+            Its prepared form is passed to the namer and substituted for
+            ``%(opts)s`` in basedir/subdir.
+
+        ``transparent``
+            If true, the transparency extension is used for the file
+            extension instead of the regular one (unless the source
+            extension is preserved). ``get_existing_thumbnail()`` calls
+            this with both values to look up either variant.
+
+        Derived from the file itself:
+
+        * ``self.name``: its parent directory is mirrored in the result
+          (with the source storage ``location`` prefix and leading slashes
+          removed; remote storages without ``location`` are used as is),
+          its file name is passed to the namer, and its lowercased
+          extension decides whether the extension is preserved.
+        * ``self.source_storage``: only for its optional ``location``.
+
+        Derived from settings (thumbnailer attributes ``thumbnail_*``,
+        defaulting to the ``THUMBNAIL_*`` settings):
+
+        * ``THUMBNAIL_BASEDIR`` / ``THUMBNAIL_SUBDIR``: directories before
+          and after the source directory; ``%(opts)s`` is replaced by the
+          prepared options joined with ``_``.
+        * ``THUMBNAIL_PREFIX``: prepended to the file name.
+        * ``THUMBNAIL_NAMER``: dotted path or callable producing the file
+          name, see ``easy_thumbnails.namers``.
+        * ``THUMBNAIL_EXTENSION``, ``THUMBNAIL_TRANSPARENCY_EXTENSION``:
+          output extension (falls back to ``jpg`` if empty).
+        * ``THUMBNAIL_PRESERVE_EXTENSIONS``: ``True`` or a list of source
+          extensions that keep their own extension.
+
+        Returns the path as a string; it is not checked for existence.
         """
         thumbnail_options = self.get_options(thumbnail_options)
         source_file_path = PurePath(self.name)
