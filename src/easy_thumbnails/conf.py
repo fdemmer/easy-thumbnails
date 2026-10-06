@@ -223,14 +223,7 @@ class Settings(AppSettings):
         Filename with source hashed, size, then options hashed like
         ``1xedFtqllFo9_100x100_QHCa6G1l.jpg``.
 
-    To write a custom namer, always catch all other keyword arguments arguments
-    (with \\*\\*kwargs). You have access to the following arguments:
-    ``thumbnailer``, ``source_filename``, ``thumbnail_extension`` (does *not*
-    include the ``'.'``), ``thumbnail_options``, ``prepared_options``.
-
-    The ``thumbnail_options`` are a copy of the options dictionary used to
-    build the thumbnail, ``prepared_options`` is a list of options prepared as
-    text, and excluding options that shouldn't be included in the filename.
+    To write your own namer, see :doc:`namers`.
     """
 
     THUMBNAIL_PROCESSORS = (

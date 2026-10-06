@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `format` option is no longer included in `prepared_options` passed to
   namers, since it already determines the thumbnail file extension. Thumbnail
   names no longer contain a `format-<ext>` part.
-- Add tests and a docstring for `ThumbnailOptions.prepared_options`.
+- Add tests and a docstring for `ThumbnailOptions.prepared_options`, and
+  document how to write custom namers.
 
 
 ## [3.3.0] - 2026-10-06

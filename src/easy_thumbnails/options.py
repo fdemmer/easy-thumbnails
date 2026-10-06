@@ -35,10 +35,16 @@ class ThumbnailOptions(dict):
         """
         Return the options as a list of strings used to name the thumbnail.
 
-        The first item is the size (``'100x50'``), the second the quality and
-        non-default subsampling (``'q85'``, ``'q85ss0'``), followed by the
-        remaining options in key order: ``key`` for ``True``, ``key-value``
-        otherwise (sequences are comma-joined).
+        The first item is the size (``'100x50'``).
+        The second item is the quality (``'q85'``).
+        It gets an ``ss`` part with the subsampling, if it is not the default
+        (``'q85ss0'``). The default is 4:2:0, which Pillow indicates with
+        ``subsampling=2``.
+
+        The remaining options follow in key order.
+        A ``True`` value is added as ``key``.
+        Any other value is added as ``key-value``.
+        Sequences are comma-joined.
 
         Falsy values and uppercase keys are skipped, they don't affect the filename.
         The ``format`` key is skipped too: it already determines the file
@@ -51,8 +57,8 @@ class ThumbnailOptions(dict):
         Image generation does not use it; the processors, source generators
         and ``engine.save_pil_image`` read the full options dict.
 
-        The size must stay the first item, since the ``source_hashed`` namer
-        relies on it!
+        The size must stay the first item, since the built-in ``source_hashed``
+        namer relies on it!
         """
         hidden_keys = ['format', 'quality', 'size', 'subsampling']
         prepared_opts = ['{size[0]}x{size[1]}'.format(**self)]
