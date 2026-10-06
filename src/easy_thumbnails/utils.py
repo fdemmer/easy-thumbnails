@@ -11,7 +11,7 @@ from PIL import Image
 from django.core.files.storage import storages
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.functional import LazyObject
+from django.utils.functional import LazyObject, empty
 from django.utils.module_loading import import_string
 
 from easy_thumbnails.conf import settings
@@ -67,7 +67,7 @@ def get_storage_hash(storage):
     """
     # If storage is wrapped in a lazy object we need to get the real thing.
     if isinstance(storage, LazyObject):
-        if storage._wrapped is None:
+        if storage._wrapped is empty:
             storage._setup()
         storage = storage._wrapped
     if not isinstance(storage, str):

@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `thumbnail` management command.
 - Fix thumbnail names removing the storage location from anywhere in the
   source path instead of only from its start.
+- Fix `get_storage_hash()` hashing `builtins.object` for lazy storages that
+  were not yet set up (e.g. `default_storage`), producing a wrong hash.
 - The source distribution now includes the `demoproject` (not the wheel).
 
 
