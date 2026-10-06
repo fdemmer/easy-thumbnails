@@ -320,7 +320,9 @@ Options
     changed after the thumbnails were generated. Aliases with identical
     options share one thumbnail, so purging one purges the other.
     With the ``alias`` namer, thumbnails not generated through an alias are
-    all named ``source..ext`` and cannot be told apart. An unknown alias name
+    all named ``source..ext`` and cannot be told apart; with ``alias_or_size``
+    they are named by size only (``source.800x600.ext``), so differing options
+    of the same size are not distinguished. An unknown alias name
     is an error; names are only checked against the fields selected by
     ``--include``/``--exclude``, and fields not defining the alias are left
     untouched.

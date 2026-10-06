@@ -96,7 +96,7 @@ All settings live in `conf.py` as attributes on the `Settings` class (which exte
 
 ### Namers
 
-`namers.py` provides four built-in filename strategies (`default`, `hashed`, `alias`, `source_hashed`). Configured via `THUMBNAIL_NAMER`. Custom namers receive `thumbnailer`, `source_filename`, `thumbnail_extension`, `thumbnail_options`, and `prepared_options` kwargs.
+`namers.py` provides five built-in filename strategies (`default`, `hashed`, `alias`, `alias_or_size`, `source_hashed`). Configured via `THUMBNAIL_NAMER`. Custom namers receive `thumbnailer`, `source_filename`, `thumbnail_extension`, `thumbnail_options`, and `prepared_options` kwargs.
 
 ### Optimize app
 

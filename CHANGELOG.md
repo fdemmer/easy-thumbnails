@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add `alias_or_size` namer, which names thumbnails after their alias or, if
+  there is none, their size (e.g. `source.medium_large.jpg` or
+  `source.800x600.jpg`).
 - The `format` option is no longer included in `prepared_options` passed to
   namers, since it already determines the thumbnail file extension. Thumbnail
   names no longer contain a `format-<ext>` part.
