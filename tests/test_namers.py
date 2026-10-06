@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from easy_thumbnails import namers
+from easy_thumbnails.options import ThumbnailOptions
 
 
 class FakeThumbnailer:
@@ -18,6 +19,38 @@ class Default(TestCase):
             thumbnail_extension='jpg',
         )
         self.assertEqual(filename, 'source.jpg.100x100_q80_crop_upscale.jpg')
+
+    def test_all_options(self):
+        options = ThumbnailOptions(
+            {
+                'size': (100, 50),
+                'quality': 80,
+                'subsampling': 0,
+                'autocrop': True,
+                'background': '#fff',
+                'bw': True,
+                'crop': 'smart',
+                'detail': True,
+                'replace_alpha': True,
+                'sharpen': 3,
+                'target': (20, None),
+                'upscale': True,
+                'zoom': 10,
+                'format': 'jpeg',
+                'ALIAS': 'medium',
+            }
+        )
+        filename = namers.default(
+            thumbnailer=FakeThumbnailer(),
+            prepared_options=options.prepared_options(),
+            source_filename='source.jpg',
+            thumbnail_extension='jpg',
+        )
+        self.assertEqual(
+            filename,
+            'source.jpg.100x50_q80ss0_autocrop_background-#fff_bw_crop-smart'
+            '_detail_replace_alpha_sharpen-3_target-20,None_upscale_zoom-10.jpg',
+        )
 
     def test_subdir_opts(self):
         filename = namers.default(
