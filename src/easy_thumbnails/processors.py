@@ -112,7 +112,9 @@ def autocrop(im, autocrop=False, **kwargs):
     return im
 
 
-def scale_and_crop(im, size, crop=False, upscale=False, zoom=None, target=None, **kwargs):
+def scale_and_crop(  # noqa: C901
+    im, size, crop=False, upscale=False, zoom=None, target=None, **kwargs
+):
     """
     Handle scaling and cropping the source image.
 
@@ -185,14 +187,14 @@ def scale_and_crop(im, size, crop=False, upscale=False, zoom=None, target=None, 
 
     # Handle one-dimensional targets.
     if not target_x:
-        target_x = round(source_x * scale)
+        target_x = max(1, round(source_x * scale))
     elif not target_y:
-        target_y = round(source_y * scale)
+        target_y = max(1, round(source_y * scale))
 
     if zoom:
         if not crop:
-            target_x = round(source_x * scale)
-            target_y = round(source_y * scale)
+            target_x = max(1, round(source_x * scale))
+            target_y = max(1, round(source_y * scale))
             crop = True
         scale *= (100 + int(zoom)) / 100.0
 
@@ -208,7 +210,10 @@ def scale_and_crop(im, size, crop=False, upscale=False, zoom=None, target=None, 
         # Resize the image to the target size boundary. Round the scaled
         # boundary sizes to avoid floating point errors.
         im = im.resize(
-            (int(round(source_x * scale)), int(round(source_y * scale))),
+            (
+                max(1, int(round(source_x * scale))),
+                max(1, int(round(source_y * scale))),
+            ),
             resample=Image__Resampling__LANCZOS,
         )
 

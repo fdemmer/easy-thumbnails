@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 (up to 2.x, version numbers were not strictly semantic).
 
+## [Unreleased]
+
+- Fix thumbnail generation failing with "width and height must be > 0" for
+  images with extreme aspect ratios (e.g. 600x1), by clamping scaled
+  dimensions to a minimum of 1px (SmileyChris/easy-thumbnails#547).
+
 ## [3.4.0rc1] - 2026-10-14
 
 - Add `Source.thumb_hash`, filled when the first thumbnail of a source is

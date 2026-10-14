@@ -119,6 +119,23 @@ class ScaleAndCropTest(TestCase):
         cropped = processors.scale_and_crop(image, size, crop=True)
         self.assertEqual(cropped.size, size)
 
+    def test_extreme_aspect_ratio_minimum_dimension(self):
+        wide = create_image(size=(600, 1))
+        scaled = processors.scale_and_crop(wide, (100, 100))
+        self.assertEqual(scaled.size, (100, 1))
+
+        tall = create_image(size=(1, 600))
+        scaled = processors.scale_and_crop(tall, (100, 100))
+        self.assertEqual(scaled.size, (1, 100))
+
+        scaled = processors.scale_and_crop(wide, (100, 0))
+        self.assertEqual(scaled.size, (100, 1))
+        scaled = processors.scale_and_crop(tall, (0, 100))
+        self.assertEqual(scaled.size, (1, 100))
+
+        scaled = processors.scale_and_crop(wide, (100, 100), zoom=40)
+        self.assertTrue(all(d >= 1 for d in scaled.size))
+
     def test_zoom_scale(self):
         image = create_image(size=(2400, 3620))
 
