@@ -9,6 +9,7 @@ from testfixtures import LogCapture
 from django.test import TestCase
 
 from easy_thumbnails import engine, exceptions, files, models, signals, utils
+from easy_thumbnails.alias import aliases
 from easy_thumbnails.conf import settings
 from easy_thumbnails.options import ThumbnailOptions
 from tests import utils as test
@@ -339,6 +340,93 @@ class FilesTest(test.BaseTest):
         thumb = self.remote_thumbnailer.get_thumbnail(opts)
         with self.assertNumQueries(0):
             self.assertEqual(thumb.width, 50)
+
+    def _prefetch_queries(self, thumbnailer):
+        settings.THUMBNAIL_CACHE_DIMENSIONS = True
+        options_list = [{'size': (50, 50)}, {'size': (30, 30)}]
+        for opts in options_list:
+            thumbnailer.get_thumbnail(opts)
+        # use a fresh thumbnailer without cached source or dimensions
+        storage = thumbnailer.thumbnail_storage
+        thumbnailer = files.get_thumbnailer(storage, thumbnailer.name)
+        thumbnailer.thumbnail_storage = storage
+        with self.assertNumQueries(1):
+            thumbnailer.prefetch_thumbnails(options_list)
+        with self.assertNumQueries(0):
+            thumbs = [thumbnailer.get_thumbnail(opts) for opts in options_list]
+            sizes = [(thumb.width, thumb.height) for thumb in thumbs]
+        self.assertEqual(sizes, [(50, 38), (30, 22)])
+
+    def test_prefetch_thumbnails(self):
+        self._prefetch_queries(self.thumbnailer)
+
+    def test_remote_prefetch_thumbnails(self):
+        self._prefetch_queries(self.remote_thumbnailer)
+
+    def test_prefetch_thumbnails_generates_missing(self):
+        settings.THUMBNAIL_CACHE_DIMENSIONS = True
+        self.remote_thumbnailer.get_thumbnail({'size': (50, 50)})
+        thumbnailer = files.get_thumbnailer(self.remote_storage, 'test.jpg')
+        thumbnailer.thumbnail_storage = self.remote_storage
+        options_list = [{'size': (50, 50)}, {'size': (30, 30)}]
+        thumbnailer.prefetch_thumbnails(options_list)
+        thumbs = [thumbnailer.get_thumbnail(opts) for opts in options_list]
+        self.assertEqual([(t.width, t.height) for t in thumbs], [(50, 38), (30, 22)])
+        # the generated thumbnail is not served from the (stale) prefetch
+        self.assertEqual(models.Thumbnail.objects.count(), 2)
+        thumb = thumbnailer.get_thumbnail({'size': (30, 30)})
+        self.assertEqual((thumb.width, thumb.height), (30, 22))
+
+    def test_remote_transparent_thumbnail_queries(self):
+        settings.THUMBNAIL_CACHE_DIMENSIONS = True
+        opts = {'size': (50, 50)}
+        filename = self.create_image(
+            self.remote_storage, 'transparent.png', image_mode='RGBA', image_format='PNG'
+        )
+
+        def get_thumbnailer():
+            thumbnailer = files.get_thumbnailer(self.remote_storage, filename)
+            thumbnailer.thumbnail_storage = self.remote_storage
+            return thumbnailer
+
+        created = get_thumbnailer().get_thumbnail(opts)
+        self.assertTrue(created.name.endswith('.png'))
+
+        thumbnailer = get_thumbnailer()
+        # jpg name (missing), png name (existing) and source in one query
+        with self.assertNumQueries(1):
+            thumb = thumbnailer.get_thumbnail(opts)
+        self.assertEqual(thumb.name, created.name)
+        with self.assertNumQueries(0):
+            self.assertEqual((thumb.width, thumb.height), (50, 38))
+            self.assertEqual(thumbnailer.get_thumbnail(opts).name, created.name)
+
+    def test_remote_missing_thumbnail_is_generated(self):
+        settings.THUMBNAIL_CACHE_DIMENSIONS = True
+        thumbnailer = self.remote_thumbnailer
+        self.assertIsNone(thumbnailer.get_existing_thumbnail({'size': (50, 50)}))
+        thumb = thumbnailer.get_thumbnail({'size': (50, 50)})
+        self.assertEqual((thumb.width, thumb.height), (50, 38))
+        # the stale "missing" entry was dropped when the thumbnail was saved
+        self.assertIsNotNone(thumbnailer.get_existing_thumbnail({'size': (50, 50)}))
+
+    def test_prefetch_aliases(self):
+        settings.THUMBNAIL_CACHE_DIMENSIONS = True
+        aliases.set('small', {'size': (50, 50)})
+        aliases.set('tiny', {'size': (30, 30)})
+        self.addCleanup(aliases.populate_from_settings)
+        for alias in ('small', 'tiny'):
+            self.remote_thumbnailer.get_thumbnail({**aliases.get(alias), 'ALIAS': alias})
+        thumbnailer = files.get_thumbnailer(self.remote_storage, 'test.jpg')
+        thumbnailer.thumbnail_storage = self.remote_storage
+        with self.assertNumQueries(1):
+            thumbnailer.prefetch_aliases(['small', 'tiny'])
+        with self.assertNumQueries(0):
+            thumbs = [thumbnailer[alias] for alias in ('small', 'tiny')]
+            sizes = [(thumb.width, thumb.height) for thumb in thumbs]
+        self.assertEqual(sizes, [(50, 38), (30, 22)])
+        with self.assertRaises(KeyError):
+            thumbnailer.prefetch_aliases(['unknown'])
 
     def test_add_dimension_cache(self):
         settings.THUMBNAIL_CACHE_DIMENSIONS = True

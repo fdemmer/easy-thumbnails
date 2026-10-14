@@ -557,6 +557,12 @@ class Thumbnailer(File):
         if transparent_name not in names:
             names.append(transparent_name)
 
+        if not utils.is_storage_local(self.thumbnail_storage):
+            prefetch = getattr(self, '_thumbnail_prefetch', {})
+            if not all(name in prefetch for name in names):
+                # one query for both candidate names (and the source)
+                self._prefetch_names(names)
+
         for filename in names:
             exists = self.thumbnail_exists(filename)
             if exists:
@@ -568,9 +574,83 @@ class Thumbnailer(File):
                 if settings.THUMBNAIL_CACHE_DIMENSIONS:
                     # If this wasn't local storage, exists will be a thumbnail
                     # instance so we can store the image dimensions now to save
-                    # a future potential query.
-                    thumbnail_file.set_image_dimensions(exists)
+                    # a future potential query. For local storage the
+                    # dimensions may come from prefetched thumbnails.
+                    prefetched = getattr(self, '_thumbnail_prefetch', {}).get(filename)
+                    thumbnail_file.set_image_dimensions(prefetched or exists)
                 return thumbnail_file
+
+    def prefetch_thumbnails(self, thumbnail_options_list):
+        """
+        Fetch the database records of several thumbnails with a single query.
+
+        The ``Thumbnail`` records are fetched together with their
+        ``ThumbnailDimensions`` (and the ``Source``), so the following calls to
+        :meth:`get_thumbnail` for the same options need no further queries for
+        existing thumbnails, and their dimensions are available without reading
+        the file (if ``THUMBNAIL_CACHE_DIMENSIONS`` is enabled).
+
+        Thumbnails that are missing are generated as usual.
+
+        Arguments:
+
+        ``thumbnail_options_list``
+            Iterable of dicts or ``ThumbnailOptions``, as for
+            :meth:`get_thumbnail`. Options of aliases must contain ``ALIAS``,
+            see :meth:`prefetch_aliases`.
+        """
+        names = set()
+        for thumbnail_options in thumbnail_options_list:
+            thumbnail_options = self.get_options(thumbnail_options)
+            names.add(self.get_thumbnail_name(thumbnail_options, transparent=False))
+            names.add(self.get_thumbnail_name(thumbnail_options, transparent=True))
+        self._thumbnail_prefetch = {}
+        self._prefetch_names(names)
+
+    def _prefetch_names(self, names):
+        """
+        Fetch the ``Thumbnail`` records for the given file names with a single
+        query and add them to the prefetched thumbnails.
+
+        Names without a record are remembered as missing. The joined ``Source``
+        is used as the source cache, if there is none yet.
+        """
+        if self.remote_source:
+            return
+        thumbnails = models.Thumbnail.objects.select_related(
+            'source', 'dimensions'
+        ).filter(
+            storage_hash=utils.get_storage_hash(self.thumbnail_storage),
+            name__in=names,
+            source__storage_hash=utils.get_storage_hash(self.source_storage),
+            source__name=self.name,
+        )
+        prefetch = self.__dict__.setdefault('_thumbnail_prefetch', {})
+        for name in names:
+            prefetch[name] = None
+        for thumbnail in thumbnails:
+            prefetch[thumbnail.name] = thumbnail
+            if not hasattr(self, '_source_cache'):
+                self._source_cache = thumbnail.source
+
+    def prefetch_aliases(self, aliases_names):
+        """
+        Like :meth:`prefetch_thumbnails` for thumbnail aliases.
+
+        Arguments:
+
+        ``aliases_names``
+            Iterable of alias names, looked up for the target of this
+            thumbnailer like ``thumbnailer[alias]`` does.
+        """
+        options_list = []
+        for alias in aliases_names:
+            options = aliases.get(alias, target=self.alias_target)
+            if not options:
+                raise KeyError(alias)
+            options['ALIAS'] = alias
+            options_list.append(options)
+        self.prefetch_thumbnails(options_list)
 
     def get_thumbnail(
         self, thumbnail_options, save=True, generate=None, silent_template_exception=False
@@ -697,6 +777,13 @@ class Thumbnailer(File):
     def get_thumbnail_cache(self, thumbnail_name, create=False, update=False):
         if self.remote_source:
             return None
+        prefetch = getattr(self, '_thumbnail_prefetch', {})
+        if create or update:
+            prefetch.pop(thumbnail_name, None)
+        elif thumbnail_name in prefetch:
+            thumbnail = prefetch[thumbnail_name]
+            if thumbnail or not self.thumbnail_check_cache_miss:
+                return thumbnail
         source = self.get_source_cache(create=True)
         update_modified = (update or create) and timezone.now()
         return models.Thumbnail.objects.get_file(

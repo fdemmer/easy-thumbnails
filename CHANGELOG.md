@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add `Thumbnailer.prefetch_thumbnails` and `Thumbnailer.prefetch_aliases` to
+  fetch the `Thumbnail` records of several thumbnails together with their
+  `ThumbnailDimensions` and `Source` in a single query. Following
+  `get_thumbnail` calls for these thumbnails need no further queries, and with
+  `THUMBNAIL_CACHE_DIMENSIONS` also local storage gets the dimensions from the
+  database.
+- With remote thumbnail storage, `get_existing_thumbnail` fetches the records of
+  the regular and the transparent thumbnail name (and the `Source`) with a
+  single query instead of one query each, and keeps them for repeated lookups.
 - Add `alias_or_size` namer, which names thumbnails after their alias or, if
   there is none, their size (e.g. `source.medium_large.jpg` or
   `source.800x600.jpg`).
