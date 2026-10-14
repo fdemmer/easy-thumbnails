@@ -63,3 +63,9 @@ class FileManagerTest(test.BaseTest):
             Thumbnail.objects.get(name=self.filename)
         except Thumbnail.DoesNotExist:
             self.fail('Thumb should exist now')
+
+
+class SourceTest(test.BaseTest):
+    def test_thumb_hash_default(self):
+        source = Source.objects.create(name='Test source', storage_hash='x')
+        self.assertEqual(source.thumb_hash, '')

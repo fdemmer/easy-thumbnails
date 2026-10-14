@@ -196,6 +196,19 @@ class Settings(AppSettings):
     preserve the original extension.
     """
 
+    THUMBNAIL_HASHER = 'easy_thumbnails.hashers.default'
+    """
+    Dotted path to the function that generates the ``thumb_hash`` stored on the
+    ``Source`` record when the first thumbnail of a source image is generated.
+
+    The function is called with the (PIL) source image and returns a short
+    string, or ``None`` if no hash can be generated. Set to ``None`` to disable.
+
+    The default, ``easy_thumbnails.hashers.default``, generates a `ThumbHash
+    <https://evanw.github.io/thumbhash/>`_ (base64 encoded) and requires the
+    ``thumbhash`` extra. Without it no hash is stored.
+    """
+
     THUMBNAIL_TRANSPARENCY_EXTENSION = 'png'
     """
     The type of image to save thumbnails with a transparency layer (e.g. GIFs

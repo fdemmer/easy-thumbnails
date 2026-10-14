@@ -18,6 +18,10 @@ from tests import utils as test
 TESTS_DIR = Path(__file__).parent
 
 
+def fake_hasher(image):
+    return 'fake-{}x{}'.format(*image.size)
+
+
 class FilesTest(test.BaseTest):
     def setUp(self):
         super().setUp()
@@ -329,6 +333,25 @@ class FilesTest(test.BaseTest):
         self.assertEqual(
             (thumb.width, thumb.height), (dimensions.width, dimensions.height)
         )
+
+    def test_thumb_hash_custom_hasher(self):
+        settings.THUMBNAIL_HASHER = 'tests.test_files.fake_hasher'
+        self.assertIsNone(self.thumbnailer.get_thumb_hash())
+        self.thumbnailer.get_thumbnail({'size': (50, 50)})
+        source = models.Source.objects.get()
+        self.assertEqual(source.thumb_hash, 'fake-800x600')
+        self.assertEqual(self.thumbnailer.get_thumb_hash(), 'fake-800x600')
+
+    def test_thumb_hash_disabled(self):
+        settings.THUMBNAIL_HASHER = None
+        self.thumbnailer.get_thumbnail({'size': (50, 50)})
+        self.assertEqual(models.Source.objects.get().thumb_hash, '')
+
+    def test_thumb_hash_remote_source(self):
+        settings.THUMBNAIL_HASHER = 'tests.test_files.fake_hasher'
+        self.remote_thumbnailer.remote_source = True
+        self.remote_thumbnailer.get_thumbnail({'size': (50, 50)})
+        self.assertEqual(models.Source.objects.count(), 0)
 
     def test_remote_cached_dimensions_queries(self):
         settings.THUMBNAIL_CACHE_DIMENSIONS = True

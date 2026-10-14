@@ -43,6 +43,9 @@ svg = [
     "svglib",
     "reportlab",
 ]
+thumbhash = [
+    "fast-thumbhash-rs",
+]
 
 [project.urls]
 Homepage = "https://github.com/fdemmer/easy-thumbnails"

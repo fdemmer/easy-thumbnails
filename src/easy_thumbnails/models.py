@@ -69,7 +69,7 @@ class File(models.Model):
 
 
 class Source(File):
-    pass
+    thumb_hash = models.CharField(max_length=64, blank=True, default='')
 
 
 class Thumbnail(File):

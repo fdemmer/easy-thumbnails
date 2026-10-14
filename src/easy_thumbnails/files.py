@@ -414,6 +414,8 @@ class Thumbnailer(File):
             msg = "The source file does not appear to be an image: '{name}'"
             raise exceptions.InvalidImageFormatError(msg.format(name=self.name))
 
+        self._compute_thumb_hash(image)
+
         thumbnail_image = engine.process_image(
             image, thumbnail_options, self.thumbnail_processors
         )
@@ -449,6 +451,29 @@ class Thumbnailer(File):
         thumbnail._committed = False
 
         return thumbnail
+
+    def _compute_thumb_hash(self, image):
+        """
+        Generate the ``thumb_hash`` of the source image with the configured
+        hasher, unless the ``Source`` record already has one.
+
+        The result is stored on the ``Source`` record by ``save_thumbnail``.
+        """
+        self._pending_thumb_hash = ''
+        if self.remote_source or not settings.THUMBNAIL_HASHER:
+            return
+        source_cache = self.get_source_cache()
+        if source_cache and source_cache.thumb_hash:
+            return
+        hasher = import_string(settings.THUMBNAIL_HASHER)
+        self._pending_thumb_hash = hasher(image) or ''
+
+    def get_thumb_hash(self):
+        """
+        Return the ``thumb_hash`` stored for this source, or an empty string.
+        """
+        if source_cache := self.get_source_cache():
+            return source_cache.thumb_hash
 
     def get_thumbnail_name(self, thumbnail_options, transparent=False):
         """
@@ -703,6 +728,15 @@ class Thumbnailer(File):
         self.thumbnail_storage.save(filename, thumbnail)
 
         thumb_cache = self.get_thumbnail_cache(thumbnail.name, create=True, update=True)
+
+        # Store the source's thumb_hash, if one was generated.
+        thumb_hash = getattr(self, '_pending_thumb_hash', '')
+        if thumb_hash and thumb_cache:
+            source_cache = thumb_cache.source
+            source_cache.thumb_hash = thumb_hash
+            models.Source.objects.filter(pk=source_cache.pk).update(thumb_hash=thumb_hash)
+            self._source_cache = source_cache
+            self._pending_thumb_hash = ''
 
         # Cache thumbnail dimensions.
         if settings.THUMBNAIL_CACHE_DIMENSIONS:
