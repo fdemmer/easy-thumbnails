@@ -11,7 +11,7 @@ clean:
     rm -f .coverage
 
 run *args:
-    uv run --extra svg demoproject/manage.py {{args}}
+    uv run --extra svg --extra thumbhash demoproject/manage.py {{args}}
 
 serve *args:
     just run migrate
@@ -28,8 +28,8 @@ coverage env="py314-dj52-svg":
     uvx --with tox-uv tox exec -e {{env}} -- coverage html
 
 demo *args="runserver":
-    uv run --extra svg python demoproject/manage.py migrate
-    uv run --extra svg python demoproject/manage.py {{args}}
+    uv run --extra svg --extra thumbhash python demoproject/manage.py migrate
+    uv run --extra svg --extra thumbhash python demoproject/manage.py {{args}}
 
 docs:
     rm -rf docs/_build
