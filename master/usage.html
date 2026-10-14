@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Usage &mdash; easy-thumbnails 3.3 documentation</title>
+  <title>Usage &mdash; easy-thumbnails 3.4.rc1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=26f62d79"></script>
+      <script src="_static/documentation_options.js?v=f42ea01d"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -88,6 +88,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#python">Python</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#get-thumbnailer"><code class="docutils literal notranslate"><span class="pre">get_thumbnailer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#prefetching-thumbnails">Prefetching thumbnails</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#non-django-file-objects">Non-Django file objects</a></li>
 </ul>
 </li>
@@ -100,6 +101,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="svg.html">Scalable Vector Graphic Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="webp.html">WebP support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thumbhash.html">ThumbHash</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
@@ -610,6 +612,53 @@ doesn’t exist (or if the source image has been modified since it was created).
 <span class="n">thumbnailer</span><span class="p">[</span><span class="s1">'large'</span><span class="p">]</span>
 </pre></div>
 </div>
+</section>
+<section id="prefetching-thumbnails">
+<h3>Prefetching thumbnails<a class="headerlink" href="#prefetching-thumbnails" title="Link to this heading"></a></h3>
+<p>Looking up existing thumbnails costs database queries: one for the
+<code class="docutils literal notranslate"><span class="pre">Source</span></code> and one per thumbnail with remote storage, and one per thumbnail
+to read the cached dimensions with local storage. If you need several
+thumbnails of one source (e.g. for a <code class="docutils literal notranslate"><span class="pre">srcset</span></code>), prefetch them with a
+single query, which also fetches the cached dimensions (see
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_CACHE_DIMENSIONS</span></code>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">thumbnailer</span> <span class="o">=</span> <span class="n">get_thumbnailer</span><span class="p">(</span><span class="s1">'animals/aardvark.jpg'</span><span class="p">)</span>
+<span class="n">thumbnailer</span><span class="o">.</span><span class="n">prefetch_aliases</span><span class="p">([</span><span class="s1">'small'</span><span class="p">,</span> <span class="s1">'large'</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'small'</span><span class="p">,</span> <span class="s1">'large'</span><span class="p">):</span>
+    <span class="n">thumb</span> <span class="o">=</span> <span class="n">thumbnailer</span><span class="p">[</span><span class="n">alias</span><span class="p">]</span>
+    <span class="n">thumb</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">thumb</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">thumb</span><span class="o">.</span><span class="n">height</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">Thumbnailer.</span></span><span class="sig-name descname"><span class="pre">prefetch_thumbnails</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnail_options_list</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Fetch the database records of several thumbnails with a single query.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Thumbnail</span></code> records are fetched together with their
+<code class="docutils literal notranslate"><span class="pre">ThumbnailDimensions</span></code> (and the <code class="docutils literal notranslate"><span class="pre">Source</span></code>), so the following calls to
+<a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_thumbnail()</span></code></a> for the same options need no further queries for
+existing thumbnails, and their dimensions are available without reading
+the file (if <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_CACHE_DIMENSIONS</span></code> is enabled).</p>
+<p>Thumbnails that are missing are generated as usual.</p>
+<p>Arguments:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">thumbnail_options_list</span></code></dt><dd><p>Iterable of dicts or <code class="docutils literal notranslate"><span class="pre">ThumbnailOptions</span></code>, as for
+<a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_thumbnail()</span></code></a>. Options of aliases must contain <code class="docutils literal notranslate"><span class="pre">ALIAS</span></code>,
+see <a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer.prefetch_aliases" title="easy_thumbnails.files.Thumbnailer.prefetch_aliases"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prefetch_aliases()</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">Thumbnailer.</span></span><span class="sig-name descname"><span class="pre">prefetch_aliases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aliases_names</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Like <a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer.prefetch_thumbnails" title="easy_thumbnails.files.Thumbnailer.prefetch_thumbnails"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prefetch_thumbnails()</span></code></a> for thumbnail aliases.</p>
+<p>Arguments:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">aliases_names</span></code></dt><dd><p>Iterable of alias names, looked up for the target of this
+thumbnailer like <code class="docutils literal notranslate"><span class="pre">thumbnailer[alias]</span></code> does.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="non-django-file-objects">
 <h3>Non-Django file objects<a class="headerlink" href="#non-django-file-objects" title="Link to this heading"></a></h3>

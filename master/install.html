@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Installation &mdash; easy-thumbnails 3.3 documentation</title>
+  <title>Installation &mdash; easy-thumbnails 3.4.rc1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=26f62d79"></script>
+      <script src="_static/documentation_options.js?v=f42ea01d"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -55,6 +55,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="svg.html">Scalable Vector Graphic Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="webp.html">WebP support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thumbhash.html">ThumbHash</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
@@ -107,6 +108,13 @@ in <code class="docutils literal notranslate"><span class="pre">svglib</span></c
 </pre></div>
 </div>
 <p>See <a class="reference internal" href="svg.html"><span class="doc">Scalable Vector Graphic Support</span></a> for details on SVG support.</p>
+<p>To store a <a class="reference external" href="https://evanw.github.io/thumbhash/">ThumbHash</a> placeholder for
+each source image, install with the <code class="docutils literal notranslate"><span class="pre">thumbhash</span></code> extra, which pulls in
+<code class="docutils literal notranslate"><span class="pre">fast-thumbhash-rs</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">fdemmer</span><span class="o">-</span><span class="n">easy</span><span class="o">-</span><span class="n">thumbnails</span><span class="p">[</span><span class="n">thumbhash</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="thumbhash.html"><span class="doc">ThumbHash</span></a> for details.</p>
 </section>
 <section id="configuring-your-project">
 <h2>Configuring your project<a class="headerlink" href="#configuring-your-project" title="Link to this heading"></a></h2>

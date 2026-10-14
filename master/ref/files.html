@@ -6,21 +6,21 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thumbnail Files and Generators &mdash; easy-thumbnails 3.3 documentation</title>
+  <title>Thumbnail Files and Generators &mdash; easy-thumbnails 3.4.rc1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=26f62d79"></script>
+      <script src="../_static/documentation_options.js?v=f42ea01d"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Namers" href="namers.html" />
-    <link rel="prev" title="WebP support" href="../webp.html" /> 
+    <link rel="prev" title="ThumbHash" href="../thumbhash.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -51,6 +51,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../svg.html">Scalable Vector Graphic Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../webp.html">WebP support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thumbhash.html">ThumbHash</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
@@ -65,8 +66,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.generate_thumbnail"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.generate_thumbnail()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_existing_thumbnail"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_existing_thumbnail()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_options"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_options()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumb_hash"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_thumb_hash()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_thumbnail()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail_name"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_thumbnail_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.prefetch_aliases"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.prefetch_aliases()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.prefetch_thumbnails"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.prefetch_thumbnails()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.save_thumbnail"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.save_thumbnail()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.source_generators"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.source_generators</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.thumbnail_exists"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.thumbnail_exists()</span></code></a></li>
@@ -201,6 +205,12 @@ thumbnailer (and the project-wide default options).</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="easy_thumbnails.files.Thumbnailer.get_thumb_hash">
+<span class="sig-name descname"><span class="pre">get_thumb_hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.Thumbnailer.get_thumb_hash" title="Link to this definition"></a></dt>
+<dd><p>Return the <code class="docutils literal notranslate"><span class="pre">thumb_hash</span></code> stored for this source, or an empty string.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="easy_thumbnails.files.Thumbnailer.get_thumbnail">
 <span class="sig-name descname"><span class="pre">get_thumbnail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnail_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent_template_exception</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="Link to this definition"></a></dt>
 <dd><p>Return a <code class="docutils literal notranslate"><span class="pre">ThumbnailFile</span></code> containing a thumbnail.</p>
@@ -259,6 +269,37 @@ output extension (falls back to <code class="docutils literal notranslate"><span
 extensions that keep their own extension.</p></li>
 </ul>
 <p>Returns the path as a string; it is not checked for existence.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="easy_thumbnails.files.Thumbnailer.prefetch_aliases">
+<span class="sig-name descname"><span class="pre">prefetch_aliases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aliases_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.Thumbnailer.prefetch_aliases" title="Link to this definition"></a></dt>
+<dd><p>Like <a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.prefetch_thumbnails" title="easy_thumbnails.files.Thumbnailer.prefetch_thumbnails"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prefetch_thumbnails()</span></code></a> for thumbnail aliases.</p>
+<p>Arguments:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">aliases_names</span></code></dt><dd><p>Iterable of alias names, looked up for the target of this
+thumbnailer like <code class="docutils literal notranslate"><span class="pre">thumbnailer[alias]</span></code> does.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="easy_thumbnails.files.Thumbnailer.prefetch_thumbnails">
+<span class="sig-name descname"><span class="pre">prefetch_thumbnails</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnail_options_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.Thumbnailer.prefetch_thumbnails" title="Link to this definition"></a></dt>
+<dd><p>Fetch the database records of several thumbnails with a single query.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Thumbnail</span></code> records are fetched together with their
+<code class="docutils literal notranslate"><span class="pre">ThumbnailDimensions</span></code> (and the <code class="docutils literal notranslate"><span class="pre">Source</span></code>), so the following calls to
+<a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_thumbnail()</span></code></a> for the same options need no further queries for
+existing thumbnails, and their dimensions are available without reading
+the file (if <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_CACHE_DIMENSIONS</span></code> is enabled).</p>
+<p>Thumbnails that are missing are generated as usual.</p>
+<p>Arguments:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">thumbnail_options_list</span></code></dt><dd><p>Iterable of dicts or <code class="docutils literal notranslate"><span class="pre">ThumbnailOptions</span></code>, as for
+<a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_thumbnail()</span></code></a>. Options of aliases must contain <code class="docutils literal notranslate"><span class="pre">ALIAS</span></code>,
+see <a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.prefetch_aliases" title="easy_thumbnails.files.Thumbnailer.prefetch_aliases"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prefetch_aliases()</span></code></a>.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -415,7 +456,7 @@ simply returned under the assumption it is a Thumbnailer instance)</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../webp.html" class="btn btn-neutral float-left" title="WebP support" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../thumbhash.html" class="btn btn-neutral float-left" title="ThumbHash" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="namers.html" class="btn btn-neutral float-right" title="Namers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

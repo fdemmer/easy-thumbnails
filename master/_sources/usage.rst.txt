@@ -311,6 +311,28 @@ For example, assuming an ``aardvark.jpg`` image exists in the default storage::
     # or to get a thumbnail by alias
     thumbnailer['large']
 
+Prefetching thumbnails
+---------------------
+
+Looking up existing thumbnails costs database queries: one for the
+``Source`` and one per thumbnail with remote storage, and one per thumbnail
+to read the cached dimensions with local storage. If you need several
+thumbnails of one source (e.g. for a ``srcset``), prefetch them with a
+single query, which also fetches the cached dimensions (see
+``THUMBNAIL_CACHE_DIMENSIONS``)::
+
+    thumbnailer = get_thumbnailer('animals/aardvark.jpg')
+    thumbnailer.prefetch_aliases(['small', 'large'])
+    for alias in ('small', 'large'):
+        thumb = thumbnailer[alias]
+        thumb.url, thumb.width, thumb.height
+
+.. automethod:: Thumbnailer.prefetch_thumbnails
+   :noindex:
+
+.. automethod:: Thumbnailer.prefetch_aliases
+   :noindex:
+
 Non-Django file objects
 -----------------------
 

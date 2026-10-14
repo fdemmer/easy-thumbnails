@@ -25,6 +25,14 @@ in ``svglib`` and ``reportlab``::
 
 See :doc:`svg` for details on SVG support.
 
+To store a `ThumbHash <https://evanw.github.io/thumbhash/>`_ placeholder for
+each source image, install with the ``thumbhash`` extra, which pulls in
+``fast-thumbhash-rs``::
+
+    pip install fdemmer-easy-thumbnails[thumbhash]
+
+See :doc:`thumbhash` for details.
+
 
 Configuring your project
 ========================

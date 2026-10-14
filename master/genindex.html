@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; easy-thumbnails 3.3 documentation</title>
+  <title>Index &mdash; easy-thumbnails 3.4.rc1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=26f62d79"></script>
+      <script src="_static/documentation_options.js?v=f42ea01d"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -48,6 +48,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="svg.html">Scalable Vector Graphic Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="webp.html">WebP support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thumbhash.html">ThumbHash</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
@@ -148,10 +149,14 @@
 </li>
       <li><a href="ref/files.html#easy_thumbnails.files.database_get_image_dimensions">database_get_image_dimensions() (in module easy_thumbnails.files)</a>
 </li>
+      <li><a href="thumbhash.html#easy_thumbnails.hashers.default">default() (in module easy_thumbnails.hashers)</a>
+
+      <ul>
+        <li><a href="ref/namers.html#easy_thumbnails.namers.default">(in module easy_thumbnails.namers)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="ref/namers.html#easy_thumbnails.namers.default">default() (in module easy_thumbnails.namers)</a>
-</li>
       <li><a href="ref/files.html#easy_thumbnails.files.ThumbnailerFieldFile.delete">delete() (easy_thumbnails.files.ThumbnailerFieldFile method)</a>
 </li>
       <li><a href="ref/files.html#easy_thumbnails.files.ThumbnailerFieldFile.delete_thumbnails">delete_thumbnails() (easy_thumbnails.files.ThumbnailerFieldFile method)</a>
@@ -227,6 +232,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_options">get_options() (easy_thumbnails.files.Thumbnailer method)</a>
 </li>
+      <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_thumb_hash">get_thumb_hash() (easy_thumbnails.files.Thumbnailer method)</a>
+</li>
       <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_thumbnail">get_thumbnail() (easy_thumbnails.files.Thumbnailer method)</a>
 </li>
       <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_thumbnail_name">get_thumbnail_name() (easy_thumbnails.files.Thumbnailer method)</a>
@@ -284,8 +291,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="ref/source_generators.html#easy_thumbnails.source_generators.pil_image">pil_image() (in module easy_thumbnails.source_generators)</a>
 </li>
+      <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.prefetch_aliases">prefetch_aliases() (easy_thumbnails.files.Thumbnailer method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.prefetch_thumbnails">prefetch_thumbnails() (easy_thumbnails.files.Thumbnailer method)</a>
+</li>
       <li><a href="ref/namers.html#easy_thumbnails.options.ThumbnailOptions.prepared_options">prepared_options() (easy_thumbnails.options.ThumbnailOptions method)</a>
 </li>
   </ul></td>
@@ -344,6 +355,8 @@
 </li>
       <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_EXTENSION">THUMBNAIL_EXTENSION (easy_thumbnails.conf.Settings attribute)</a>
 </li>
+      <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_HASHER">THUMBNAIL_HASHER (easy_thumbnails.conf.Settings attribute)</a>
+</li>
       <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS">THUMBNAIL_IMAGE_SAVE_OPTIONS (easy_thumbnails.conf.Settings attribute)</a>
 </li>
       <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_MEDIA_ROOT">THUMBNAIL_MEDIA_ROOT (easy_thumbnails.conf.Settings attribute)</a>
@@ -354,10 +367,10 @@
 </li>
       <li><a href="ref/optimize.html#easy_thumbnails.optimize.conf.OptimizeSettings.THUMBNAIL_OPTIMIZE_COMMAND">THUMBNAIL_OPTIMIZE_COMMAND (easy_thumbnails.optimize.conf.OptimizeSettings attribute)</a>
 </li>
-      <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_PREFIX">THUMBNAIL_PREFIX (easy_thumbnails.conf.Settings attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_PREFIX">THUMBNAIL_PREFIX (easy_thumbnails.conf.Settings attribute)</a>
+</li>
       <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_PRESERVE_EXTENSIONS">THUMBNAIL_PRESERVE_EXTENSIONS (easy_thumbnails.conf.Settings attribute)</a>
 </li>
       <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS">THUMBNAIL_PROCESSORS (easy_thumbnails.conf.Settings attribute)</a>

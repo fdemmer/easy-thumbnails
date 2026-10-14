@@ -36,6 +36,7 @@ Features
 
    svg
    webp
+   thumbhash
 
 Reference
 =========
