@@ -407,7 +407,9 @@ are not matched. The same applies if <code class="docutils literal notranslate">
 changed after the thumbnails were generated. Aliases with identical
 options share one thumbnail, so purging one purges the other.
 With the <code class="docutils literal notranslate"><span class="pre">alias</span></code> namer, thumbnails not generated through an alias are
-all named <code class="docutils literal notranslate"><span class="pre">source..ext</span></code> and cannot be told apart. An unknown alias name
+all named <code class="docutils literal notranslate"><span class="pre">source..ext</span></code> and cannot be told apart; with <code class="docutils literal notranslate"><span class="pre">alias_or_size</span></code>
+they are named by size only (<code class="docutils literal notranslate"><span class="pre">source.800x600.ext</span></code>), so differing options
+of the same size are not distinguished. An unknown alias name
 is an error; names are only checked against the fields selected by
 <code class="docutils literal notranslate"><span class="pre">--include</span></code>/<code class="docutils literal notranslate"><span class="pre">--exclude</span></code>, and fields not defining the alias are left
 untouched.</p>

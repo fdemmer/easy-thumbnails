@@ -230,7 +230,7 @@ generated thumbnail.</p>
 <dt class="sig sig-object py" id="easy_thumbnails.conf.Settings.THUMBNAIL_NAMER">
 <span class="sig-name descname"><span class="pre">THUMBNAIL_NAMER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'easy_thumbnails.namers.default'</span></span><a class="headerlink" href="#easy_thumbnails.conf.Settings.THUMBNAIL_NAMER" title="Link to this definition"></a></dt>
 <dd><p>The function used to generate the filename for thumbnail images.</p>
-<p>Four namers are included in easy_thumbnails:</p>
+<p>Five namers are included in easy_thumbnails:</p>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">easy_thumbnails.namers.default</span></code></dt><dd><p>Descriptive filename containing the source and options like
 <code class="docutils literal notranslate"><span class="pre">source.jpg.100x100_q80_crop_upscale.jpg</span></code>.</p>
@@ -239,6 +239,9 @@ generated thumbnail.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">easy_thumbnails.namers.alias</span></code></dt><dd><p>Filename based on <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_ALIASES</span></code> dictionary key like
 <code class="docutils literal notranslate"><span class="pre">source.jpg.medium_large.jpg</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">easy_thumbnails.namers.alias_or_size</span></code></dt><dd><p>Like <code class="docutils literal notranslate"><span class="pre">alias</span></code>, but falls back to the size if there is no alias, like
+<code class="docutils literal notranslate"><span class="pre">source.medium_large.jpg</span></code> or <code class="docutils literal notranslate"><span class="pre">source.800x600.jpg</span></code>.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">easy_thumbnails.namers.source_hashed</span></code></dt><dd><p>Filename with source hashed, size, then options hashed like
 <code class="docutils literal notranslate"><span class="pre">1xedFtqllFo9_100x100_QHCa6G1l.jpg</span></code>.</p>
