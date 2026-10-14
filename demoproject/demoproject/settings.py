@@ -53,7 +53,7 @@ STORAGES = {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'easy_thumbnails': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'BACKEND': 'easy_thumbnails.storage.ThumbnailFileSystemStorage',
     },
 }
 

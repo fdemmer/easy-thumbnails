@@ -6,13 +6,13 @@ from easy_thumbnails.conf import settings
 
 def get_storage():
     # If the user has specified a custom storage backend, use it.
-    from django.core.files.storage import default_storage, storages
+    from django.core.files.storage import storages
     from django.core.files.storage.handler import InvalidStorageError
 
     try:
         return storages[settings.THUMBNAIL_DEFAULT_STORAGE_ALIAS]
     except InvalidStorageError:
-        return default_storage
+        return ThumbnailFileSystemStorage()
 
 
 @deconstructible

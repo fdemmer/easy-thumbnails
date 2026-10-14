@@ -3,6 +3,7 @@ import tempfile
 from pathlib import Path
 
 from django.conf import settings as django_settings
+from django.test import override_settings
 
 from easy_thumbnails import storage
 from easy_thumbnails.conf import settings
@@ -69,3 +70,38 @@ class ThumbnailMediaSettingsIntegrationTest(test.BaseTest):
         self.assertTrue((Path(self.thumb_root) / thumb.name).exists())
         # Nothing was written next to the source.
         self.assertFalse((Path(self.source_storage.location) / thumb.name).exists())
+
+
+class GetStorageTest(test.BaseTest):
+    def test_missing_alias_uses_thumbnail_settings(self):
+        with override_settings(
+            STORAGES={
+                'default': {
+                    'BACKEND': 'django.core.files.storage.FileSystemStorage',
+                },
+            },
+        ):
+            settings.THUMBNAIL_MEDIA_ROOT = '/tmp/thumb_root'
+            settings.THUMBNAIL_MEDIA_URL = '/thumbs/'
+            fs = storage.get_storage()
+        self.assertIsInstance(fs, ThumbnailFileSystemStorage)
+        self.assertEqual(Path(fs.location), Path('/tmp/thumb_root'))
+        self.assertEqual(fs.base_url, '/thumbs/')
+
+    def test_configured_alias_is_used(self):
+        fs = storage.get_storage()
+        self.assertIsInstance(fs, test.TemporaryStorage)
+
+    def test_alias_with_thumbnail_storage_uses_thumbnail_settings(self):
+        with override_settings(
+            STORAGES={
+                'easy_thumbnails': {
+                    'BACKEND': 'easy_thumbnails.storage.ThumbnailFileSystemStorage',
+                },
+            },
+        ):
+            settings.THUMBNAIL_MEDIA_ROOT = '/tmp/thumb_root'
+            settings.THUMBNAIL_MEDIA_URL = '/thumbs/'
+            fs = storage.get_storage()
+        self.assertEqual(Path(fs.location), Path('/tmp/thumb_root'))
+        self.assertEqual(fs.base_url, '/thumbs/')

@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix thumbnail generation failing with "width and height must be > 0" for
   images with extreme aspect ratios (e.g. 600x1), by clamping scaled
   dimensions to a minimum of 1px (SmileyChris/easy-thumbnails#547).
+- Fix `THUMBNAIL_MEDIA_ROOT` and `THUMBNAIL_MEDIA_URL` being ignored when no
+  `easy_thumbnails` storage is configured in `STORAGES`: the thumbnail storage
+  now falls back to `ThumbnailFileSystemStorage` instead of Django's default
+  storage (SmileyChris/easy-thumbnails#649).
 
 ## [3.4.0rc1] - 2026-10-14
 
