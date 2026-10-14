@@ -1,0 +1,58 @@
+{% extends "mainapp/base.html" %}
+{% load static %}
+{% block title %}{{ image.title }}{% endblock %}
+{% block heading %}{{ image.title }}{% endblock %}
+{% block extra_head %}
+    <style>
+        tr.original { background: #f4f4f4; font-weight: 600; }
+        td img { max-width: 160px; height: auto; display: block; }
+    </style>
+{% endblock %}
+{% block nav %}
+    <a href="{% url 'edit_image' image.pk %}">Edit</a>
+{% endblock %}
+{% block content %}
+    {% if thumb_hash %}
+        <h2>ThumbHash placeholder</h2>
+        <img id="thumbhash" width="160" alt="ThumbHash placeholder">
+        <p><code id="thumbhash-value">{{ thumb_hash }}</code></p>
+    {% endif %}
+    <h2>Image and renditions</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Preview</th>
+                <th>File</th>
+                <th>Format</th>
+                <th>Dimensions</th>
+                <th>File size</th>
+                <th>Modified</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in rows %}
+                <tr{% if forloop.first %} class="original"{% endif %}>
+                    <td><a href="{{ r.url }}"><img src="{{ r.url }}" alt="{{ r.name }}"></a></td>
+                    <td><a href="{{ r.url }}">{{ r.name }}</a>{% if forloop.first %} (original){% endif %}</td>
+                    <td>{{ r.format }}</td>
+                    <td>{% if r.width %}{{ r.width }}&times;{{ r.height }}{% else %}&ndash;{% endif %}</td>
+                    <td>{% if r.size is not None %}{{ r.size|filesizeformat }}{% else %}&ndash;{% endif %}</td>
+                    <td>{% if r.modified %}{{ r.modified }}{% else %}&ndash;{% endif %}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if not renditions %}
+        <p>No renditions generated yet.</p>
+    {% endif %}
+{% endblock %}
+{% block scripts %}
+    {% if thumb_hash %}
+    <script type="module">
+            import { thumbHashToDataURL } from "{% static 'mainapp/thumbhash.js' %}";
+            const value = document.getElementById('thumbhash-value').textContent.trim();
+            const hash = Uint8Array.from(atob(value), c => c.charCodeAt(0));
+            document.getElementById('thumbhash').src = thumbHashToDataURL(hash);
+        </script>
+    {% endif %}
+{% endblock %}

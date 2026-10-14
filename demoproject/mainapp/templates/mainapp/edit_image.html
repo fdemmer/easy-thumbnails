@@ -1,12 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Edit Image</title>
-</head>
-<body>
-    <h1>Edit Image</h1>
+{% extends "mainapp/base.html" %}
+{% block title %}Edit {{ image.title }}{% endblock %}
+{% block heading %}Edit: {{ image.title }}{% endblock %}
+{% block nav %}
+    <a href="{% url 'image_detail' image.pk %}">Details</a>
+{% endblock %}
+{% block content %}
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_div }}
@@ -16,6 +14,4 @@
         {% csrf_token %}
         <button type="submit">Delete</button>
     </form>
-    <a href="{% url 'index' %}">Back to list</a>
-</body>
-</html>
+{% endblock %}

@@ -1,88 +1,110 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Easy Thumbnails Demo</title>
+{% extends "mainapp/base.html" %}
+{% load static %}
+{% block title %}Gallery{% endblock %}
+{% block heading %}Gallery{% endblock %}
+{% block extra_head %}
     <style>
-        ul.images {
+        ul.gallery {
             list-style: none;
             margin: 0;
             padding: 0;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 0.75rem;
         }
-        ul.images li {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        ul.images picture {
-            grid-column: 1 / -1;
-            display: flex;
-            justify-content: center;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
+        ul.gallery li { position: relative; }
+        ul.gallery a.detail {
+            display: block;
+            aspect-ratio: 4 / 3;
             border-radius: 4px;
-            background: #fafafa;
+            overflow: hidden;
+            background-color: #eee;
+            background-size: cover;
+            background-position: center;
         }
-        ul.images img {
-            max-width: 100%;
-            height: auto;
+        ul.gallery img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.4s ease;
         }
-        ul.images p {
-            grid-column: 2;
-            margin: 0;
-            text-align: center;
+        ul.gallery img.loaded { opacity: 1; }
+        ul.gallery .caption {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
         }
-        ul.images a {
-            grid-column: 3;
-            justify-self: end;
-            font-size: 0.8rem;
-            color: #888;
-            text-decoration: none;
+        ul.gallery .caption span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-        ul.images a:hover {
-            color: #333;
-            text-decoration: underline;
-        }
-        /* matches the large <source> breakpoint: show large previews at full size */
-        @media (min-width: 800px) {
-            ul.images {
-                grid-template-columns: 1fr;
-            }
-            ul.images li {
-                justify-self: start;
-            }
-        }
+        ul.gallery .caption a { color: #888; text-decoration: none; }
+        ul.gallery .caption a:hover { color: #333; text-decoration: underline; }
     </style>
-</head>
-<body>
-    <h1>Upload an Image</h1>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_div }}
-        <button type="submit">Upload</button>
-    </form>
+{% endblock %}
+{% block content %}
+    <details{% if form.errors %} open{% endif %}>
+        <summary>Upload an image</summary>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_div }}
+            <button type="submit">Upload</button>
+        </form>
+    </details>
 
-    <h2>Uploaded Images</h2>
-    <ul class="images">
+    <ul class="gallery">
         {% for image in images %}
+            {% with f=image.image %}
             <li>
-                <picture>
-                    <source media="(min-width: 800px)" type="image/avif" srcset="{{ image.image.preview_large_avif.url }}">
-                    <source media="(min-width: 800px)" type="image/webp" srcset="{{ image.image.preview_large_webp.url }}">
-                    <source media="(min-width: 800px)" srcset="{{ image.image.preview_large.url }}">
-                    <source type="image/avif" srcset="{{ image.image.preview_avif.url }}">
-                    <source type="image/webp" srcset="{{ image.image.preview_webp.url }}">
-                    <img src="{{ image.image.preview.url }}" srcset="{{ image.image.preview.url }}" alt="{{ image.title }}">
-                </picture>
-                <p>{{ image.title }}</p>
-                <a href="{% url 'edit_image' image.pk %}">Edit</a>
+                <a class="detail" href="{% url 'image_detail' image.pk %}"{% if image.thumb_hash %} data-thumbhash="{{ image.thumb_hash }}"{% endif %}>
+                    <picture>
+                        <source type="image/avif" data-srcset="{{ f.gallery_avif.url }} 1x, {{ f.gallery_2x_avif.url }} 2x">
+                        <source type="image/webp" data-srcset="{{ f.gallery_webp.url }} 1x, {{ f.gallery_2x_webp.url }} 2x">
+                        <img data-src="{{ f.gallery.url }}" data-srcset="{{ f.gallery.url }} 1x, {{ f.gallery_2x.url }} 2x"
+                             width="320" height="240" loading="lazy" alt="{{ image.title }}">
+                    </picture>
+                </a>
+                <div class="caption">
+                    <span>{{ image.title }}</span>
+                    <a href="{% url 'edit_image' image.pk %}">Edit</a>
+                </div>
             </li>
+            {% endwith %}
+        {% empty %}
+            <li>No images yet.</li>
         {% endfor %}
     </ul>
-</body>
-</html>
+{% endblock %}
+{% block scripts %}
+    <script type="module">
+        import { thumbHashToDataURL } from "{% static 'mainapp/thumbhash.js' %}";
+
+        // decode ThumbHash placeholders client side
+        document.querySelectorAll('[data-thumbhash]').forEach(function (el) {
+            const hash = Uint8Array.from(atob(el.dataset.thumbhash), c => c.charCodeAt(0));
+            el.style.backgroundImage = 'url(' + thumbHashToDataURL(hash) + ')';
+        });
+
+        // images are only loaded after a delay, to make the placeholders visible
+        const LOAD_DELAY_MS = 1000;
+
+        document.querySelectorAll('ul.gallery picture').forEach(function (picture) {
+            const img = picture.querySelector('img');
+            // fade in over the placeholder once loaded
+            img.addEventListener('load', function () { img.classList.add('loaded'); });
+            img.addEventListener('error', function () { img.classList.add('loaded'); });
+            setTimeout(function () {
+                picture.querySelectorAll('source').forEach(function (source) {
+                    source.srcset = source.dataset.srcset;
+                });
+                img.srcset = img.dataset.srcset;
+                img.src = img.dataset.src;
+            }, LOAD_DELAY_MS);
+        });
+    </script>
+{% endblock %}

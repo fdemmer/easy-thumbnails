@@ -50,52 +50,64 @@ STORAGES = {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'staticfiles': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
     },
     'easy_thumbnails': {
         'BACKEND': 'easy_thumbnails.storage.ThumbnailFileSystemStorage',
     },
 }
 
-THUMBNAIL_BASEDIR = 'thumbs'
+
 THUMBNAIL_ALIASES = {
     'mainapp.TestImage.image': {
-        'preview': {
-            'size': (640, 256),
+        'gallery': {
+            'size': (320, 240),
             'crop': True,
             'upscale': True,
         },
-        'preview_webp': {
-            'size': (640, 256),
+        'gallery_webp': {
+            'size': (320, 240),
             'crop': True,
             'upscale': True,
             'format': 'webp',
         },
-        'preview_avif': {
-            'size': (640, 256),
+        'gallery_avif': {
+            'size': (320, 240),
             'crop': True,
             'upscale': True,
             'format': 'avif',
         },
-        'preview_large': {
-            'size': (1280, 512),
+        'gallery_2x': {
+            'size': (640, 480),
             'crop': True,
             'upscale': True,
         },
-        'preview_large_webp': {
-            'size': (1280, 512),
+        'gallery_2x_webp': {
+            'size': (640, 480),
             'crop': True,
             'upscale': True,
             'format': 'webp',
         },
-        'preview_large_avif': {
-            'size': (1280, 512),
+        'gallery_2x_avif': {
+            'size': (640, 480),
             'crop': True,
             'upscale': True,
             'format': 'avif',
         },
     },
 }
+THUMBNAIL_BASEDIR = 'thumbs'
+THUMBNAIL_CACHE_DIMENSIONS = True
+THUMBNAIL_CHECK_CACHE_MISS = True
+THUMBNAIL_DEBUG = DEBUG
+THUMBNAIL_IMAGE_SAVE_OPTIONS = {
+    'AVIF': {'quality': 61},
+    'JPEG': {'quality': 76},
+    'WEBP': {'quality': 80},
+}
+# THUMBNAIL_NAMER = 'easy_thumbnails.namers.alias_or_size'
+THUMBNAIL_PRESERVE_EXTENSIONS = ['png']
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

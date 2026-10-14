@@ -1,0 +1,30 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Easy Thumbnails Demo{% endblock %}</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 1rem; color: #222; }
+        nav { display: flex; gap: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #ddd; }
+        nav a { color: #06c; text-decoration: none; }
+        nav a:hover { text-decoration: underline; }
+        nav .spacer { margin-left: auto; }
+        h1 { margin-top: 0; }
+        details { margin-bottom: 1.5rem; }
+        summary { cursor: pointer; font-weight: 600; }
+        table { border-collapse: collapse; }
+        th, td { padding: 0.4rem 0.8rem; border-bottom: 1px solid #ddd; text-align: left; vertical-align: middle; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav>
+        <a href="{% url 'index' %}">Gallery</a>
+        {% block nav %}{% endblock %}
+    </nav>
+    <h1>{% block heading %}{% endblock %}</h1>
+    {% block content %}{% endblock %}
+    {% block scripts %}{% endblock %}
+</body>
+</html>
