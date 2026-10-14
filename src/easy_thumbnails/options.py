@@ -15,6 +15,8 @@ class ThumbnailOptions(dict):
         if settings.THUMBNAIL_DEFAULT_OPTIONS:
             for key, value in settings.THUMBNAIL_DEFAULT_OPTIONS.items():
                 self.setdefault(key, value)
+        # TODO should get default q dependent on format/size (add new setting with table):
+        #  https://docs.wagtail.org/en/stable/topics/images.html#image-quality
         self.setdefault('quality', settings.THUMBNAIL_QUALITY)
         self.setdefault('subsampling', JPEG_CSS_420)
         if self.get('format'):
@@ -24,7 +26,8 @@ class ThumbnailOptions(dict):
     def _normalize_format(value):
         fmt = str(value).lower().lstrip('.')
         fmt = {'jpeg': 'jpg'}.get(fmt, fmt)
-        if fmt not in OUTPUT_FORMATS:
+        # TODO use Image.EXTENSION like in engine.py
+        if fmt not in OUTPUT_FORMATS:  # TODO png output broken.. and gif and svg :(
             raise ValueError(
                 f'Unsupported thumbnail format {value!r}, '
                 f'expected one of: jpeg, webp, avif'
@@ -63,6 +66,7 @@ class ThumbnailOptions(dict):
         hidden_keys = ['format', 'quality', 'size', 'subsampling']
         prepared_opts = ['{size[0]}x{size[1]}'.format(**self)]
 
+        # TODO suppress quality (and subsampling?) for png (other formats?)
         opts_text = ''
         if 'quality' in self:
             opts_text += 'q{quality}'.format(**self)

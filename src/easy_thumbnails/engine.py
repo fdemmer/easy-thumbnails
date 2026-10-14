@@ -47,6 +47,8 @@ def save_pil_image(image, destination=None, filename=None, **options):
     if format in settings.THUMBNAIL_IMAGE_SAVE_OPTIONS:
         for key, value in settings.THUMBNAIL_IMAGE_SAVE_OPTIONS[format].items():
             options.setdefault(key, value)
+            # TODO: that's broken for quality and subsampling (is already set)
+
     saved = False
     if format == 'JPEG':
         if image.mode.endswith('A'):
