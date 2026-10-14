@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `easy_thumbnails` storage is configured in `STORAGES`: the thumbnail storage
   now falls back to `ThumbnailFileSystemStorage` instead of Django's default
   storage (SmileyChris/easy-thumbnails#649).
+- Increase the `name` column length of `Source` and `Thumbnail` from 255 to
+  512 characters, to fit long file names plus thumbnail directory prefixes
+  (SmileyChris/easy-thumbnails#624). Includes a migration. 512 stays within
+  the index key limits of PostgreSQL (2704 bytes) and MySQL/MariaDB InnoDB
+  (3072 bytes, utf8mb4).
 
 ## [3.4.0rc1] - 2026-10-14
 

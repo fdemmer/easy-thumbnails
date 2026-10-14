@@ -69,3 +69,26 @@ class SourceTest(test.BaseTest):
     def test_thumb_hash_default(self):
         source = Source.objects.create(name='Test source', storage_hash='x')
         self.assertEqual(source.thumb_hash, '')
+
+
+class NameLengthTest(test.BaseTest):
+    def test_name_max_length(self):
+        for model in (Source, Thumbnail):
+            self.assertEqual(model._meta.get_field('name').max_length, 512)
+
+    def test_long_names_round_trip(self):
+        storage = test.TemporaryStorage()
+        self.addCleanup(storage.delete_temporary_storage)
+        name = 'a/' * 255 + 'b.jpg'
+        self.assertGreater(len(name), 255)
+        source = Source.objects.get_file(storage, name, create=True)
+        thumbnail = Thumbnail.objects.create(
+            name='thumbs/' + name + '.100x100_q85.jpg',
+            storage_hash=source.storage_hash,
+            source=source,
+        )
+        self.assertEqual(Source.objects.get(pk=source.pk).name, name)
+        self.assertEqual(
+            Thumbnail.objects.get(pk=thumbnail.pk).name,
+            'thumbs/' + name + '.100x100_q85.jpg',
+        )
