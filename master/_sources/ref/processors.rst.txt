@@ -22,6 +22,65 @@ options which they use.
    :members:
 
 
+Option combinations and pitfalls
+================================
+
+All options are passed to every processor and the processors run in order (see
+:attr:`~easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS`), so the result of
+an option depends on what ran before it. These combinations are covered by
+``tests/test_pixel_processors.py``.
+
+``size``
+    - A zero in ``size`` leaves that dimension unbounded. ``size=(0, 0)`` has
+      nothing to derive a scale from and gives a 1x1 image.
+    - :func:`~easy_thumbnails.processors.background` needs both dimensions and
+      does nothing if one is zero.
+
+``crop``
+    - Without ``upscale`` a smaller source is never enlarged, so the result
+      can be smaller than ``size`` even with ``crop`` (``background`` can pad
+      it to the exact size).
+    - ``crop="scale"`` never crops. Combined with ``zoom`` the result is
+      larger than ``size``.
+    - The ``W,H`` offsets are a percentage of the requested thumbnail size (not
+      of the source) and are limited to the available overflow. For ``W,H``
+      the ``target`` option only applies to an axis that has no offset, e.g.
+      ``crop=",0"``.
+    - An empty ``crop=","`` is the same as ``crop=True``.
+
+``target``
+    - Only used when the image is cropped, otherwise it has no effect.
+    - Invalid values (``"abc"``, ``"-5,5"``, ``"1,2,3"``) are silently ignored
+      and the image is centered. Use ``None`` or an empty part for the default
+      of 50%.
+
+``zoom``
+    - Without ``crop`` the image is scaled to fit ``size`` and then cropped to
+      that size, so ``zoom`` implies cropping.
+    - Is limited by ``upscale`` like any other scaling: a source smaller than
+      ``size`` is not zoomed in unless ``upscale`` is set.
+
+``autocrop``
+    - Runs before scaling, so ``crop`` and ``size`` apply to the trimmed image
+      (and its aspect ratio).
+    - Only pure white (``#fff``) is whitespace; off-white borders are kept.
+      Transparent areas count as white, so white content on a transparent
+      background is trimmed as well.
+
+``replace_alpha`` and ``background``
+    - ``background`` also replaces transparency with its color, even without
+      ``replace_alpha``, but only if padding is needed. If both are set,
+      ``replace_alpha`` is applied first by
+      :func:`~easy_thumbnails.processors.colorspace`, so the image is flat
+      before it is padded.
+    - ``background`` cannot pad with transparency. The result is always opaque
+      and the alpha part of a color like ``#0000`` is ignored (black border).
+    - ``bw`` is passed through to ``background``, so a padded image is
+      grayscale as well.
+    - ``background`` pads whenever the image is smaller than ``size`` on *one*
+      axis, and crops around the center on the other axis if the image is
+      larger there.
+
 Custom processors
 =================
 
@@ -39,10 +98,10 @@ Create the processor
 First create a processor like this::
 
     def whizzbang_processor(image, bang=False, **kwargs):
-    	"""
-    	Whizz bang the source image.
+        """
+        Whizz bang the source image.
 
-    	"""
+        """
         if bang:
             image = whizz(image)
         return image

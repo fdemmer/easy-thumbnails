@@ -67,6 +67,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.processors.scale_and_crop"><code class="docutils literal notranslate"><span class="pre">scale_and_crop()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#option-combinations-and-pitfalls">Option combinations and pitfalls</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#custom-processors">Custom processors</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#create-the-processor">Create the processor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#use-the-processor">Use the processor</a></li>
@@ -120,6 +121,8 @@ options which they use.</p>
 <dt class="sig sig-object py" id="easy_thumbnails.processors.autocrop">
 <span class="sig-prename descclassname"><span class="pre">easy_thumbnails.processors.</span></span><span class="sig-name descname"><span class="pre">autocrop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">im</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autocrop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.processors.autocrop" title="Link to this definition"></a></dt>
 <dd><p>Remove any unnecessary whitespace from the edges of the source image.</p>
+<p>Only pure white (<code class="docutils literal notranslate"><span class="pre">#fff</span></code>) pixels are trimmed, with no tolerance, and
+fully transparent areas are treated as white.</p>
 <p>This processor should be listed before <a class="reference internal" href="#easy_thumbnails.processors.scale_and_crop" title="easy_thumbnails.processors.scale_and_crop"><code class="xref py py-func docutils literal notranslate"><span class="pre">scale_and_crop()</span></code></a> so the
 whitespace is removed from the source image before it is resized.</p>
 <dl class="simple">
@@ -133,6 +136,14 @@ whitespace is removed from the source image before it is resized.</p>
 <span class="sig-prename descclassname"><span class="pre">easy_thumbnails.processors.</span></span><span class="sig-name descname"><span class="pre">background</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">im</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.processors.background" title="Link to this definition"></a></dt>
 <dd><p>Add borders of a certain color to make the resized image fit exactly within
 the dimensions given.</p>
+<p>The image is centered on the new canvas. Nothing is done if either
+dimension of <code class="docutils literal notranslate"><span class="pre">size</span></code> is zero or the image already fills <code class="docutils literal notranslate"><span class="pre">size</span></code> on both
+axes. Any transparency is replaced by the background color. If the image
+is smaller than <code class="docutils literal notranslate"><span class="pre">size</span></code> on only one axis, it is cropped on the other.</p>
+<p>The result is always opaque, so padding with transparency is not
+possible: the alpha part of a color such as <code class="docutils literal notranslate"><span class="pre">#0000</span></code> is ignored and the
+border becomes black. To keep transparency, do not use this option and
+let the thumbnail keep its fitted size, or add a custom processor.</p>
 <dl class="simple">
 <dt>background</dt><dd><p>Background color to use</p>
 </dd>
@@ -219,6 +230,72 @@ separated string such as <code class="docutils literal notranslate"><span class=
 </dl>
 </dd></dl>
 
+</section>
+<section id="option-combinations-and-pitfalls">
+<h2>Option combinations and pitfalls<a class="headerlink" href="#option-combinations-and-pitfalls" title="Link to this heading"></a></h2>
+<p>All options are passed to every processor and the processors run in order (see
+<a class="reference internal" href="settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS" title="easy_thumbnails.conf.Settings.THUMBNAIL_PROCESSORS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_PROCESSORS</span></code></a>), so the result of
+an option depends on what ran before it. These combinations are covered by
+<code class="docutils literal notranslate"><span class="pre">tests/test_pixel_processors.py</span></code>.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">size</span></code></dt><dd><ul class="simple">
+<li><p>A zero in <code class="docutils literal notranslate"><span class="pre">size</span></code> leaves that dimension unbounded. <code class="docutils literal notranslate"><span class="pre">size=(0,</span> <span class="pre">0)</span></code> has
+nothing to derive a scale from and gives a 1x1 image.</p></li>
+<li><p><a class="reference internal" href="#easy_thumbnails.processors.background" title="easy_thumbnails.processors.background"><code class="xref py py-func docutils literal notranslate"><span class="pre">background()</span></code></a> needs both dimensions and
+does nothing if one is zero.</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">crop</span></code></dt><dd><ul class="simple">
+<li><p>Without <code class="docutils literal notranslate"><span class="pre">upscale</span></code> a smaller source is never enlarged, so the result
+can be smaller than <code class="docutils literal notranslate"><span class="pre">size</span></code> even with <code class="docutils literal notranslate"><span class="pre">crop</span></code> (<code class="docutils literal notranslate"><span class="pre">background</span></code> can pad
+it to the exact size).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">crop=&quot;scale&quot;</span></code> never crops. Combined with <code class="docutils literal notranslate"><span class="pre">zoom</span></code> the result is
+larger than <code class="docutils literal notranslate"><span class="pre">size</span></code>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">W,H</span></code> offsets are a percentage of the requested thumbnail size (not
+of the source) and are limited to the available overflow. For <code class="docutils literal notranslate"><span class="pre">W,H</span></code>
+the <code class="docutils literal notranslate"><span class="pre">target</span></code> option only applies to an axis that has no offset, e.g.
+<code class="docutils literal notranslate"><span class="pre">crop=&quot;,0&quot;</span></code>.</p></li>
+<li><p>An empty <code class="docutils literal notranslate"><span class="pre">crop=&quot;,&quot;</span></code> is the same as <code class="docutils literal notranslate"><span class="pre">crop=True</span></code>.</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">target</span></code></dt><dd><ul class="simple">
+<li><p>Only used when the image is cropped, otherwise it has no effect.</p></li>
+<li><p>Invalid values (<code class="docutils literal notranslate"><span class="pre">&quot;abc&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;-5,5&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;1,2,3&quot;</span></code>) are silently ignored
+and the image is centered. Use <code class="docutils literal notranslate"><span class="pre">None</span></code> or an empty part for the default
+of 50%.</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">zoom</span></code></dt><dd><ul class="simple">
+<li><p>Without <code class="docutils literal notranslate"><span class="pre">crop</span></code> the image is scaled to fit <code class="docutils literal notranslate"><span class="pre">size</span></code> and then cropped to
+that size, so <code class="docutils literal notranslate"><span class="pre">zoom</span></code> implies cropping.</p></li>
+<li><p>Is limited by <code class="docutils literal notranslate"><span class="pre">upscale</span></code> like any other scaling: a source smaller than
+<code class="docutils literal notranslate"><span class="pre">size</span></code> is not zoomed in unless <code class="docutils literal notranslate"><span class="pre">upscale</span></code> is set.</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">autocrop</span></code></dt><dd><ul class="simple">
+<li><p>Runs before scaling, so <code class="docutils literal notranslate"><span class="pre">crop</span></code> and <code class="docutils literal notranslate"><span class="pre">size</span></code> apply to the trimmed image
+(and its aspect ratio).</p></li>
+<li><p>Only pure white (<code class="docutils literal notranslate"><span class="pre">#fff</span></code>) is whitespace; off-white borders are kept.
+Transparent areas count as white, so white content on a transparent
+background is trimmed as well.</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">replace_alpha</span></code> and <code class="docutils literal notranslate"><span class="pre">background</span></code></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">background</span></code> also replaces transparency with its color, even without
+<code class="docutils literal notranslate"><span class="pre">replace_alpha</span></code>, but only if padding is needed. If both are set,
+<code class="docutils literal notranslate"><span class="pre">replace_alpha</span></code> is applied first by
+<a class="reference internal" href="#easy_thumbnails.processors.colorspace" title="easy_thumbnails.processors.colorspace"><code class="xref py py-func docutils literal notranslate"><span class="pre">colorspace()</span></code></a>, so the image is flat
+before it is padded.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">background</span></code> cannot pad with transparency. The result is always opaque
+and the alpha part of a color like <code class="docutils literal notranslate"><span class="pre">#0000</span></code> is ignored (black border).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bw</span></code> is passed through to <code class="docutils literal notranslate"><span class="pre">background</span></code>, so a padded image is
+grayscale as well.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">background</span></code> pads whenever the image is smaller than <code class="docutils literal notranslate"><span class="pre">size</span></code> on <em>one</em>
+axis, and crops around the center on the other axis if the image is
+larger there.</p></li>
+</ul>
+</dd>
+</dl>
 </section>
 <section id="custom-processors">
 <h2>Custom processors<a class="headerlink" href="#custom-processors" title="Link to this heading"></a></h2>
