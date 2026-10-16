@@ -318,6 +318,11 @@ def background(im, size, background=None, **kwargs):
     axes. Any transparency is replaced by the background color. If the image
     is smaller than ``size`` on only one axis, it is cropped on the other.
 
+    The result is always opaque, so padding with transparency is not
+    possible: the alpha part of a color such as ``#0000`` is ignored and the
+    border becomes black. To keep transparency, do not use this option and
+    let the thumbnail keep its fitted size, or add a custom processor.
+
     background
         Background color to use
     """
@@ -332,6 +337,8 @@ def background(im, size, background=None, **kwargs):
         # The image is already equal to (or larger than) the expected size, so
         # there's nothing to do.
         return im
+    # The background color always wins, even if replace_alpha was also given.
+    kwargs.pop('replace_alpha', None)
     im = colorspace(im, replace_alpha=background, **kwargs)
     new_im = Image.new('RGB', size, background)
     if new_im.mode != im.mode:
