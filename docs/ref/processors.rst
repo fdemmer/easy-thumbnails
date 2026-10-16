@@ -39,10 +39,10 @@ Create the processor
 First create a processor like this::
 
     def whizzbang_processor(image, bang=False, **kwargs):
-    	"""
-    	Whizz bang the source image.
+        """
+        Whizz bang the source image.
 
-    	"""
+        """
         if bang:
             image = whizz(image)
         return image
