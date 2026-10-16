@@ -61,7 +61,6 @@ def colorspace(im, bw=False, replace_alpha=False, **kwargs):
 
     is_transparent = utils.is_transparent(im)
     is_grayscale = im.mode in ('L', 'LA')
-    new_mode = im.mode
     if is_grayscale or bw:
         new_mode = 'L'
     else:
@@ -87,6 +86,9 @@ def autocrop(im, autocrop=False, **kwargs):
     """
     Remove any unnecessary whitespace from the edges of the source image.
 
+    Only pure white (``#fff``) pixels are trimmed, with no tolerance, and
+    fully transparent areas are treated as white.
+
     This processor should be listed before :func:`scale_and_crop` so the
     whitespace is removed from the source image before it is resized.
 
@@ -101,12 +103,9 @@ def autocrop(im, autocrop=False, **kwargs):
             no_alpha.paste(im, mask=im.split()[-1])
         else:
             no_alpha = im.convert('L')
-        # Convert to black and white image.
-        bw = no_alpha.convert('L')
-        # bw = bw.filter(ImageFilter.MedianFilter)
         # White background.
         bg = Image.new('L', im.size, 255)
-        bbox = ImageChops.difference(bw, bg).getbbox()
+        bbox = ImageChops.difference(no_alpha, bg).getbbox()
         if bbox:
             im = im.crop(bbox)
     return im
@@ -246,7 +245,7 @@ def scale_and_crop(  # noqa: C901
             edge_crop = isinstance(crop, str) and re.match(
                 r'(?:(-?)(\d+))?,(?:(-?)(\d+))?$', crop
             )
-            if edge_crop and filter(None, edge_crop.groups()):
+            if edge_crop and any(edge_crop.groups()):
                 x_right, x_crop, y_bottom, y_crop = edge_crop.groups()
                 if x_crop:
                     offset = min(int(target_x) * int(x_crop) // 100, diff_x)
@@ -313,6 +312,11 @@ def background(im, size, background=None, **kwargs):
     """
     Add borders of a certain color to make the resized image fit exactly within
     the dimensions given.
+
+    The image is centered on the new canvas. Nothing is done if either
+    dimension of ``size`` is zero or the image already fills ``size`` on both
+    axes. Any transparency is replaced by the background color. If the image
+    is smaller than ``size`` on only one axis, it is cropped on the other.
 
     background
         Background color to use
