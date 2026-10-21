@@ -408,30 +408,36 @@ class Thumbnailer(File):
             # drop a given ``quality=None``, so it does not end up in the name.
             thumbnail_options.pop('quality', None)
 
-    def get_output_extension(self, thumbnail_options, transparent=False):
+    def get_output_extension(self, thumbnail_options, transparent=False, default='jpg'):
         """
         Return the file extension (without dot) of a thumbnail.
 
         In order of precedence, this is the ``format`` thumbnail option, the
         source extension if it is in ``THUMBNAIL_PRESERVE_EXTENSIONS``, the
         ``THUMBNAIL_TRANSPARENCY_EXTENSION`` if ``transparent`` is true, or
-        the ``THUMBNAIL_EXTENSION`` (falling back to ``jpg`` if empty).
+        the ``THUMBNAIL_EXTENSION``.
+
+        Falls back to ``default`` (``'jpg'``) if the chosen extension is empty,
+        e.g. for a source without an extension and
+        ``THUMBNAIL_PRESERVE_EXTENSIONS = True``, or an empty
+        ``THUMBNAIL_EXTENSION`` / ``THUMBNAIL_TRANSPARENCY_EXTENSION``.
         """
+        if extension := thumbnail_options.get('format'):
+            return extension
+
         source_extension = PurePath(self.name).suffix[1:].lower()
-        preserve_extensions = self.thumbnail_preserve_extensions
-        if thumbnail_options.get('format'):
-            extension = thumbnail_options['format']
-        elif (
-            preserve_extensions is True
-            or isinstance(preserve_extensions, (list, tuple))
-            and source_extension in preserve_extensions
+        if (
+            self.thumbnail_preserve_extensions is True
+            or isinstance(self.thumbnail_preserve_extensions, (list, tuple))
+            and source_extension in self.thumbnail_preserve_extensions
         ):
             extension = source_extension
         elif transparent:
             extension = self.thumbnail_transparency_extension
         else:
             extension = self.thumbnail_extension
-        return extension or 'jpg'
+
+        return extension or default
 
     def generate_thumbnail(self, thumbnail_options, silent_template_exception=False):
         """

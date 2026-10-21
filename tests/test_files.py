@@ -185,6 +185,18 @@ class FilesTest(test.BaseTest):
         thumb = self.ext_thumbnailer.get_thumbnail({'size': (100, 100)})
         self.assertEqual(path.splitext(thumb.name)[1], '.jpg')
 
+    def test_output_extension_fallback(self):
+        filename = self.create_image(self.storage, 'noext')
+        thumbnailer = files.get_thumbnailer(self.storage, filename)
+        thumbnailer.thumbnail_storage = self.storage
+        thumbnailer.thumbnail_preserve_extensions = True
+        self.assertEqual(thumbnailer.get_output_extension({}), 'jpg')
+        thumb = thumbnailer.get_thumbnail({'size': (100, 100)})
+        self.assertEqual(path.splitext(thumb.name)[1], '.jpg')
+
+        self.ext_thumbnailer.thumbnail_extension = ''
+        self.assertEqual(self.ext_thumbnailer.get_output_extension({}), 'jpg')
+
     def test_format_option_extension(self):
         self.ext_thumbnailer.thumbnail_extension = 'png'
         self.ext_thumbnailer.thumbnail_preserve_extensions = True
