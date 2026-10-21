@@ -282,6 +282,24 @@ class FilesTest(test.BaseTest):
         self.assertTrue(name.endswith('.100x100.webp'), name)
         self.assertIsNone(quality)
 
+    def test_quality_none_uses_format_default(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'WEBP': {'quality': 80}}
+        for options in (
+            {'size': (100, 100), 'format': 'webp', 'quality': None},
+            ThumbnailOptions({'size': (100, 100), 'format': 'webp', 'quality': None}),
+        ):
+            opts = self.ext_thumbnailer.get_options(options)
+            self.assertEqual(opts['quality'], 80)
+
+    def test_quality_none_without_format_default(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {}
+        for options in (
+            {'size': (100, 100), 'quality': None},
+            ThumbnailOptions({'size': (100, 100), 'quality': None}),
+        ):
+            name = self.ext_thumbnailer.get_thumbnail_name(options)
+            self.assertTrue(name.endswith('.100x100.jpg'), name)
+
     def test_quality_of_preserved_png(self):
         self.transparent_thumbnailer.thumbnail_preserve_extensions = ('png',)
         name, quality = self._saved_quality(

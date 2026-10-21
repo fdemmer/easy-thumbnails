@@ -373,42 +373,44 @@ class Thumbnailer(File):
         Get the thumbnail options that includes the default options for this
         thumbnailer (and the project-wide default options).
 
-        If no ``quality`` is given, the default quality of the output format
-        is added (see ``get_quality()``).
+        If no ``quality`` is given (or it is ``None``), the default quality of
+        the output format is added (see ``set_quality()``).
         """
         if isinstance(thumbnail_options, ThumbnailOptions):
-            if 'quality' in thumbnail_options:
+            if thumbnail_options.get('quality') is not None:
                 return thumbnail_options
-            opts = ThumbnailOptions(thumbnail_options)
-        else:
-            args = []
-            if thumbnail_options is not None:
-                args.append(thumbnail_options)
-            opts = ThumbnailOptions(*args, **kwargs)
 
-        if (quality := self.get_quality(opts)) is not None:
-            opts['quality'] = quality
-
+        # copy to avoid modifying given dict in place
+        opts = ThumbnailOptions(thumbnail_options or {}, **kwargs)
+        self.set_quality(opts)
         return opts
 
-    def get_quality(self, thumbnail_options):
+    def set_quality(self, thumbnail_options):
         """
-        Return the quality to save a thumbnail with.
+        Set the quality to save a thumbnail with in ``thumbnail_options``.
 
-        This is the ``quality`` thumbnail option, if given. Otherwise it is
-        the ``quality`` entry of ``THUMBNAIL_IMAGE_SAVE_OPTIONS`` for the
-        output format (see ``get_output_extension()``), or ``None`` if that
-        format has no default quality.
+        A ``quality`` thumbnail option is kept, unless it is ``None``.
+        Otherwise it is set to the ``quality`` entry of
+        ``THUMBNAIL_IMAGE_SAVE_OPTIONS`` for the output format (see
+        ``get_output_extension()``). If that format has no default quality,
+        the ``quality`` key is removed.
         """
-        if 'quality' in thumbnail_options:
-            return thumbnail_options['quality']
+        if thumbnail_options.get('quality') is not None:
+            return
 
         # Ensure plugins are fully loaded so that Image.EXTENSION is populated.
         Image.init()
         extension = self.get_output_extension(thumbnail_options)
         format = Image.EXTENSION.get(f'.{extension}', 'JPEG')
         save_options = settings.THUMBNAIL_IMAGE_SAVE_OPTIONS.get(format, {})
-        return save_options.get('quality')
+
+        if (quality := save_options.get('quality')) is not None:
+            thumbnail_options['quality'] = quality
+        else:
+            # The format has no default quality (e.g. a preserved PNG or a
+            # format left out of the setting): save with Pillow's default and
+            # drop a given ``quality=None``, so it does not end up in the name.
+            thumbnail_options.pop('quality', None)
 
     def get_output_extension(self, thumbnail_options, transparent=False):
         """
