@@ -6,6 +6,7 @@ from pathlib import Path
 from PIL import Image, features
 from testfixtures import LogCapture
 
+from django.core.files.base import ContentFile
 from django.test import TestCase
 
 from easy_thumbnails import engine, exceptions, files, models, signals, utils
@@ -208,6 +209,64 @@ class FilesTest(test.BaseTest):
         thumb = self.ext_thumbnailer.get_thumbnail({'size': (100, 100), 'format': 'avif'})
         with Image.open(thumb.path) as im:
             self.assertEqual(im.format, 'AVIF')
+
+    def _animated_thumbnailer(self):
+        data = BytesIO()
+        frames = [Image.new('RGB', (80, 60), c) for c in ('red', 'green', 'blue')]
+        frames[0].save(
+            data, format='GIF', save_all=True, append_images=frames[1:], duration=50
+        )
+        name = self.storage.save('animated.gif', ContentFile(data.getvalue()))
+        thumbnailer = files.get_thumbnailer(self.storage, name)
+        thumbnailer.thumbnail_storage = self.storage
+        return thumbnailer
+
+    def test_animated_webp(self):
+        thumbnailer = self._animated_thumbnailer()
+        thumb = thumbnailer.get_thumbnail(
+            {'size': (40, 40), 'format': 'webp', 'animated': True}
+        )
+        with Image.open(thumb.path) as im:
+            self.assertEqual(im.format, 'WEBP')
+            self.assertTrue(im.is_animated)
+            self.assertEqual(im.n_frames, 3)
+            self.assertEqual(im.size, (40, 30))
+
+    def test_animated_option_not_set(self):
+        thumbnailer = self._animated_thumbnailer()
+        thumb = thumbnailer.get_thumbnail({'size': (40, 40), 'format': 'webp'})
+        with Image.open(thumb.path) as im:
+            self.assertFalse(getattr(im, 'is_animated', False))
+
+    def test_animated_non_webp_output(self):
+        thumbnailer = self._animated_thumbnailer()
+        thumb = thumbnailer.get_thumbnail(
+            {'size': (40, 40), 'format': 'jpeg', 'animated': True}
+        )
+        with Image.open(thumb.path) as im:
+            self.assertEqual(im.format, 'JPEG')
+
+    def test_animated_name_differs(self):
+        thumbnailer = self._animated_thumbnailer()
+        animated = thumbnailer.get_thumbnail(
+            {'size': (40, 40), 'format': 'webp', 'animated': True}
+        )
+        static = thumbnailer.get_thumbnail({'size': (40, 40), 'format': 'webp'})
+        self.assertNotEqual(animated.name, static.name)
+
+    def test_animated_autocrop(self):
+        thumbnailer = self._animated_thumbnailer()
+        with self.assertRaises(exceptions.EasyThumbnailsError):
+            thumbnailer.get_thumbnail(
+                {'size': (40, 40), 'format': 'webp', 'animated': True, 'autocrop': True}
+            )
+
+    def test_animated_static_source(self):
+        thumb = self.ext_thumbnailer.get_thumbnail(
+            {'size': (40, 40), 'format': 'webp', 'animated': True, 'autocrop': True}
+        )
+        with Image.open(thumb.path) as im:
+            self.assertEqual(im.format, 'WEBP')
 
     def test_format_option_invalid(self):
         with self.assertRaises(ValueError):

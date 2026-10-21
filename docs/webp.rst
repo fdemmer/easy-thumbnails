@@ -49,6 +49,34 @@ The option can also be used in
    example ``replace_alpha="#fff"``) to control the background color. WebP
    keeps transparency, so it is the better choice for transparent sources.
 
+Animated WebP
+==============
+
+By default an animated source (such as a GIF) produces a static thumbnail of
+its first frame. The ``animated`` thumbnail option processes every frame and
+saves an animated WebP, keeping each frame's duration and the loop count::
+
+    {% thumbnail animation.gif 200x200 format="webp" animated=True %}
+
+    thumbnailer.get_thumbnail(
+        {'size': (200, 200), 'format': 'webp', 'animated': True}
+    )
+
+Things to be aware of:
+
+* The thumbnail is only animated if it is saved as WebP, so combine the option
+  with ``format="webp"`` (or ``THUMBNAIL_EXTENSION = 'webp'``). For any other
+  output format only the first frame is saved.
+* All frames are decoded and processed, which takes much longer and uses more
+  memory than a static thumbnail. Consider generating these in advance or only
+  for trusted sources.
+* The ``autocrop`` option is not supported for animated sources and raises an
+  :class:`~easy_thumbnails.exceptions.EasyThumbnailsError`, since it could crop
+  every frame differently.
+* EXIF orientation is not applied to animated sources.
+* The ``animated`` option is part of the thumbnail file name, so animated and
+  static thumbnails of the same source are cached separately.
+
 Checking supported formats
 ---------------------------
 

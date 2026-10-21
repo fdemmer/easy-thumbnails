@@ -11,7 +11,9 @@ def pil_image(source, exif_orientation=True, **options):
     exif_orientation
 
         If EXIF orientation data is present, perform any required reorientation
-        before passing the data along the processing pipeline.
+        before passing the data along the processing pipeline. This is skipped
+        for animated sources when the ``animated`` option is set, since it
+        would discard all but the first frame.
 
     """
     # Use a BytesIO wrapper because if the source is an incomplete file like
@@ -32,7 +34,8 @@ def pil_image(source, exif_orientation=True, **options):
     finally:
         ImageFile.LOAD_TRUNCATED_IMAGES = False
 
-    if exif_orientation:
+    animated = options.get('animated') and getattr(image, 'is_animated', False)
+    if exif_orientation and not animated:
         image = utils.exif_orientation(image)
     return image
 

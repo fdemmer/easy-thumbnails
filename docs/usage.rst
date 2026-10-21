@@ -109,6 +109,11 @@ Output options
       transparency: with ``format=jpeg`` the alpha channel of a transparent
       source is discarded, so combine it with ``replace_alpha`` to choose the
       background color. WebP and AVIF preserve transparency.
+    - ``animated=True`` Keep all frames of an animated source (GIF or WebP)
+      and save an animated WebP. Only applies to WebP output, so combine it
+      with ``format=webp``; other formats get the first frame only. Not
+      supported together with ``autocrop`` and EXIF orientation is not
+      applied. See :doc:`webp`.
     - ``subsampling=<N>`` Set the JPEG color subsampling level where N is:
 
       - ``2`` is 4:1:1 (both easy-thumbnails and PIL's default)

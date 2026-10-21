@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add the `animated` thumbnail option to generate animated WebP thumbnails from
+  animated sources such as GIFs. It is not supported together with `autocrop`.
 - Fix thumbnail generation failing with "width and height must be > 0" for
   images with extreme aspect ratios (e.g. 600x1), by clamping scaled
   dimensions to a minimum of 1px (SmileyChris/easy-thumbnails#547).

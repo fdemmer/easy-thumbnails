@@ -34,6 +34,12 @@ class PreparedOptions(TestCase):
             ['100x50', 'q80', 'crop'],
         )
 
+    def test_animated_option(self):
+        self.assertEqual(
+            self.prepared(animated=True),
+            ['100x50', 'q80', 'animated'],
+        )
+
     def test_falsy_values_skipped(self):
         self.assertEqual(
             self.prepared(crop=False, upscale=None, bw=0),

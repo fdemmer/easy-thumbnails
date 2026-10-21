@@ -1,10 +1,11 @@
 from io import BytesIO, StringIO
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageSequence
 
 from django.utils.module_loading import import_string
 
+from easy_thumbnails import exceptions
 from easy_thumbnails.conf import settings
 from easy_thumbnails.options import ThumbnailOptions
 
@@ -31,6 +32,29 @@ def process_image(source, processor_options, processors=None):
     for processor in processors:
         image = processor(image, **processor_options)
     return image
+
+
+def process_animated_image(source, processor_options, processors=None):
+    """
+    Process every frame of an animated PIL image through a series of image
+    processors.
+
+    Returns a ``(frames, durations)`` tuple, where ``durations`` holds the
+    display time in milliseconds of each frame.
+
+    The ``autocrop`` option is not supported, since it can crop each frame
+    differently.
+    """
+    if processor_options.get('autocrop'):
+        raise exceptions.EasyThumbnailsError(
+            'The autocrop option is not supported for animated sources'
+        )
+    frames = []
+    durations = []
+    for frame in ImageSequence.Iterator(source):
+        durations.append(frame.info.get('duration', 0))
+        frames.append(process_image(frame.copy(), processor_options, processors))
+    return frames, durations
 
 
 def save_pil_image(image, destination=None, filename=None, **options):

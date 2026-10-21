@@ -416,9 +416,22 @@ class Thumbnailer(File):
 
         self._compute_thumb_hash(image)
 
-        thumbnail_image = engine.process_image(
-            image, thumbnail_options, self.thumbnail_processors
-        )
+        animation = None
+        if thumbnail_options.get('animated') and getattr(image, 'is_animated', False):
+            frames, durations = engine.process_animated_image(
+                image, thumbnail_options, self.thumbnail_processors
+            )
+            thumbnail_image = frames[0]
+            animation = {
+                'save_all': True,
+                'append_images': frames[1:],
+                'duration': durations,
+                'loop': image.info.get('loop', 0),
+            }
+        else:
+            thumbnail_image = engine.process_image(
+                image, thumbnail_options, self.thumbnail_processors
+            )
         filename = self.get_thumbnail_name(
             thumbnail_options, transparent=utils.is_transparent(thumbnail_image)
         )
@@ -428,12 +441,16 @@ class Thumbnailer(File):
         if Path(self.name).suffix.lower() == '.svg':
             img = engine.save_svg_image(thumbnail_image, filename=filename)
         else:
+            save_options = {}
+            if animation and Path(filename).suffix.lower() == '.webp':
+                save_options = animation
             img = engine.save_pil_image(
                 thumbnail_image,
                 filename=filename,
                 quality=quality,
                 subsampling=subsampling,
                 keep_icc_profile=thumbnail_options.get('keep_icc_profile', False),
+                **save_options,
             )
         data = img.read()
 
