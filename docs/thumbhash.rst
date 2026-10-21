@@ -11,7 +11,9 @@ Install the ``thumbhash`` extra (see :doc:`install`) to enable the default
 hasher. Without it, ``thumb_hash`` stays empty.
 
 The hash is generated when the first thumbnail of a source image is created and
-is available through ``Thumbnailer.get_thumb_hash()``.
+is available through ``Thumbnailer.get_thumb_hash()``. For sources that
+already have thumbnails, generate the missing hashes with
+:ref:`thumbnail thumb_hash <thumbnail_thumb_hash>`.
 
 Custom hashers
 ==============

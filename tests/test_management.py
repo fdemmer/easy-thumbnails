@@ -798,3 +798,74 @@ class ThumbnailPurgeCommandTest(test.BaseTest):
     def test_include_matching_field_purges(self):
         self._call(include=['easy_thumbnails_tests.testmodel.picture'])
         self.assertEqual(Thumbnail.objects.count(), 0)
+
+
+def other_hasher(image):
+    return 'other'
+
+
+class ThumbnailThumbHashCommandTest(test.BaseTest):
+    def setUp(self):
+        super().setUp()
+        thumbnail_settings.THUMBNAIL_HASHER = 'tests.test_files.fake_hasher'
+
+        field = TestModel._meta.get_field('picture')
+        name = self.create_image(field.storage, 'pictures/hash.jpg')
+        self.addCleanup(field.storage.delete, name)
+
+        self.instance = TestModel.objects.create(avatar='avatars/a.jpg', picture=name)
+        self.thumbnailer = get_thumbnailer(self.instance.picture)
+        self.thumbnailer.get_thumbnail({'size': (20, 20)})
+        Source.objects.update(thumb_hash='')
+
+    def _call(self, **kwargs):
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        call_command('thumbnail', 'thumb_hash', stdout=stdout, stderr=stderr, **kwargs)
+        return stdout.getvalue(), stderr.getvalue()
+
+    def _thumb_hash(self):
+        return Source.objects.get().thumb_hash
+
+    def test_fills_missing_hash(self):
+        stdout, _ = self._call()
+        self.assertEqual(self._thumb_hash(), 'fake-800x600')
+        self.assertIn('Hashes generated:', stdout)
+
+    def test_dry_run_saves_nothing(self):
+        stdout, _ = self._call(dry_run=True)
+        self.assertIn('would be generated', stdout)
+        self.assertEqual(self._thumb_hash(), '')
+
+    def test_keeps_existing_hash(self):
+        Source.objects.update(thumb_hash='existing')
+        self._call()
+        self.assertEqual(self._thumb_hash(), 'existing')
+
+    def test_force_regenerates_existing_hash(self):
+        Source.objects.update(thumb_hash='existing')
+        self._call(force=True)
+        self.assertEqual(self._thumb_hash(), 'fake-800x600')
+
+    def test_skips_source_without_record(self):
+        Source.objects.all().delete()
+        self._call()
+        self.assertEqual(Source.objects.count(), 0)
+
+    def test_no_hasher_raises(self):
+        thumbnail_settings.THUMBNAIL_HASHER = None
+        with self.assertRaises(CommandError):
+            self._call()
+
+    def test_hasher_option_overrides_setting(self):
+        thumbnail_settings.THUMBNAIL_HASHER = None
+        self._call(hasher='tests.test_management.other_hasher')
+        self.assertEqual(self._thumb_hash(), 'other')
+
+    def test_invalid_hasher_option_raises(self):
+        with self.assertRaises(CommandError):
+            self._call(hasher='tests.nope.hasher')
+
+    def test_exclude_skips_field(self):
+        self._call(exclude=['easy_thumbnails_tests.testmodel.picture'])
+        self.assertEqual(self._thumb_hash(), '')

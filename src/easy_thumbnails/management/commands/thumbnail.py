@@ -9,7 +9,9 @@ from django.core.files.storage import storages
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.module_loading import import_string
 
+from easy_thumbnails import engine
 from easy_thumbnails.alias import aliases
 from easy_thumbnails.compat import batched
 from easy_thumbnails.conf import settings
@@ -384,6 +386,54 @@ class Command(BaseCommand):
             ),
         )
 
+        thumb_hash_parser = subparsers.add_parser(
+            'thumb_hash',
+            help='Generate missing thumb_hash values of Source records.',
+        )
+        thumb_hash_parser.set_defaults(method=self.do_thumb_hash)
+        thumb_hash_parser.add_argument(
+            '--dry-run',
+            action='store_true',
+            dest='dry_run',
+            default=False,
+            help='Report how many hashes would be generated without saving them.',
+        )
+        thumb_hash_parser.add_argument(
+            '--force',
+            action='store_true',
+            default=False,
+            help='Also regenerate existing hashes.',
+        )
+        thumb_hash_parser.add_argument(
+            '--hasher',
+            dest='hasher',
+            metavar='DOTTED_PATH',
+            default=None,
+            help='Hasher function to use instead of THUMBNAIL_HASHER.',
+        )
+        thumb_hash_parser.add_argument(
+            '--include',
+            dest='include',
+            metavar='SPEC',
+            action='append',
+            default=[],
+            help=(
+                'Restrict hashing to "app" or "app.model" or "app.model.field". '
+                'May be repeated.'
+            ),
+        )
+        thumb_hash_parser.add_argument(
+            '--exclude',
+            dest='exclude',
+            metavar='SPEC',
+            action='append',
+            default=[],
+            help=(
+                'Exclude "app" or "app.model" or "app.model.field" from hashing. '
+                'May be repeated.'
+            ),
+        )
+
     def add_arguments(self, parser):
         subparsers = parser.add_subparsers(
             title='sub-commands',
@@ -632,5 +682,91 @@ class Command(BaseCommand):
         self.stdout.write(f'{"Sources processed:":<40} {counts["sources"]:>7}')
         label = 'Thumbnails that would be purged:' if dry_run else 'Thumbnails purged:'
         self.stdout.write(f'{label:<40} {counts["thumbnails"]:>7}')
+        self.stdout.write(f'{"Errors:":<40} {counts["errors"]:>7}')
+        self.stdout.write(f'(Completed in {execution_time} seconds)\n')
+
+    def _get_hasher(self, hasher_path):
+        """
+        Import the hasher function, raise CommandError if there is none.
+        """
+        hasher_path = hasher_path or settings.THUMBNAIL_HASHER
+        if not hasher_path:
+            raise CommandError(
+                'No hasher configured: set THUMBNAIL_HASHER or pass --hasher.'
+            )
+        try:
+            return import_string(hasher_path)
+        except ImportError as e:
+            raise CommandError(f'Cannot import hasher {hasher_path!r}: {e}') from e
+
+    def do_thumb_hash(self, *args, **options):
+        """
+        Generate the thumb_hash of Source records that don't have one yet.
+
+        For every non-empty ThumbnailerImageField value with a Source record,
+        the source image is loaded with the field's source generators and
+        hashed with THUMBNAIL_HASHER, or the hasher given by --hasher.
+        Sources without a Source record (no thumbnails generated yet) are
+        skipped, they get their hash with the first thumbnail.
+
+        Fields can be narrowed down with --include/--exclude. With --force,
+        existing hashes are regenerated too.
+
+        With --dry-run, only reports how many hashes would be generated.
+        """
+        dry_run = options['dry_run']
+        force = options['force']
+        verbosity = int(options.get('verbosity', 1))
+        hasher = self._get_hasher(options['hasher'])
+
+        pairs = self._resolve_field_pairs(options)
+
+        if dry_run:
+            self.stdout.write('Dry run...')
+
+        counts = Counter()
+        seen = set()
+        time_start = time.time()
+        for model, field in pairs:
+            query = model.objects.filter(q_has_value(field)).only('pk', field.name)
+            for instance in queryset_iterator(query):
+                fieldfile = getattr(instance, field.name)
+                source_cache = fieldfile.get_source_cache()
+                if source_cache is None or source_cache.pk in seen:
+                    continue
+                seen.add(source_cache.pk)
+                if source_cache.thumb_hash and not force:
+                    continue
+                counts['sources'] += 1
+
+                try:
+                    image = engine.generate_source_image(
+                        fieldfile, {}, fieldfile.source_generators
+                    )
+                    if image is None:
+                        raise ValueError('not an image')
+                    thumb_hash = hasher(image)
+                except Exception as e:
+                    self.stderr.write(f'Could not hash {source_cache.name}: {e}')
+                    counts['errors'] += 1
+                    continue
+                if not thumb_hash:
+                    counts['skipped'] += 1
+                    continue
+
+                if verbosity > 1:
+                    self.stdout.write(source_cache.name)
+                if not dry_run:
+                    Source.objects.filter(pk=source_cache.pk).update(
+                        thumb_hash=thumb_hash
+                    )
+                counts['hashed'] += 1
+
+        execution_time = round(time.time() - time_start)
+        self.stdout.write(f'{timezone.now().strftime("%Y-%m-%d %H:%M "):-<48}')
+        self.stdout.write(f'{"Sources processed:":<40} {counts["sources"]:>7}')
+        label = 'Hashes that would be generated:' if dry_run else 'Hashes generated:'
+        self.stdout.write(f'{label:<40} {counts["hashed"]:>7}')
+        self.stdout.write(f'{"Skipped (no hash):":<40} {counts["skipped"]:>7}')
         self.stdout.write(f'{"Errors:":<40} {counts["errors"]:>7}')
         self.stdout.write(f'(Completed in {execution_time} seconds)\n')
