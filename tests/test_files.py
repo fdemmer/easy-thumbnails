@@ -474,11 +474,35 @@ class FilesTest(test.BaseTest):
         self.thumbnailer.get_thumbnail({'size': (50, 50)})
         self.assertEqual(models.Source.objects.get().thumb_hash, '')
 
-    def test_thumb_hash_remote_source(self):
+    def get_file_source_thumbnailer(self):
+        source = BytesIO()
+        Image.new('RGB', (800, 600)).save(source, 'JPEG')
+        source.seek(0)
+        thumbnailer = files.get_thumbnailer(source, 'test.jpg')
+        thumbnailer.thumbnail_storage = self.storage
+        return thumbnailer
+
+    def test_file_source(self):
         settings.THUMBNAIL_HASHER = 'tests.test_files.fake_hasher'
-        self.remote_thumbnailer.remote_source = True
-        self.remote_thumbnailer.get_thumbnail({'size': (50, 50)})
+        thumbnailer = self.get_file_source_thumbnailer()
+        self.assertTrue(thumbnailer.remote_source)
+        opts = {'size': (50, 50)}
+        thumb = thumbnailer.get_thumbnail(opts)
+        self.assertEqual(thumb.name, 'test.jpg.50x50_q76.jpg')
+        self.assertTrue(self.storage.exists(thumb.name))
+        # No cache is used, so the thumbnail is never found as existing.
+        self.assertIsNone(thumbnailer.get_existing_thumbnail(opts))
+        self.assertIsNone(thumbnailer.get_thumbnail(opts, generate=False))
+        self.assertIsNone(thumbnailer.get_thumb_hash())
         self.assertEqual(models.Source.objects.count(), 0)
+        self.assertEqual(models.Thumbnail.objects.count(), 0)
+
+    def test_file_source_cache_dimensions(self):
+        settings.THUMBNAIL_CACHE_DIMENSIONS = True
+        thumbnailer = self.get_file_source_thumbnailer()
+        thumb = thumbnailer.get_thumbnail({'size': (50, 50)})
+        self.assertEqual((thumb.width, thumb.height), (50, 38))
+        self.assertEqual(models.ThumbnailDimensions.objects.count(), 0)
 
     def test_remote_cached_dimensions_queries(self):
         settings.THUMBNAIL_CACHE_DIMENSIONS = True

@@ -327,14 +327,25 @@ class Thumbnailer(File):
         **kwargs,
     ):
         super().__init__(file, name)
+
         if source_storage is None:
             source_storage = default_storage
         self.source_storage = source_storage
+
         if thumbnail_storage is None:
             thumbnail_storage = storage.thumbnail_default_storage
         self.thumbnail_storage = thumbnail_storage
+
+        # The source/file is a file-like object rather than a file in
+        # ``source_storage`` (``is_file_source`` would be a better name; it has
+        # nothing to do with remote storages). Without a storage name and
+        # modification time to identify it, the database cache is bypassed:
+        # no ``Source``/``Thumbnail`` records are read or written, and every
+        # ``get_thumbnail`` call generates (and overwrites) the thumbnail.
         self.remote_source = remote_source
+
         self.alias_target = None
+
         self.generate = generate
 
         # Set default properties. For backwards compatibilty, check to see
@@ -526,7 +537,8 @@ class Thumbnailer(File):
 
     def get_thumb_hash(self):
         """
-        Return the ``thumb_hash`` stored for this source, or an empty string.
+        Return the ``thumb_hash`` stored for this source, or ``None`` if there
+        is no ``Source`` record (yet).
         """
         if source_cache := self.get_source_cache():
             return source_cache.thumb_hash
@@ -775,7 +787,7 @@ class Thumbnailer(File):
 
         # Store the source's thumb_hash, if one was generated.
         thumb_hash = getattr(self, '_pending_thumb_hash', '')
-        if thumb_hash and thumb_cache:
+        if thumb_cache and thumb_hash:
             source_cache = thumb_cache.source
             source_cache.thumb_hash = thumb_hash
             models.Source.objects.filter(pk=source_cache.pk).update(thumb_hash=thumb_hash)
@@ -783,7 +795,7 @@ class Thumbnailer(File):
             self._pending_thumb_hash = ''
 
         # Cache thumbnail dimensions.
-        if settings.THUMBNAIL_CACHE_DIMENSIONS:
+        if thumb_cache and settings.THUMBNAIL_CACHE_DIMENSIONS:
             dimensions_cache, created = models.ThumbnailDimensions.objects.get_or_create(
                 thumbnail=thumb_cache,
                 defaults={'width': thumbnail.width, 'height': thumbnail.height},
