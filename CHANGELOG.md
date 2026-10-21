@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 (up to 2.x, version numbers were not strictly semantic).
 
-## [Unreleased]
+## [3.4.0rc2] - 2026-10-21
 
 - Fix thumbnail generation failing with "width and height must be > 0" for
   images with extreme aspect ratios (e.g. 600x1), by clamping scaled
@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (SmileyChris/easy-thumbnails#624). Includes a migration. 512 stays within
   the index key limits of PostgreSQL (2704 bytes) and MySQL/MariaDB InnoDB
   (3072 bytes, utf8mb4).
+- Fix the `background` option crashing with "got multiple values for keyword
+  argument 'replace_alpha'" when `replace_alpha` is also set. The background
+  color now takes precedence.
+- Document the processor pipeline, thumbnail options grouped by processor, and
+  how processor options combine, including their pitfalls.
 
 ## [3.4.0rc1] - 2026-10-14
 
