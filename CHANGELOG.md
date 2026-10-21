@@ -8,14 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Fix `generate_all_aliases`, `Thumbnailer[alias]` and
-  `Thumbnailer.prefetch_aliases` adding an `ALIAS` key to the shared alias
-  options (and so to the `THUMBNAIL_ALIASES` setting). With the `alias` or
-  `alias_or_size` namer, the `{% thumbnail %}` tag could then name the same
-  thumbnail differently, depending on what ran earlier in the process.
-
-## [3.4.0rc2] - 2026-10-21
-
 - **Backwards incompatible:** Remove the `THUMBNAIL_QUALITY` setting and the
   `Thumbnailer.thumbnail_quality` attribute. The default quality is now set
   per output format by the `quality` entries of `THUMBNAIL_IMAGE_SAVE_OPTIONS`.
@@ -27,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is part of the thumbnail name, thumbnails without an explicit quality are
   regenerated once. Formats without a default quality (e.g. preserved PNG) no
   longer get a `q…` part in their name.
+- Fix `generate_all_aliases`, `Thumbnailer[alias]` and
+  `Thumbnailer.prefetch_aliases` adding an `ALIAS` key to the shared alias
+  options (and so to the `THUMBNAIL_ALIASES` setting). With the `alias` or
+  `alias_or_size` namer, the `{% thumbnail %}` tag could then name the same
+  thumbnail differently, depending on what ran earlier in the process.
+
+## [3.4.0rc2] - 2026-10-21
+
 - Fix thumbnail generation failing with "width and height must be > 0" for
   images with extreme aspect ratios (e.g. 600x1), by clamping scaled
   dimensions to a minimum of 1px (SmileyChris/easy-thumbnails#547).
