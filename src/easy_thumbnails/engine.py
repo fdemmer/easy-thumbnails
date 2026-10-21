@@ -1,10 +1,9 @@
 from io import BytesIO, StringIO
 from pathlib import Path
 
-from PIL import Image
-
 from django.utils.module_loading import import_string
 
+from easy_thumbnails import utils
 from easy_thumbnails.conf import settings
 from easy_thumbnails.options import ThumbnailOptions
 
@@ -40,10 +39,7 @@ def save_pil_image(image, destination=None, filename=None, **options):
     destination = BytesIO() if destination is None else destination
     filename = '' if filename is None else filename
 
-    # Ensure plugins are fully loaded so that Image.EXTENSION is populated.
-    Image.init()
-
-    format = Image.EXTENSION.get(Path(filename).suffix.lower(), 'JPEG')
+    format = utils.get_pil_format(Path(filename).suffix[1:])
     if format in settings.THUMBNAIL_IMAGE_SAVE_OPTIONS:
         for key, value in settings.THUMBNAIL_IMAGE_SAVE_OPTIONS[format].items():
             options.setdefault(key, value)

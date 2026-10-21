@@ -1,7 +1,5 @@
 from pathlib import Path, PurePath
 
-from PIL import Image
-
 from django.core.files.base import ContentFile, File
 from django.core.files.images import get_image_dimensions
 from django.core.files.storage import Storage, default_storage
@@ -398,10 +396,8 @@ class Thumbnailer(File):
         if thumbnail_options.get('quality') is not None:
             return
 
-        # Ensure plugins are fully loaded so that Image.EXTENSION is populated.
-        Image.init()
         extension = self.get_output_extension(thumbnail_options)
-        format = Image.EXTENSION.get(f'.{extension}', 'JPEG')
+        format = utils.get_pil_format(extension)
         save_options = settings.THUMBNAIL_IMAGE_SAVE_OPTIONS.get(format, {})
 
         if (quality := save_options.get('quality')) is not None:
