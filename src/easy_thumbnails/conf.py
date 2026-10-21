@@ -156,13 +156,6 @@ class Settings(AppSettings):
         MEDIA_ROOT + 'photos/thumbs_1_jpg_150x150_q85.jpg'
     """
 
-    THUMBNAIL_QUALITY = 85
-    """
-    The default quality level for JPG images on a scale from 1 (worst) to 95
-    (best). Technically, values up to 100 are allowed, but this is not
-    recommended.
-    """
-
     THUMBNAIL_PROGRESSIVE = 100
     """
     Use progressive JPGs for thumbnails where either dimension is at least this
@@ -178,8 +171,8 @@ class Settings(AppSettings):
     """
     The type of image to save thumbnails with no transparency layer as.
 
-    Note that changing the extension will most likely cause the
-    ``THUMBNAIL_QUALITY`` setting to have no effect.
+    The default quality depends on this format, see
+    ``THUMBNAIL_IMAGE_SAVE_OPTIONS``.
     """
 
     THUMBNAIL_PRESERVE_EXTENSIONS = None
@@ -328,15 +321,36 @@ class Settings(AppSettings):
         'WEBP': {
             'quality': 85,
         },
+        'AVIF': {
+            'quality': 85,
+        },
     }
     """
-    Allows customising Image.save parameters based on format, for example:
-    `{'WEBP': {'method': 6}}` or, for lossless WebP,
-    `{'WEBP': {'lossless': True}}`.
+    ``Image.save`` parameters per Pillow format name (``'JPEG'``, ``'WEBP'``,
+    ``'AVIF'``, ...), for example ``{'WEBP': {'method': 6}}`` or, for lossless
+    WebP, ``{'WEBP': {'lossless': True}}``.
 
-    Note that the ``quality`` thumbnail option is always passed explicitly and
-    takes precedence over a ``quality`` entry here; use ``THUMBNAIL_QUALITY``
-    to change the default quality. See :doc:`/webp` for details.
+    The ``quality`` entry is the default quality for thumbnails saved in that
+    format, on a scale from 1 (worst) to 100 (best)::
+
+        THUMBNAIL_IMAGE_SAVE_OPTIONS = {
+            'JPEG': {'quality': 76},
+            'WEBP': {'quality': 80},
+            'AVIF': {'quality': 61},
+        }
+
+    A ``quality`` thumbnail option (or one in ``THUMBNAIL_DEFAULT_OPTIONS``)
+    takes precedence. The quality is part of the thumbnail file name, so
+    changing it regenerates the thumbnails.
+
+    Setting this replaces the whole dictionary, so include every format you
+    want a default quality for. Formats without a ``quality`` entry are saved
+    with Pillow's default quality.
+
+    The default quality is chosen for the regular output format (the
+    ``format`` option, a preserved source extension or ``THUMBNAIL_EXTENSION``).
+    Thumbnails saved with ``THUMBNAIL_TRANSPARENCY_EXTENSION`` use the same
+    quality. See :doc:`/webp` for details.
     """
 
 

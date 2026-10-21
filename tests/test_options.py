@@ -13,6 +13,17 @@ class PreparedOptions(TestCase):
     def test_default_size_and_quality(self):
         self.assertEqual(self.prepared(), ['100x50', 'q80'])
 
+    def test_no_quality(self):
+        options = ThumbnailOptions({'size': (100, 50)})
+        self.assertNotIn('quality', options)
+        self.assertEqual(options.prepared_options(), ['100x50'])
+        self.assertEqual(
+            ThumbnailOptions(
+                {'size': (100, 50), 'subsampling': JPEG_CSS_444}
+            ).prepared_options(),
+            ['100x50', 'ss0'],
+        )
+
     def test_default_subsampling_omitted(self):
         self.assertEqual(self.prepared(), ['100x50', 'q80'])
 

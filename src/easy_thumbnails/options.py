@@ -15,7 +15,6 @@ class ThumbnailOptions(dict):
         if settings.THUMBNAIL_DEFAULT_OPTIONS:
             for key, value in settings.THUMBNAIL_DEFAULT_OPTIONS.items():
                 self.setdefault(key, value)
-        self.setdefault('quality', settings.THUMBNAIL_QUALITY)
         self.setdefault('subsampling', JPEG_CSS_420)
         if self.get('format'):
             self['format'] = self._normalize_format(self['format'])
@@ -40,6 +39,8 @@ class ThumbnailOptions(dict):
         It gets an ``ss`` part with the subsampling, if it is not the default
         (``'q85ss0'``). The default is 4:2:0, which Pillow indicates with
         ``subsampling=2``.
+        It is left out if there is neither a quality nor a non-default
+        subsampling (e.g. for formats without a configured default quality).
 
         The remaining options follow in key order.
         A ``True`` value is added as ``key``.
@@ -68,7 +69,8 @@ class ThumbnailOptions(dict):
             opts_text += 'q{quality}'.format(**self)
         if 'subsampling' in self and str(self['subsampling']) != f'{JPEG_CSS_420}':
             opts_text += 'ss{subsampling}'.format(**self)
-        prepared_opts.append(opts_text)
+        if opts_text:
+            prepared_opts.append(opts_text)
 
         for key, value in sorted(self.items()):
             if key == key.upper():

@@ -1,5 +1,7 @@
 from pathlib import Path, PurePath
 
+from PIL import Image
+
 from django.core.files.base import ContentFile, File
 from django.core.files.images import get_image_dimensions
 from django.core.files.storage import Storage, default_storage
@@ -344,7 +346,6 @@ class Thumbnailer(File):
             'basedir',
             'subdir',
             'prefix',
-            'quality',
             'extension',
             'preserve_extensions',
             'transparency_extension',
@@ -371,16 +372,68 @@ class Thumbnailer(File):
         """
         Get the thumbnail options that includes the default options for this
         thumbnailer (and the project-wide default options).
+
+        If no ``quality`` is given, the default quality of the output format
+        is added (see ``get_quality()``).
         """
         if isinstance(thumbnail_options, ThumbnailOptions):
-            return thumbnail_options
-        args = []
-        if thumbnail_options is not None:
-            args.append(thumbnail_options)
-        opts = ThumbnailOptions(*args, **kwargs)
-        if 'quality' not in thumbnail_options:
-            opts['quality'] = self.thumbnail_quality
+            if 'quality' in thumbnail_options:
+                return thumbnail_options
+            opts = ThumbnailOptions(thumbnail_options)
+        else:
+            args = []
+            if thumbnail_options is not None:
+                args.append(thumbnail_options)
+            opts = ThumbnailOptions(*args, **kwargs)
+
+        if (quality := self.get_quality(opts)) is not None:
+            opts['quality'] = quality
+
         return opts
+
+    def get_quality(self, thumbnail_options):
+        """
+        Return the quality to save a thumbnail with.
+
+        This is the ``quality`` thumbnail option, if given. Otherwise it is
+        the ``quality`` entry of ``THUMBNAIL_IMAGE_SAVE_OPTIONS`` for the
+        output format (see ``get_output_extension()``), or ``None`` if that
+        format has no default quality.
+        """
+        if 'quality' in thumbnail_options:
+            return thumbnail_options['quality']
+
+        # Ensure plugins are fully loaded so that Image.EXTENSION is populated.
+        Image.init()
+        extension = self.get_output_extension(thumbnail_options)
+        format = Image.EXTENSION.get(f'.{extension}', 'JPEG')
+        save_options = settings.THUMBNAIL_IMAGE_SAVE_OPTIONS.get(format, {})
+        return save_options.get('quality')
+
+    def get_output_extension(self, thumbnail_options, transparent=False):
+        """
+        Return the file extension (without dot) of a thumbnail.
+
+        In order of precedence, this is the ``format`` thumbnail option, the
+        source extension if it is in ``THUMBNAIL_PRESERVE_EXTENSIONS``, the
+        ``THUMBNAIL_TRANSPARENCY_EXTENSION`` if ``transparent`` is true, or
+        the ``THUMBNAIL_EXTENSION`` (falling back to ``jpg`` if empty).
+        """
+        source_extension = PurePath(self.name).suffix[1:].lower()
+        preserve_extensions = self.thumbnail_preserve_extensions
+        if thumbnail_options.get('format'):
+            extension = thumbnail_options['format']
+        elif (
+            preserve_extensions is True
+            or isinstance(preserve_extensions, (list, tuple))
+            and source_extension in preserve_extensions
+        ):
+            extension = source_extension
+        elif transparent:
+            extension = self.thumbnail_transparency_extension
+        else:
+            extension = self.thumbnail_extension
+        return extension or 'jpg'
 
     def generate_thumbnail(self, thumbnail_options, silent_template_exception=False):
         """
@@ -421,18 +474,18 @@ class Thumbnailer(File):
         filename = self.get_thumbnail_name(
             thumbnail_options, transparent=utils.is_transparent(thumbnail_image)
         )
-        quality = thumbnail_options['quality']
-        subsampling = thumbnail_options['subsampling']
+        save_options = {
+            'subsampling': thumbnail_options['subsampling'],
+            'keep_icc_profile': thumbnail_options.get('keep_icc_profile', False),
+        }
+        if thumbnail_options.get('quality') is not None:
+            save_options['quality'] = thumbnail_options['quality']
 
         if Path(self.name).suffix.lower() == '.svg':
             img = engine.save_svg_image(thumbnail_image, filename=filename)
         else:
             img = engine.save_pil_image(
-                thumbnail_image,
-                filename=filename,
-                quality=quality,
-                subsampling=subsampling,
-                keep_icc_profile=thumbnail_options.get('keep_icc_profile', False),
+                thumbnail_image, filename=filename, **save_options
             )
         data = img.read()
 
@@ -486,7 +539,8 @@ class Thumbnailer(File):
         ``thumbnail_options``
             Dict or ``ThumbnailOptions`` of thumbnail options (e.g.
             ``{'size': (100, 100), 'crop': True}``). Normalised through
-            ``get_options()``, so the default quality is added if missing.
+            ``get_options()``, so the default quality of the output format is
+            added if missing.
             Its prepared form is passed to the namer and substituted for
             ``%(opts)s`` in basedir/subdir.
 
@@ -532,21 +586,7 @@ class Thumbnailer(File):
         # remove leading slash if present
         path = path.lstrip('/')
 
-        source_extension = source_file_path.suffix[1:].lower()
-        preserve_extensions = self.thumbnail_preserve_extensions
-        if thumbnail_options.get('format'):
-            extension = thumbnail_options['format']
-        elif (
-            preserve_extensions is True
-            or isinstance(preserve_extensions, (list, tuple))
-            and source_extension in preserve_extensions
-        ):
-            extension = source_extension
-        elif transparent:
-            extension = self.thumbnail_transparency_extension
-        else:
-            extension = self.thumbnail_extension
-        extension = extension or 'jpg'
+        extension = self.get_output_extension(thumbnail_options, transparent)
 
         prepared_opts = thumbnail_options.prepared_options()
         opts_text = '_'.join(prepared_opts)
@@ -952,9 +992,6 @@ class ThumbnailerImageFieldFile(ImageFieldFile, ThumbnailerFieldFile):
         the field.
         """
         if options := getattr(self.field, 'resize_source', None):
-            if 'quality' not in options:
-                options['quality'] = self.thumbnail_quality
-
             content = Thumbnailer(content, name).generate_thumbnail(options)
 
             # If the generated extension differs from the original, use it instead.

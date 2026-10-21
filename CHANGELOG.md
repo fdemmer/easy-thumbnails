@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.4.0rc2] - 2026-10-21
 
+- **Backwards incompatible:** Remove the `THUMBNAIL_QUALITY` setting and the
+  `Thumbnailer.thumbnail_quality` attribute. The default quality is now set
+  per output format by the `quality` entries of `THUMBNAIL_IMAGE_SAVE_OPTIONS`
+  (85 for JPEG, WebP and AVIF by default), e.g.
+  `{'JPEG': {'quality': 76}, 'WEBP': {'quality': 80}, 'AVIF': {'quality': 61}}`.
+  Before, these entries had no effect. A `quality` thumbnail option still takes
+  precedence. To migrate, move a custom `THUMBNAIL_QUALITY` into the
+  `quality` entry of each format. Formats without a default quality (e.g.
+  preserved PNG) no longer get a `q85` part in their thumbnail name, so these
+  thumbnails are regenerated once.
 - Fix thumbnail generation failing with "width and height must be > 0" for
   images with extreme aspect ratios (e.g. 600x1), by clamping scaled
   dimensions to a minimum of 1px (SmileyChris/easy-thumbnails#547).
