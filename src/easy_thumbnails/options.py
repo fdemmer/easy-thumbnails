@@ -10,6 +10,30 @@ JPEG_CSS_420 = 2
 
 
 class ThumbnailOptions(dict):
+    """
+    A dictionary of thumbnail options (e.g. ``{'size': (100, 100), 'crop':
+    True}``), as passed to the source generators, the processors and
+    ``engine.save_pil_image``. :meth:`Thumbnailer.get_options
+    <easy_thumbnails.files.Thumbnailer.get_options>` and the engine wrap plain
+    dictionaries in it. See :doc:`/usage` and :doc:`processors` for the
+    available options.
+
+    On creation, it:
+
+    * adds the entries of ``THUMBNAIL_DEFAULT_OPTIONS`` that aren't given,
+    * sets ``subsampling`` to 4:2:0 (``JPEG_CSS_420``) if it isn't given,
+    * normalizes ``format``: lowercased, without a leading ``.``, and ``jpeg``
+      becomes ``jpg``. It must be one of ``OUTPUT_FORMATS`` (``jpg``,
+      ``webp``, ``avif``), otherwise a ``ValueError`` is raised.
+
+    It doesn't add a ``quality``; ``Thumbnailer.get_options`` adds the default
+    quality of the output format from ``THUMBNAIL_IMAGE_SAVE_OPTIONS``. It
+    doesn't parse a ``size`` string either (the ``{% thumbnail %}`` tag does).
+
+    :meth:`prepared_options` turns the options into the parts of the thumbnail
+    file name.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if settings.THUMBNAIL_DEFAULT_OPTIONS:
@@ -35,9 +59,9 @@ class ThumbnailOptions(dict):
         Return the options as a list of strings used to name the thumbnail.
 
         The first item is the size (``'100x50'``).
-        The second item is the quality (``'q85'``).
+        The second item is the quality (``'q76'``).
         It gets an ``ss`` part with the subsampling, if it is not the default
-        (``'q85ss0'``). The default is 4:2:0, which Pillow indicates with
+        (``'q76ss0'``). The default is 4:2:0, which Pillow indicates with
         ``subsampling=2``.
         It is left out if there is neither a quality nor a non-default
         subsampling (e.g. for formats without a configured default quality).

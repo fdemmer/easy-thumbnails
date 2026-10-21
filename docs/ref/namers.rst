@@ -29,3 +29,4 @@ the thumbnail, ``prepared_options`` is a list of options prepared as text, and
 excluding options that shouldn't be included in the filename:
 
 .. automethod:: easy_thumbnails.options.ThumbnailOptions.prepared_options
+   :noindex:

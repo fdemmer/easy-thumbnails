@@ -576,10 +576,10 @@ class Thumbnailer(File):
         Arguments:
 
         ``thumbnail_options``
-            Dict or ``ThumbnailOptions`` of thumbnail options (e.g.
-            ``{'size': (100, 100), 'crop': True}``). Normalised through
-            ``get_options()``, so the default quality of the output format is
-            added if missing.
+            Dict or :class:`~easy_thumbnails.options.ThumbnailOptions` of
+            thumbnail options (e.g. ``{'size': (100, 100), 'crop': True}``).
+            Normalised through ``get_options()``, so the default quality of
+            the output format is added if missing.
             Its prepared form is passed to the namer and substituted for
             ``%(opts)s`` in basedir/subdir.
 
@@ -698,7 +698,8 @@ class Thumbnailer(File):
         Arguments:
 
         ``thumbnail_options_list``
-            Iterable of dicts or ``ThumbnailOptions``, as for
+            Iterable of dicts or
+            :class:`~easy_thumbnails.options.ThumbnailOptions`, as for
             :meth:`get_thumbnail`. Options of aliases must contain ``ALIAS``,
             see :meth:`prefetch_aliases`.
         """
