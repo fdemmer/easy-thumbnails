@@ -44,7 +44,7 @@ def vil_image(source, **options):
     try:
         from easy_thumbnails.VIL import Image
     except ImportError as ie:
-        warnings.warn(f'Could not import VIL for SVG image support: {ie}.')
+        warnings.warn(f'Could not import VIL for SVG image support: {ie}.', stacklevel=2)
         return
 
     if not source:
