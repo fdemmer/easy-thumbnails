@@ -298,14 +298,37 @@ class ThumbnailFile(ImageFieldFile):
 
 class Thumbnailer(File):
     """
-    A file-like object which provides some methods to generate thumbnail
-    images.
+    A Django ``File`` for a source image, which generates thumbnails of it and
+    keeps track of them in the database cache.
 
-    You can subclass this object and override the following properties to
-    change the defaults (pulled from the default settings):
+    Use :func:`get_thumbnailer` to get an instance rather than creating one
+    directly. :meth:`get_thumbnail` returns an existing thumbnail or generates
+    a new one, ``thumbnailer['alias']`` does the same for a thumbnail alias.
 
-        * source_generators
-        * thumbnail_processors
+    :param file: An optional file-like object to read the source from. If not
+        given, the source is opened from ``source_storage`` by ``name``.
+    :param name: The name of the source, relative to ``source_storage``.
+        Thumbnail names are derived from it.
+    :param source_storage: The storage of the source. Defaults to Django's
+        ``default_storage``.
+    :param thumbnail_storage: The storage thumbnails are saved to. Defaults to
+        the storage named by ``THUMBNAIL_DEFAULT_STORAGE_ALIAS``, or a
+        ``ThumbnailFileSystemStorage`` if there is no such storage.
+    :param remote_source: ``True`` if ``file`` is not a file in
+        ``source_storage``. The database cache is then bypassed and every
+        :meth:`get_thumbnail` call generates a new thumbnail.
+    :param generate: Whether :meth:`get_thumbnail` generates missing
+        thumbnails, unless told otherwise by its ``generate`` argument.
+
+    Subclasses can set these attributes to override the settings of the same
+    name in upper case (e.g. ``THUMBNAIL_NAMER`` for ``thumbnail_namer``);
+    ``None`` uses the setting:
+
+    * :attr:`source_generators`, :attr:`thumbnail_processors`
+    * ``thumbnail_basedir``, ``thumbnail_subdir``, ``thumbnail_prefix``,
+      ``thumbnail_extension``, ``thumbnail_preserve_extensions``,
+      ``thumbnail_transparency_extension``, ``thumbnail_check_cache_miss``,
+      ``thumbnail_namer``
     """
 
     #: A list of source generators to use. If ``None``, will use the default
