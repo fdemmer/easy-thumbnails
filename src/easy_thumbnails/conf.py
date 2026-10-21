@@ -131,7 +131,7 @@ class Settings(AppSettings):
     with a ``THUMBNAIL_BASEDIR`` of ``'thumbs'`` would result in the
     following thumbnail filename::
 
-        MEDIA_ROOT + 'thumbs/photos/1_jpg_150x150_q85.jpg'
+        MEDIA_ROOT + 'thumbs/photos/1_jpg_150x150_q76.jpg'
     """
 
     THUMBNAIL_SUBDIR = ''
@@ -142,7 +142,7 @@ class Settings(AppSettings):
     a ``THUMBNAIL_SUBDIR`` of ``'thumbs'`` would result in the following
     thumbnail filename::
 
-        MEDIA_ROOT + 'photos/thumbs/1_jpg_150x150_q85.jpg'
+        MEDIA_ROOT + 'photos/thumbs/1_jpg_150x150_q76.jpg'
     """
 
     THUMBNAIL_PREFIX = ''
@@ -153,7 +153,7 @@ class Settings(AppSettings):
     a ``THUMBNAIL_PREFIX`` of ``'thumbs_'`` would result in the following
     thumbnail filename::
 
-        MEDIA_ROOT + 'photos/thumbs_1_jpg_150x150_q85.jpg'
+        MEDIA_ROOT + 'photos/thumbs_1_jpg_150x150_q76.jpg'
     """
 
     THUMBNAIL_PROGRESSIVE = 100
@@ -316,13 +316,13 @@ class Settings(AppSettings):
 
     THUMBNAIL_IMAGE_SAVE_OPTIONS = {
         'JPEG': {
-            'quality': 85,
+            'quality': 76,
         },
         'WEBP': {
-            'quality': 85,
+            'quality': 80,
         },
         'AVIF': {
-            'quality': 85,
+            'quality': 61,
         },
     }
     """
@@ -331,12 +331,16 @@ class Settings(AppSettings):
     WebP, ``{'WEBP': {'lossless': True}}``.
 
     The ``quality`` entry is the default quality for thumbnails saved in that
-    format, on a scale from 1 (worst) to 100 (best)::
+    format, on a scale from 1 (worst) to 100 (best). The defaults give a
+    similar perceived quality across formats for general web content (the
+    same values as Wagtail, see its `image quality
+    <https://docs.wagtail.org/en/stable/topics/images.html#image-quality>`_
+    documentation). For example, for small thumbnails::
 
         THUMBNAIL_IMAGE_SAVE_OPTIONS = {
-            'JPEG': {'quality': 76},
-            'WEBP': {'quality': 80},
-            'AVIF': {'quality': 61},
+            'JPEG': {'quality': 65},
+            'WEBP': {'quality': 70},
+            'AVIF': {'quality': 54},
         }
 
     A ``quality`` thumbnail option (or one in ``THUMBNAIL_DEFAULT_OPTIONS``)

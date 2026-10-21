@@ -102,7 +102,7 @@ Output options
     - ``quality=<N>`` Specify the output JPEG, WebP or AVIF quality as an
       integer N between 1 and 100. The default depends on the output format
       and is set by the ``quality`` entries of
-      ``THUMBNAIL_IMAGE_SAVE_OPTIONS`` (85 for all three by default). For
+      ``THUMBNAIL_IMAGE_SAVE_OPTIONS`` (JPEG 76, WebP 80, AVIF 61 by default). For
       lossless WebP it only trades encoding speed for file size, see
       :doc:`webp`.
     - ``format=<jpeg|webp|avif>`` Set the output format of this thumbnail,

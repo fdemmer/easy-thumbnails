@@ -227,8 +227,8 @@ class FilesTest(test.BaseTest):
 
     def test_default_quality(self):
         name, quality = self._saved_quality(self.ext_thumbnailer, {'size': (100, 100)})
-        self.assertIn('_q85', name)
-        self.assertEqual(quality, 85)
+        self.assertIn('_q76', name)
+        self.assertEqual(quality, 76)
 
     def test_quality_per_format(self):
         settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {
@@ -393,7 +393,7 @@ class FilesTest(test.BaseTest):
         opts = {'size': (50, 50), 'crop': 'smart', 'upscale': True, 'target': (10, 10)}
         self.assertEqual(
             self.thumbnailer.get_thumbnail_name(opts),
-            'test.jpg.50x50_q85_crop-smart_target-10,10_upscale.jpg',
+            'test.jpg.50x50_q76_crop-smart_target-10,10_upscale.jpg',
         )
 
     def test_get_thumbnail_name_strips_location_prefix_only(self):
@@ -401,7 +401,7 @@ class FilesTest(test.BaseTest):
         self.thumbnailer.name = f'{location}/sub{location}/test.jpg'
         self.assertEqual(
             self.thumbnailer.get_thumbnail_name({'size': (50, 50)}),
-            f'sub{location}/test.jpg.50x50_q85.jpg'.lstrip('/'),
+            f'sub{location}/test.jpg.50x50_q76.jpg'.lstrip('/'),
         )
 
     def test_default_options_setting(self):

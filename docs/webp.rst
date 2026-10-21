@@ -75,14 +75,19 @@ Lossy compression (default)
 
 WebP thumbnails are lossy unless configured otherwise. The ``quality`` (0-100,
 higher is better and larger) works like for JPEG and AVIF. The default for each
-format is the ``'quality'`` entry in ``THUMBNAIL_IMAGE_SAVE_OPTIONS`` (85 by
-default), so every format can have its own::
+format is the ``'quality'`` entry in ``THUMBNAIL_IMAGE_SAVE_OPTIONS``. The
+defaults are chosen to give a similar perceived quality across formats for
+general web content, following `Wagtail
+<https://docs.wagtail.org/en/stable/topics/images.html#image-quality>`_::
 
     THUMBNAIL_IMAGE_SAVE_OPTIONS = {
         'JPEG': {'quality': 76},
         'WEBP': {'quality': 80},
         'AVIF': {'quality': 61},
     }
+
+Wagtail suggests lower values for thumbnails (e.g. JPEG 65, WebP 70, AVIF 54
+at 256x256) and higher ones for full-size photos (JPEG 85, WebP 87, AVIF 73).
 
 The ``quality`` thumbnail option overrides it for a single thumbnail, for
 example ``{% thumbnail photo 200x200 format="webp" quality=70 %}``.

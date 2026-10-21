@@ -83,12 +83,12 @@ class NameLengthTest(test.BaseTest):
         self.assertGreater(len(name), 255)
         source = Source.objects.get_file(storage, name, create=True)
         thumbnail = Thumbnail.objects.create(
-            name='thumbs/' + name + '.100x100_q85.jpg',
+            name='thumbs/' + name + '.100x100_q76.jpg',
             storage_hash=source.storage_hash,
             source=source,
         )
         self.assertEqual(Source.objects.get(pk=source.pk).name, name)
         self.assertEqual(
             Thumbnail.objects.get(pk=thumbnail.pk).name,
-            'thumbs/' + name + '.100x100_q85.jpg',
+            'thumbs/' + name + '.100x100_q76.jpg',
         )

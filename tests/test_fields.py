@@ -95,11 +95,11 @@ class ThumbnailerFieldTest(AliasBaseTest):
     def test_serialization(self):
         instance = models.TestModel(avatar='avatars/avatar.jpg')
         self.assertEqual(
-            '/media/avatars/avatar.jpg.100x100_q85.jpg', instance.avatar['small'].url
+            '/media/avatars/avatar.jpg.100x100_q76.jpg', instance.avatar['small'].url
         )
         new_instance = pickle.loads(pickle.dumps(instance))
         self.assertEqual(
-            '/media/avatars/avatar.jpg.100x100_q85.jpg', new_instance.avatar['small'].url
+            '/media/avatars/avatar.jpg.100x100_q76.jpg', new_instance.avatar['small'].url
         )
 
     def _read_filefield(self, field):
