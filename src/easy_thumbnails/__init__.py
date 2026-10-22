@@ -1,4 +1,4 @@
-VERSION = (3, 4, 0, 'rc', 2)
+VERSION = (3, 4, 0, 'rc', 3)
 
 
 def get_version(*args, **kwargs):
