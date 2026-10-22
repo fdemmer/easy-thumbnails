@@ -49,12 +49,13 @@
 <li class="toctree-l1"><a class="reference internal" href="svg.html">Scalable Vector Graphic Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="webp.html">WebP support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thumbhash.html">ThumbHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimizing Images using a Postprocessor</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ref/files.html">Thumbnail Files and Generators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/namers.html">Namers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ref/optimize.html">Optimizing Images using a Postprocessor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/options.html">Thumbnail Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/processors.html">Image Processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/settings.html">Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/source_generators.html">Source Generators</a></li>
@@ -99,6 +100,7 @@
  | <a href="#I"><strong>I</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#V"><strong>V</strong></a>
@@ -228,9 +230,11 @@
 </li>
       <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_existing_thumbnail">get_existing_thumbnail() (easy_thumbnails.files.Thumbnailer method)</a>
 </li>
+      <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_options">get_options() (easy_thumbnails.files.Thumbnailer method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_options">get_options() (easy_thumbnails.files.Thumbnailer method)</a>
+      <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_output_extension">get_output_extension() (easy_thumbnails.files.Thumbnailer method)</a>
 </li>
       <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_thumb_hash">get_thumb_hash() (easy_thumbnails.files.Thumbnailer method)</a>
 </li>
@@ -297,7 +301,15 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.prefetch_thumbnails">prefetch_thumbnails() (easy_thumbnails.files.Thumbnailer method)</a>
 </li>
-      <li><a href="ref/namers.html#easy_thumbnails.options.ThumbnailOptions.prepared_options">prepared_options() (easy_thumbnails.options.ThumbnailOptions method)</a>
+      <li><a href="ref/options.html#easy_thumbnails.options.ThumbnailOptions.prepared_options">prepared_options() (easy_thumbnails.options.ThumbnailOptions method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.resolve_quality">resolve_quality() (easy_thumbnails.files.Thumbnailer method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -365,7 +377,7 @@
 </li>
       <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_NAMER">THUMBNAIL_NAMER (easy_thumbnails.conf.Settings attribute)</a>
 </li>
-      <li><a href="ref/optimize.html#easy_thumbnails.optimize.conf.OptimizeSettings.THUMBNAIL_OPTIMIZE_COMMAND">THUMBNAIL_OPTIMIZE_COMMAND (easy_thumbnails.optimize.conf.OptimizeSettings attribute)</a>
+      <li><a href="optimize.html#easy_thumbnails.optimize.conf.OptimizeSettings.THUMBNAIL_OPTIMIZE_COMMAND">THUMBNAIL_OPTIMIZE_COMMAND (easy_thumbnails.optimize.conf.OptimizeSettings attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -378,8 +390,6 @@
       <li><a href="ref/files.html#easy_thumbnails.files.Thumbnailer.thumbnail_processors">thumbnail_processors (easy_thumbnails.files.Thumbnailer attribute)</a>
 </li>
       <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_PROGRESSIVE">THUMBNAIL_PROGRESSIVE (easy_thumbnails.conf.Settings attribute)</a>
-</li>
-      <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_QUALITY">THUMBNAIL_QUALITY (easy_thumbnails.conf.Settings attribute)</a>
 </li>
       <li><a href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_SOURCE_GENERATORS">THUMBNAIL_SOURCE_GENERATORS (easy_thumbnails.conf.Settings attribute)</a>
 </li>
@@ -406,6 +416,8 @@
       <li><a href="ref/files.html#easy_thumbnails.files.ThumbnailerImageFieldFile">ThumbnailerImageFieldFile (class in easy_thumbnails.files)</a>
 </li>
       <li><a href="ref/files.html#easy_thumbnails.files.ThumbnailFile">ThumbnailFile (class in easy_thumbnails.files)</a>
+</li>
+      <li><a href="ref/options.html#easy_thumbnails.options.ThumbnailOptions">ThumbnailOptions (class in easy_thumbnails.options)</a>
 </li>
   </ul></td>
 </tr></table>

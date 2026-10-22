@@ -19,7 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Optimizing Images using a Postprocessor" href="optimize.html" />
+    <link rel="next" title="Thumbnail Options" href="options.html" />
     <link rel="prev" title="Thumbnail Files and Generators" href="files.html" /> 
 </head>
 
@@ -52,6 +52,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../svg.html">Scalable Vector Graphic Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../webp.html">WebP support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../thumbhash.html">ThumbHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimize.html">Optimizing Images using a Postprocessor</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
@@ -65,13 +66,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.namers.source_hashed"><code class="docutils literal notranslate"><span class="pre">source_hashed()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#custom-namers">Custom namers</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.options.ThumbnailOptions.prepared_options"><code class="docutils literal notranslate"><span class="pre">ThumbnailOptions.prepared_options()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-namers">Custom namers</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimizing Images using a Postprocessor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">Thumbnail Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="processors.html">Image Processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source_generators.html">Source Generators</a></li>
@@ -163,14 +161,16 @@ must return a filename.</p>
 the thumbnail, <code class="docutils literal notranslate"><span class="pre">prepared_options</span></code> is a list of options prepared as text, and
 excluding options that shouldn’t be included in the filename:</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="easy_thumbnails.options.ThumbnailOptions.prepared_options">
-<span class="sig-prename descclassname"><span class="pre">ThumbnailOptions.</span></span><span class="sig-name descname"><span class="pre">prepared_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.options.ThumbnailOptions.prepared_options" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">ThumbnailOptions.</span></span><span class="sig-name descname"><span class="pre">prepared_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
 <dd><p>Return the options as a list of strings used to name the thumbnail.</p>
 <p>The first item is the size (<code class="docutils literal notranslate"><span class="pre">'100x50'</span></code>).
-The second item is the quality (<code class="docutils literal notranslate"><span class="pre">'q85'</span></code>).
+The second item is the quality (<code class="docutils literal notranslate"><span class="pre">'q76'</span></code>).
 It gets an <code class="docutils literal notranslate"><span class="pre">ss</span></code> part with the subsampling, if it is not the default
-(<code class="docutils literal notranslate"><span class="pre">'q85ss0'</span></code>). The default is 4:2:0, which Pillow indicates with
-<code class="docutils literal notranslate"><span class="pre">subsampling=2</span></code>.</p>
+(<code class="docutils literal notranslate"><span class="pre">'q76ss0'</span></code>). The default is 4:2:0, which Pillow indicates with
+<code class="docutils literal notranslate"><span class="pre">subsampling=2</span></code>.
+It is left out if there is neither a quality nor a non-default
+subsampling (e.g. for formats without a configured default quality).</p>
 <p>The remaining options follow in key order.
 A <code class="docutils literal notranslate"><span class="pre">True</span></code> value is added as <code class="docutils literal notranslate"><span class="pre">key</span></code>.
 Any other value is added as <code class="docutils literal notranslate"><span class="pre">key-value</span></code>.
@@ -195,7 +195,7 @@ namer relies on it!</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="files.html" class="btn btn-neutral float-left" title="Thumbnail Files and Generators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="optimize.html" class="btn btn-neutral float-right" title="Optimizing Images using a Postprocessor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="options.html" class="btn btn-neutral float-right" title="Thumbnail Options" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

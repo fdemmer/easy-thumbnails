@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Namers" href="namers.html" />
-    <link rel="prev" title="ThumbHash" href="../thumbhash.html" /> 
+    <link rel="prev" title="Optimizing Images using a Postprocessor" href="../optimize.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -52,6 +52,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../svg.html">Scalable Vector Graphic Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../webp.html">WebP support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../thumbhash.html">ThumbHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimize.html">Optimizing Images using a Postprocessor</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
@@ -66,11 +67,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.generate_thumbnail"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.generate_thumbnail()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_existing_thumbnail"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_existing_thumbnail()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_options"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_options()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_output_extension"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_output_extension()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumb_hash"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_thumb_hash()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_thumbnail()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail_name"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_thumbnail_name()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.prefetch_aliases"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.prefetch_aliases()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.prefetch_thumbnails"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.prefetch_thumbnails()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.resolve_quality"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.resolve_quality()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.save_thumbnail"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.save_thumbnail()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.source_generators"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.source_generators</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.thumbnail_exists"><code class="docutils literal notranslate"><span class="pre">Thumbnailer.thumbnail_exists()</span></code></a></li>
@@ -94,7 +97,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="namers.html">Namers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimizing Images using a Postprocessor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">Thumbnail Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="processors.html">Image Processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source_generators.html">Source Generators</a></li>
@@ -172,16 +175,41 @@ attributes to the <cite>img</cite> tag.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="easy_thumbnails.files.Thumbnailer">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">easy_thumbnails.files.</span></span><span class="sig-name descname"><span class="pre">Thumbnailer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_storage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thumbnail_storage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.Thumbnailer" title="Link to this definition"></a></dt>
-<dd><p>A file-like object which provides some methods to generate thumbnail
-images.</p>
-<p>You can subclass this object and override the following properties to
-change the defaults (pulled from the default settings):</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>source_generators</p></li>
-<li><p>thumbnail_processors</p></li>
+<dd><p>A Django <code class="docutils literal notranslate"><span class="pre">File</span></code> for a source image, which generates thumbnails of it and
+keeps track of them in the database cache.</p>
+<p>Use <a class="reference internal" href="#easy_thumbnails.files.get_thumbnailer" title="easy_thumbnails.files.get_thumbnailer"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_thumbnailer()</span></code></a> to get an instance rather than creating one
+directly. <a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_thumbnail()</span></code></a> returns an existing thumbnail or generates
+a new one, <code class="docutils literal notranslate"><span class="pre">thumbnailer['alias']</span></code> does the same for a thumbnail alias.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – An optional file-like object to read the source from. If not
+given, the source is opened from <code class="docutils literal notranslate"><span class="pre">source_storage</span></code> by <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p></li>
+<li><p><strong>name</strong> – The name of the source, relative to <code class="docutils literal notranslate"><span class="pre">source_storage</span></code>.
+Thumbnail names are derived from it.</p></li>
+<li><p><strong>source_storage</strong> – The storage of the source. Defaults to Django’s
+<code class="docutils literal notranslate"><span class="pre">default_storage</span></code>.</p></li>
+<li><p><strong>thumbnail_storage</strong> – The storage thumbnails are saved to. Defaults to
+the storage named by <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_DEFAULT_STORAGE_ALIAS</span></code>, or a
+<code class="docutils literal notranslate"><span class="pre">ThumbnailFileSystemStorage</span></code> if there is no such storage.</p></li>
+<li><p><strong>remote_source</strong> – <code class="docutils literal notranslate"><span class="pre">True</span></code> if <code class="docutils literal notranslate"><span class="pre">file</span></code> is not a file in
+<code class="docutils literal notranslate"><span class="pre">source_storage</span></code>. The database cache is then bypassed and every
+<a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_thumbnail()</span></code></a> call generates a new thumbnail.</p></li>
+<li><p><strong>generate</strong> – Whether <a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_thumbnail()</span></code></a> generates missing
+thumbnails, unless told otherwise by its <code class="docutils literal notranslate"><span class="pre">generate</span></code> argument.</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
+<p>Subclasses can set these attributes to override the settings of the same
+name in upper case (e.g. <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_NAMER</span></code> for <code class="docutils literal notranslate"><span class="pre">thumbnail_namer</span></code>);
+<code class="docutils literal notranslate"><span class="pre">None</span></code> uses the setting:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.source_generators" title="easy_thumbnails.files.Thumbnailer.source_generators"><code class="xref py py-attr docutils literal notranslate"><span class="pre">source_generators</span></code></a>, <a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.thumbnail_processors" title="easy_thumbnails.files.Thumbnailer.thumbnail_processors"><code class="xref py py-attr docutils literal notranslate"><span class="pre">thumbnail_processors</span></code></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">thumbnail_basedir</span></code>, <code class="docutils literal notranslate"><span class="pre">thumbnail_subdir</span></code>, <code class="docutils literal notranslate"><span class="pre">thumbnail_prefix</span></code>,
+<code class="docutils literal notranslate"><span class="pre">thumbnail_extension</span></code>, <code class="docutils literal notranslate"><span class="pre">thumbnail_preserve_extensions</span></code>,
+<code class="docutils literal notranslate"><span class="pre">thumbnail_transparency_extension</span></code>, <code class="docutils literal notranslate"><span class="pre">thumbnail_check_cache_miss</span></code>,
+<code class="docutils literal notranslate"><span class="pre">thumbnail_namer</span></code></p></li>
+</ul>
 <dl class="py method">
 <dt class="sig sig-object py" id="easy_thumbnails.files.Thumbnailer.generate_thumbnail">
 <span class="sig-name descname"><span class="pre">generate_thumbnail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnail_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent_template_exception</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.Thumbnailer.generate_thumbnail" title="Link to this definition"></a></dt>
@@ -202,12 +230,30 @@ of thumbnail options, or <code class="docutils literal notranslate"><span class=
 <span class="sig-name descname"><span class="pre">get_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnail_options</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.Thumbnailer.get_options" title="Link to this definition"></a></dt>
 <dd><p>Get the thumbnail options that includes the default options for this
 thumbnailer (and the project-wide default options).</p>
+<p>The default quality of the output format is not added here, as it
+depends on whether the thumbnail is transparent (see
+<code class="docutils literal notranslate"><span class="pre">resolve_quality()</span></code>).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="easy_thumbnails.files.Thumbnailer.get_output_extension">
+<span class="sig-name descname"><span class="pre">get_output_extension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnail_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transparent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'jpg'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.Thumbnailer.get_output_extension" title="Link to this definition"></a></dt>
+<dd><p>Return the file extension (without dot) of a thumbnail.</p>
+<p>In order of precedence, this is the <code class="docutils literal notranslate"><span class="pre">format</span></code> thumbnail option, the
+source extension if it is in <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_PRESERVE_EXTENSIONS</span></code>, the
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_TRANSPARENCY_EXTENSION</span></code> if <code class="docutils literal notranslate"><span class="pre">transparent</span></code> is true, or
+the <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_EXTENSION</span></code>.</p>
+<p>Falls back to <code class="docutils literal notranslate"><span class="pre">default</span></code> (<code class="docutils literal notranslate"><span class="pre">'jpg'</span></code>) if the chosen extension is empty,
+e.g. for a source without an extension and
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_PRESERVE_EXTENSIONS</span> <span class="pre">=</span> <span class="pre">True</span></code>, or an empty
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_EXTENSION</span></code> / <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_TRANSPARENCY_EXTENSION</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="easy_thumbnails.files.Thumbnailer.get_thumb_hash">
 <span class="sig-name descname"><span class="pre">get_thumb_hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.Thumbnailer.get_thumb_hash" title="Link to this definition"></a></dt>
-<dd><p>Return the <code class="docutils literal notranslate"><span class="pre">thumb_hash</span></code> stored for this source, or an empty string.</p>
+<dd><p>Return the <code class="docutils literal notranslate"><span class="pre">thumb_hash</span></code> stored for this source, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if there
+is no <code class="docutils literal notranslate"><span class="pre">Source</span></code> record (yet).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -233,16 +279,18 @@ generated thumbnail will be saved too.</p>
 <code class="docutils literal notranslate"><span class="pre">&lt;basedir&gt;/&lt;source</span> <span class="pre">dir&gt;/&lt;subdir&gt;/&lt;prefix&gt;&lt;namer</span> <span class="pre">output&gt;</span></code>.</p>
 <p>Arguments:</p>
 <dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">thumbnail_options</span></code></dt><dd><p>Dict or <code class="docutils literal notranslate"><span class="pre">ThumbnailOptions</span></code> of thumbnail options (e.g.
-<code class="docutils literal notranslate"><span class="pre">{'size':</span> <span class="pre">(100,</span> <span class="pre">100),</span> <span class="pre">'crop':</span> <span class="pre">True}</span></code>). Normalised through
-<code class="docutils literal notranslate"><span class="pre">get_options()</span></code>, so the default quality is added if missing.
-Its prepared form is passed to the namer and substituted for
-<code class="docutils literal notranslate"><span class="pre">%(opts)s</span></code> in basedir/subdir.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">thumbnail_options</span></code></dt><dd><p>Dict or <a class="reference internal" href="options.html#easy_thumbnails.options.ThumbnailOptions" title="easy_thumbnails.options.ThumbnailOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThumbnailOptions</span></code></a> of
+thumbnail options (e.g. <code class="docutils literal notranslate"><span class="pre">{'size':</span> <span class="pre">(100,</span> <span class="pre">100),</span> <span class="pre">'crop':</span> <span class="pre">True}</span></code>).
+Normalised through <code class="docutils literal notranslate"><span class="pre">get_options()</span></code> and <code class="docutils literal notranslate"><span class="pre">resolve_quality()</span></code>,
+so the default quality of the output format is added if missing.
+The result is passed to the namer, and its prepared form is
+substituted for <code class="docutils literal notranslate"><span class="pre">%(opts)s</span></code> in basedir/subdir.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">transparent</span></code></dt><dd><p>If true, the transparency extension is used for the file
-extension instead of the regular one (unless the source
-extension is preserved). <code class="docutils literal notranslate"><span class="pre">get_existing_thumbnail()</span></code> calls
-this with both values to look up either variant.</p>
+extension (and its default quality) instead of the regular one
+(unless the source extension is preserved).
+<code class="docutils literal notranslate"><span class="pre">get_existing_thumbnail()</span></code> calls this with both values to look
+up either variant.</p>
 </dd>
 </dl>
 <p>Derived from the file itself:</p>
@@ -296,11 +344,23 @@ the file (if <code class="docutils literal notranslate"><span class="pre">THUMBN
 <p>Thumbnails that are missing are generated as usual.</p>
 <p>Arguments:</p>
 <dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">thumbnail_options_list</span></code></dt><dd><p>Iterable of dicts or <code class="docutils literal notranslate"><span class="pre">ThumbnailOptions</span></code>, as for
+<dt><code class="docutils literal notranslate"><span class="pre">thumbnail_options_list</span></code></dt><dd><p>Iterable of dicts or
+<a class="reference internal" href="options.html#easy_thumbnails.options.ThumbnailOptions" title="easy_thumbnails.options.ThumbnailOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThumbnailOptions</span></code></a>, as for
 <a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_thumbnail()</span></code></a>. Options of aliases must contain <code class="docutils literal notranslate"><span class="pre">ALIAS</span></code>,
 see <a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.prefetch_aliases" title="easy_thumbnails.files.Thumbnailer.prefetch_aliases"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prefetch_aliases()</span></code></a>.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="easy_thumbnails.files.Thumbnailer.resolve_quality">
+<span class="sig-name descname"><span class="pre">resolve_quality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnail_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transparent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.Thumbnailer.resolve_quality" title="Link to this definition"></a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">thumbnail_options</span></code> with the quality to save a thumbnail with.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">quality</span></code> thumbnail option is kept, unless it is <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+Otherwise a copy is returned, with <code class="docutils literal notranslate"><span class="pre">quality</span></code> set to the <code class="docutils literal notranslate"><span class="pre">quality</span></code>
+entry of <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code> for the output format (see
+<code class="docutils literal notranslate"><span class="pre">get_output_extension()</span></code>, which <code class="docutils literal notranslate"><span class="pre">transparent</span></code> is passed to). If
+that format has no default quality, the <code class="docutils literal notranslate"><span class="pre">quality</span></code> key is removed.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -457,7 +517,7 @@ simply returned under the assumption it is a Thumbnailer instance)</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../thumbhash.html" class="btn btn-neutral float-left" title="ThumbHash" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../optimize.html" class="btn btn-neutral float-left" title="Optimizing Images using a Postprocessor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="namers.html" class="btn btn-neutral float-right" title="Namers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -106,12 +106,13 @@
 <li class="toctree-l1"><a class="reference internal" href="svg.html">Scalable Vector Graphic Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="webp.html">WebP support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thumbhash.html">ThumbHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimizing Images using a Postprocessor</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ref/files.html">Thumbnail Files and Generators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/namers.html">Namers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ref/optimize.html">Optimizing Images using a Postprocessor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/options.html">Thumbnail Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/processors.html">Image Processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/settings.html">Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/source_generators.html">Source Generators</a></li>
@@ -236,8 +237,10 @@ transparency with that color.</p></li>
 </dd>
 <dt>Output options</dt><dd><p>These are not used by a processor but when the thumbnail is saved.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">quality=&lt;N&gt;</span></code> Specify the output JPEG or WebP quality as an integer
-N between 1 and 100. The default is 85 (<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_QUALITY</span></code>). For
+<li><p><code class="docutils literal notranslate"><span class="pre">quality=&lt;N&gt;</span></code> Specify the output JPEG, WebP or AVIF quality as an
+integer N between 1 and 100. The default depends on the output format
+and is set by the <code class="docutils literal notranslate"><span class="pre">quality</span></code> entries of
+<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code> (JPEG 76, WebP 80, AVIF 61 by default). For
 lossless WebP it only trades encoding speed for file size, see
 <a class="reference internal" href="webp.html"><span class="doc">WebP support</span></a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">format=&lt;jpeg|webp|avif&gt;</span></code> Set the output format of this thumbnail,
@@ -691,7 +694,8 @@ the file (if <code class="docutils literal notranslate"><span class="pre">THUMBN
 <p>Thumbnails that are missing are generated as usual.</p>
 <p>Arguments:</p>
 <dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">thumbnail_options_list</span></code></dt><dd><p>Iterable of dicts or <code class="docutils literal notranslate"><span class="pre">ThumbnailOptions</span></code>, as for
+<dt><code class="docutils literal notranslate"><span class="pre">thumbnail_options_list</span></code></dt><dd><p>Iterable of dicts or
+<a class="reference internal" href="ref/options.html#easy_thumbnails.options.ThumbnailOptions" title="easy_thumbnails.options.ThumbnailOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThumbnailOptions</span></code></a>, as for
 <a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_thumbnail()</span></code></a>. Options of aliases must contain <code class="docutils literal notranslate"><span class="pre">ALIAS</span></code>,
 see <a class="reference internal" href="ref/files.html#easy_thumbnails.files.Thumbnailer.prefetch_aliases" title="easy_thumbnails.files.Thumbnailer.prefetch_aliases"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prefetch_aliases()</span></code></a>.</p>
 </dd>

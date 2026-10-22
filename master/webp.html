@@ -65,12 +65,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="thumbhash.html">ThumbHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimizing Images using a Postprocessor</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ref/files.html">Thumbnail Files and Generators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/namers.html">Namers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ref/optimize.html">Optimizing Images using a Postprocessor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/options.html">Thumbnail Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/processors.html">Image Processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/settings.html">Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ref/source_generators.html">Source Generators</a></li>
@@ -160,27 +161,39 @@ their library versions.</p>
 <h2>Encoder options<a class="headerlink" href="#encoder-options" title="Link to this heading"></a></h2>
 <p>Additional WebP save options are configured via
 <a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS" title="easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code></a>, a
-dictionary keyed by Pillow format name (<code class="docutils literal notranslate"><span class="pre">'WEBP'</span></code>, <code class="docutils literal notranslate"><span class="pre">'JPEG'</span></code>). Every keyword
+dictionary keyed by Pillow format name (<code class="docutils literal notranslate"><span class="pre">'WEBP'</span></code>, <code class="docutils literal notranslate"><span class="pre">'AVIF'</span></code>, <code class="docutils literal notranslate"><span class="pre">'JPEG'</span></code>). Every keyword
 accepted by Pillow’s <a class="reference external" href="https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#webp">WebP plugin</a>
 can be set here and is passed to <code class="docutils literal notranslate"><span class="pre">Image.save()</span></code> for each WebP thumbnail.</p>
 <section id="lossy-compression-default">
 <h3>Lossy compression (default)<a class="headerlink" href="#lossy-compression-default" title="Link to this heading"></a></h3>
 <p>WebP thumbnails are lossy unless configured otherwise. The <code class="docutils literal notranslate"><span class="pre">quality</span></code> (0-100,
-higher is better and larger) is controlled like for JPEG: with the
-<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_QUALITY</span></code> setting or the <code class="docutils literal notranslate"><span class="pre">quality</span></code> thumbnail option, for example
-<code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">photo</span> <span class="pre">200x200</span> <span class="pre">format=&quot;webp&quot;</span> <span class="pre">quality=70</span> <span class="pre">%}</span></code>.</p>
+higher is better and larger) works like for JPEG and AVIF. The default for each
+format is the <code class="docutils literal notranslate"><span class="pre">'quality'</span></code> entry in <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code>. The
+defaults are chosen to give a similar perceived quality across formats for
+general web content, following <a class="reference external" href="https://docs.wagtail.org/en/stable/topics/images.html#image-quality">Wagtail</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_IMAGE_SAVE_OPTIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'JPEG'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'quality'</span><span class="p">:</span> <span class="mi">76</span><span class="p">},</span>
+    <span class="s1">'WEBP'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'quality'</span><span class="p">:</span> <span class="mi">80</span><span class="p">},</span>
+    <span class="s1">'AVIF'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'quality'</span><span class="p">:</span> <span class="mi">61</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Wagtail suggests lower values for thumbnails (e.g. JPEG 65, WebP 70, AVIF 54
+at 256x256) and higher ones for full-size photos (JPEG 85, WebP 87, AVIF 73).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">quality</span></code> thumbnail option overrides it for a single thumbnail, for
+example <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">photo</span> <span class="pre">200x200</span> <span class="pre">format=&quot;webp&quot;</span> <span class="pre">quality=70</span> <span class="pre">%}</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">quality</span></code> thumbnail option is always passed explicitly when saving, so
-it takes precedence over a <code class="docutils literal notranslate"><span class="pre">'quality'</span></code> entry in
-<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code>. Use <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_QUALITY</span></code> (or
-<code class="docutils literal notranslate"><span class="pre">THUMBNAIL_DEFAULT_OPTIONS</span></code>) to change the default quality.</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_IMAGE_SAVE_OPTIONS</span></code> replaces the default dictionary as a
+whole. Formats left out have no default quality and are saved with Pillow’s
+default quality.</p>
 </div>
 <p>Other useful lossy options are <code class="docutils literal notranslate"><span class="pre">method</span></code> (0-6, slower encoding gives smaller
 files, Pillow’s default is 4) and <code class="docutils literal notranslate"><span class="pre">alpha_quality</span></code> (0-100, quality of the
 transparency layer):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THUMBNAIL_IMAGE_SAVE_OPTIONS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">'WEBP'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'quality'</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
         <span class="s1">'method'</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">}</span>

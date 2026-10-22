@@ -65,7 +65,7 @@ Encoder options
 
 Additional WebP save options are configured via
 :attr:`~easy_thumbnails.conf.Settings.THUMBNAIL_IMAGE_SAVE_OPTIONS`, a
-dictionary keyed by Pillow format name (``'WEBP'``, ``'JPEG'``). Every keyword
+dictionary keyed by Pillow format name (``'WEBP'``, ``'AVIF'``, ``'JPEG'``). Every keyword
 accepted by Pillow's `WebP plugin
 <https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#webp>`_
 can be set here and is passed to ``Image.save()`` for each WebP thumbnail.
@@ -74,16 +74,29 @@ Lossy compression (default)
 ---------------------------
 
 WebP thumbnails are lossy unless configured otherwise. The ``quality`` (0-100,
-higher is better and larger) is controlled like for JPEG: with the
-``THUMBNAIL_QUALITY`` setting or the ``quality`` thumbnail option, for example
-``{% thumbnail photo 200x200 format="webp" quality=70 %}``.
+higher is better and larger) works like for JPEG and AVIF. The default for each
+format is the ``'quality'`` entry in ``THUMBNAIL_IMAGE_SAVE_OPTIONS``. The
+defaults are chosen to give a similar perceived quality across formats for
+general web content, following `Wagtail
+<https://docs.wagtail.org/en/stable/topics/images.html#image-quality>`_::
+
+    THUMBNAIL_IMAGE_SAVE_OPTIONS = {
+        'JPEG': {'quality': 76},
+        'WEBP': {'quality': 80},
+        'AVIF': {'quality': 61},
+    }
+
+Wagtail suggests lower values for thumbnails (e.g. JPEG 65, WebP 70, AVIF 54
+at 256x256) and higher ones for full-size photos (JPEG 85, WebP 87, AVIF 73).
+
+The ``quality`` thumbnail option overrides it for a single thumbnail, for
+example ``{% thumbnail photo 200x200 format="webp" quality=70 %}``.
 
 .. note::
 
-   The ``quality`` thumbnail option is always passed explicitly when saving, so
-   it takes precedence over a ``'quality'`` entry in
-   ``THUMBNAIL_IMAGE_SAVE_OPTIONS``. Use ``THUMBNAIL_QUALITY`` (or
-   ``THUMBNAIL_DEFAULT_OPTIONS``) to change the default quality.
+   Setting ``THUMBNAIL_IMAGE_SAVE_OPTIONS`` replaces the default dictionary as a
+   whole. Formats left out have no default quality and are saved with Pillow's
+   default quality.
 
 Other useful lossy options are ``method`` (0-6, slower encoding gives smaller
 files, Pillow's default is 4) and ``alpha_quality`` (0-100, quality of the
@@ -91,6 +104,7 @@ transparency layer)::
 
     THUMBNAIL_IMAGE_SAVE_OPTIONS = {
         'WEBP': {
+            'quality': 80,
             'method': 6,
         },
     }
