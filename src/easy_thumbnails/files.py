@@ -91,8 +91,7 @@ def generate_all_aliases(fieldfile, include_global):
     if all_options:
         thumbnailer = get_thumbnailer(fieldfile)
         for key, options in all_options.items():
-            options['ALIAS'] = key
-            thumbnailer.get_thumbnail(options)
+            thumbnailer.get_thumbnail({**options, 'ALIAS': key})
 
 
 def database_get_image_dimensions(file, close=False):
@@ -365,7 +364,7 @@ class Thumbnailer(File):
         options = aliases.get(alias, target=self.alias_target)
         if not options:
             raise KeyError(alias)
-        options['ALIAS'] = alias
+        options = {**options, 'ALIAS': alias}
         return self.get_thumbnail(options, silent_template_exception=True)
 
     def get_options(self, thumbnail_options, **kwargs):
@@ -667,14 +666,15 @@ class Thumbnailer(File):
         ``aliases_names``
             Iterable of alias names, looked up for the target of this
             thumbnailer like ``thumbnailer[alias]`` does.
+
+        Raises a ``KeyError`` if one of the aliases does not exist.
         """
         options_list = []
         for alias in aliases_names:
             options = aliases.get(alias, target=self.alias_target)
             if not options:
                 raise KeyError(alias)
-            options['ALIAS'] = alias
-            options_list.append(options)
+            options_list.append({**options, 'ALIAS': alias})
         self.prefetch_thumbnails(options_list)
 
     def get_thumbnail(

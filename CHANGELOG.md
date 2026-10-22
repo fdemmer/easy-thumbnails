@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 (up to 2.x, version numbers were not strictly semantic).
 
+## [Unreleased]
+
+- Fix `generate_all_aliases`, `Thumbnailer[alias]` and
+  `Thumbnailer.prefetch_aliases` adding an `ALIAS` key to the shared alias
+  options (and so to the `THUMBNAIL_ALIASES` setting). With the `alias` or
+  `alias_or_size` namer, the `{% thumbnail %}` tag could then name the same
+  thumbnail differently, depending on what ran earlier in the process.
+
 ## [3.4.0rc2] - 2026-10-21
 
 - Fix thumbnail generation failing with "width and height must be > 0" for

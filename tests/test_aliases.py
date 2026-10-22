@@ -178,6 +178,14 @@ class AliasThumbnailerTest(BaseTest):
         thumb = thumbnailer['small']
         self.assertEqual((thumb.width, thumb.height), (20, 20))
 
+    def test_thumbnailer_does_not_mutate_aliases(self):
+        thumbnailer = files.get_thumbnailer(self.storage, 'avatars/test.jpg')
+        thumbnailer.thumbnail_storage = self.storage
+        thumbnailer['small']
+        thumbnailer.prefetch_aliases(['small'])
+        self.assertEqual(aliases.get('small'), {'size': (100, 100)})
+        self.assertNotIn('ALIAS', settings.THUMBNAIL_ALIASES['']['small'])
+
 
 class GenerationBase(BaseTest):
     create_file = True
@@ -314,3 +322,11 @@ class GlobalGenerationTest(GenerationBase):
         files = self.fake_save(profile)
         # 1 source, 4 specific thumbs, 1 project-wide thumb.
         self.assertEqual(len(files), 6)
+
+    def test_changed_does_not_mutate_aliases(self):
+        profile = models.Profile(avatar='avatars/test.jpg')
+        profile.avatar._committed = False
+        self.fake_save(profile)
+        for target_aliases in aliases._aliases.values():
+            for options in target_aliases.values():
+                self.assertNotIn('ALIAS', options)
