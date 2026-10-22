@@ -346,3 +346,55 @@ Purge two aliases everywhere except one field::
 
     python manage.py thumbnail purge --alias small --alias large \
         --exclude myapp.article.cover
+
+.. _thumbnail_thumb_hash:
+
+thumbnail thumb_hash
+====================
+
+**Usage**::
+
+    python manage.py thumbnail thumb_hash [options]
+
+Generates the ``thumb_hash`` (see :doc:`thumbhash`) of ``Source`` records that
+don't have one yet, e.g. sources whose thumbnails were generated before
+easy-thumbnails supported hashes or before the ``thumbhash`` extra was
+installed. Existing thumbnails are not touched.
+
+Every non-empty ``ThumbnailerImageField`` value with a ``Source`` record is
+loaded with the field's source generators and passed to the hasher. Values
+without a ``Source`` record are skipped; they get their hash with their first
+thumbnail.
+
+The summary shows the number of sources processed, hashes generated, sources
+the hasher returned no hash for (e.g. SVG images with the default hasher) and
+errors (source files that cannot be opened or hashed).
+
+Options
+-------
+
+``--dry-run``
+    Report how many hashes would be generated without saving them.
+
+``--force``
+    Also regenerate existing hashes, e.g. after changing the hasher.
+
+``--hasher DOTTED_PATH``
+    Use this hasher function instead of ``THUMBNAIL_HASHER``. Required if
+    ``THUMBNAIL_HASHER`` is ``None``.
+
+``--include SPEC`` / ``--exclude SPEC``
+    Restrict hashing to ``app``, ``app.model`` or ``app.model.field``
+    (wildcards allowed). May be repeated.
+
+Examples
+--------
+
+Generate all missing hashes::
+
+    python manage.py thumbnail thumb_hash
+
+Regenerate the hashes of one model with a custom hasher::
+
+    python manage.py thumbnail thumb_hash --force --include myapp.article \
+        --hasher myapp.hashers.blurhash

@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add `thumbnail thumb_hash` management command to generate the missing
+  `thumb_hash` of existing `Source` records, with the hasher of
+  `THUMBNAIL_HASHER` or the one given by `--hasher`.
 - Fix `generate_all_aliases`, `Thumbnailer[alias]` and
   `Thumbnailer.prefetch_aliases` adding an `ALIAS` key to the shared alias
   options (and so to the `THUMBNAIL_ALIASES` setting). With the `alias` or
