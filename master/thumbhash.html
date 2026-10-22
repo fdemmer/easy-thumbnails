@@ -102,7 +102,9 @@ encoded.</p>
 <p>Install the <code class="docutils literal notranslate"><span class="pre">thumbhash</span></code> extra (see <a class="reference internal" href="install.html"><span class="doc">Installation</span></a>) to enable the default
 hasher. Without it, <code class="docutils literal notranslate"><span class="pre">thumb_hash</span></code> stays empty.</p>
 <p>The hash is generated when the first thumbnail of a source image is created and
-is available through <code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_thumb_hash()</span></code>.</p>
+is available through <code class="docutils literal notranslate"><span class="pre">Thumbnailer.get_thumb_hash()</span></code>. For sources that
+already have thumbnails, generate the missing hashes with
+<a class="reference internal" href="commands.html#thumbnail-thumb-hash"><span class="std std-ref">thumbnail thumb_hash</span></a>.</p>
 <section id="custom-hashers">
 <h2>Custom hashers<a class="headerlink" href="#custom-hashers" title="Link to this heading"></a></h2>
 <p>Set <a class="reference internal" href="ref/settings.html#easy_thumbnails.conf.Settings.THUMBNAIL_HASHER" title="easy_thumbnails.conf.Settings.THUMBNAIL_HASHER"><code class="xref py py-attr docutils literal notranslate"><span class="pre">THUMBNAIL_HASHER</span></code></a> to the dotted path
