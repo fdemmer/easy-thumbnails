@@ -106,6 +106,15 @@ def is_transparent(image):
     )
 
 
+def get_pil_format(extension):
+    """
+    Return the Pillow format name (e.g. ``'WEBP'``) for a file extension
+    (without dot, case-insensitive). Unknown or empty extensions return
+    ``'JPEG'``.
+    """
+    return Image.registered_extensions().get(f'.{extension.lower()}', 'JPEG')
+
+
 def is_progressive(image):
     """
     Check to see if an image is progressive.

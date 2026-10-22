@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Backwards incompatible:** Remove the `THUMBNAIL_QUALITY` setting and the
+  `Thumbnailer.thumbnail_quality` attribute. The default quality is now set
+  per output format by the `quality` entries of `THUMBNAIL_IMAGE_SAVE_OPTIONS`.
+  Before, these entries had no effect. The defaults change from 85 for all
+  formats to JPEG 76, WebP 80 and AVIF 61, which give a similar perceived
+  quality for general web content (the same values as Wagtail). A `quality`
+  thumbnail option still takes precedence. To migrate, move a custom
+  `THUMBNAIL_QUALITY` into the `quality` entry of each format. As the quality
+  is part of the thumbnail name, thumbnails without an explicit quality are
+  regenerated once. With the `alias` or `alias_or_size` namer the name has no
+  quality, so existing thumbnails are kept until they are deleted. Formats
+  without a default quality (e.g. preserved PNG) no longer get a `q…` part in
+  their name. Transparent thumbnails get the default quality of
+  `THUMBNAIL_TRANSPARENCY_EXTENSION`'s format.
 - Add `thumbnail thumb_hash` management command to generate the missing
   `thumb_hash` of existing `Source` records, with the hasher of
   `THUMBNAIL_HASHER` or the one given by `--hasher`.

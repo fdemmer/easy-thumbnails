@@ -1,9 +1,12 @@
 import pickle
 from pathlib import Path
+from unittest import mock
 
 from django import VERSION as DJANGO_VERSION
 from django.core.files.base import ContentFile
 
+from easy_thumbnails import engine
+from easy_thumbnails.conf import settings
 from easy_thumbnails.engine import NoSourceGenerator
 from easy_thumbnails.exceptions import EasyThumbnailsError, InvalidImageFormatError
 from tests import models, utils
@@ -92,11 +95,11 @@ class ThumbnailerFieldTest(AliasBaseTest):
     def test_serialization(self):
         instance = models.TestModel(avatar='avatars/avatar.jpg')
         self.assertEqual(
-            '/media/avatars/avatar.jpg.100x100_q85.jpg', instance.avatar['small'].url
+            '/media/avatars/avatar.jpg.100x100_q76.jpg', instance.avatar['small'].url
         )
         new_instance = pickle.loads(pickle.dumps(instance))
         self.assertEqual(
-            '/media/avatars/avatar.jpg.100x100_q85.jpg', new_instance.avatar['small'].url
+            '/media/avatars/avatar.jpg.100x100_q76.jpg', new_instance.avatar['small'].url
         )
 
     def _read_filefield(self, field):
@@ -120,6 +123,19 @@ class ThumbnailerFieldTest(AliasBaseTest):
         )
 
         self.assertEqual(instance.picture.width, 10)
+
+    def test_saving_image_field_with_resize_source_quality(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'JPEG': {'quality': 42}}
+        instance = models.TestModel(avatar='avatars/avatar.jpg')
+        with mock.patch.object(
+            engine, 'save_pil_image', wraps=engine.save_pil_image
+        ) as save:
+            instance.picture.save(
+                'file.jpg',
+                ContentFile(self._read_filefield(instance.avatar)),
+                save=False,
+            )
+        self.assertEqual(save.call_args.kwargs['quality'], 42)
 
     def test_saving_image_field_with_resize_source_different_ext(self):
         instance = models.TestModel(avatar='avatars/avatar.jpg')

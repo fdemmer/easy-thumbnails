@@ -2,6 +2,7 @@ import unittest
 from io import BytesIO
 from os import path
 from pathlib import Path
+from unittest import mock
 
 from PIL import Image, features
 from testfixtures import LogCapture
@@ -184,6 +185,18 @@ class FilesTest(test.BaseTest):
         thumb = self.ext_thumbnailer.get_thumbnail({'size': (100, 100)})
         self.assertEqual(path.splitext(thumb.name)[1], '.jpg')
 
+    def test_output_extension_fallback(self):
+        filename = self.create_image(self.storage, 'noext')
+        thumbnailer = files.get_thumbnailer(self.storage, filename)
+        thumbnailer.thumbnail_storage = self.storage
+        thumbnailer.thumbnail_preserve_extensions = True
+        self.assertEqual(thumbnailer.get_output_extension({}), 'jpg')
+        thumb = thumbnailer.get_thumbnail({'size': (100, 100)})
+        self.assertEqual(path.splitext(thumb.name)[1], '.jpg')
+
+        self.ext_thumbnailer.thumbnail_extension = ''
+        self.assertEqual(self.ext_thumbnailer.get_output_extension({}), 'jpg')
+
     def test_format_option_extension(self):
         self.ext_thumbnailer.thumbnail_extension = 'png'
         self.ext_thumbnailer.thumbnail_preserve_extensions = True
@@ -212,6 +225,177 @@ class FilesTest(test.BaseTest):
     def test_format_option_invalid(self):
         with self.assertRaises(ValueError):
             self.ext_thumbnailer.get_thumbnail({'size': (100, 100), 'format': 'gif'})
+
+    def _saved_quality(self, thumbnailer, options):
+        """
+        Generate a thumbnail and return its name and the quality passed to
+        ``engine.save_pil_image`` (``None`` if not passed).
+        """
+        with mock.patch.object(
+            engine, 'save_pil_image', wraps=engine.save_pil_image
+        ) as save:
+            thumb = thumbnailer.get_thumbnail(options)
+        return thumb.name, save.call_args.kwargs.get('quality')
+
+    def test_default_quality(self):
+        name, quality = self._saved_quality(self.ext_thumbnailer, {'size': (100, 100)})
+        self.assertIn('_q76', name)
+        self.assertEqual(quality, 76)
+
+    def test_quality_per_format(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {
+            'JPEG': {'quality': 76},
+            'WEBP': {'quality': 80, 'method': 6},
+            'AVIF': {'quality': 61},
+        }
+        formats = [('jpeg', 76), ('webp', 80)]
+        if features.check('avif'):
+            formats.append(('avif', 61))
+        for fmt, expected in formats:
+            name, quality = self._saved_quality(
+                self.ext_thumbnailer, {'size': (100, 100), 'format': fmt}
+            )
+            self.assertIn(f'_q{expected}.', name)
+            self.assertEqual(quality, expected)
+
+    def test_quality_per_format_from_extension(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {
+            'JPEG': {'quality': 76},
+            'WEBP': {'quality': 80},
+        }
+        self.ext_thumbnailer.thumbnail_extension = 'webp'
+        name, quality = self._saved_quality(self.ext_thumbnailer, {'size': (100, 100)})
+        self.assertIn('_q80.webp', name)
+        self.assertEqual(quality, 80)
+
+    def test_quality_option_overrides_format_default(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'WEBP': {'quality': 80}}
+        name, quality = self._saved_quality(
+            self.ext_thumbnailer, {'size': (100, 100), 'format': 'webp', 'quality': 50}
+        )
+        self.assertIn('_q50.webp', name)
+        self.assertEqual(quality, 50)
+
+    def test_default_options_quality_overrides_format_default(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'WEBP': {'quality': 80}}
+        settings.THUMBNAIL_DEFAULT_OPTIONS = {'quality': 40}
+        name, quality = self._saved_quality(
+            self.ext_thumbnailer, {'size': (100, 100), 'format': 'webp'}
+        )
+        self.assertIn('_q40.webp', name)
+        self.assertEqual(quality, 40)
+
+    def test_quality_without_format_default(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'JPEG': {'quality': 76}}
+        name, quality = self._saved_quality(
+            self.ext_thumbnailer, {'size': (100, 100), 'format': 'webp'}
+        )
+        self.assertNotIn('_q', name)
+        self.assertTrue(name.endswith('.100x100.webp'), name)
+        self.assertIsNone(quality)
+
+    def test_quality_none_uses_format_default(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'WEBP': {'quality': 80}}
+        for options in (
+            {'size': (100, 100), 'format': 'webp', 'quality': None},
+            ThumbnailOptions({'size': (100, 100), 'format': 'webp', 'quality': None}),
+        ):
+            opts = self.ext_thumbnailer.resolve_quality(
+                self.ext_thumbnailer.get_options(options)
+            )
+            self.assertEqual(opts['quality'], 80)
+            name = self.ext_thumbnailer.get_thumbnail_name(options)
+            self.assertTrue(name.endswith('_q80.webp'), name)
+
+    def test_quality_none_without_format_default(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {}
+        for options in (
+            {'size': (100, 100), 'quality': None},
+            ThumbnailOptions({'size': (100, 100), 'quality': None}),
+        ):
+            name = self.ext_thumbnailer.get_thumbnail_name(options)
+            self.assertTrue(name.endswith('.100x100.jpg'), name)
+
+    def test_quality_of_preserved_png(self):
+        self.transparent_thumbnailer.thumbnail_preserve_extensions = ('png',)
+        name, quality = self._saved_quality(
+            self.transparent_thumbnailer, {'size': (100, 100)}
+        )
+        self.assertTrue(name.endswith('.100x100.png'), name)
+        self.assertIsNone(quality)
+
+    def test_quality_transparent_uses_transparency_format(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {
+            'JPEG': {'quality': 76},
+            'WEBP': {'quality': 80},
+        }
+        self.transparent_thumbnailer.thumbnail_transparency_extension = 'webp'
+        name, quality = self._saved_quality(
+            self.transparent_thumbnailer, {'size': (100, 100)}
+        )
+        self.assertTrue(name.endswith('_q80.webp'), name)
+        self.assertEqual(quality, 80)
+        thumb = self.transparent_thumbnailer.get_existing_thumbnail({'size': (100, 100)})
+        self.assertEqual(thumb.name, name)
+        self.assertEqual(thumb.thumbnail_options['quality'], 80)
+        # The opaque variant still uses the regular format's default.
+        self.assertTrue(
+            self.transparent_thumbnailer.get_thumbnail_name(
+                {'size': (100, 100)}
+            ).endswith('_q76.jpg')
+        )
+
+    def test_quality_transparent_png(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'JPEG': {'quality': 76}}
+        self.transparent_thumbnailer.thumbnail_transparency_extension = 'png'
+        name, quality = self._saved_quality(
+            self.transparent_thumbnailer, {'size': (100, 100)}
+        )
+        self.assertTrue(name.endswith('.100x100.png'), name)
+        self.assertIsNone(quality)
+
+    def test_resolve_quality_thumbnail_options_instance(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'WEBP': {'quality': 80}}
+        options = ThumbnailOptions({'size': (100, 100), 'format': 'webp'})
+        opts = self.ext_thumbnailer.resolve_quality(
+            self.ext_thumbnailer.get_options(options)
+        )
+        self.assertEqual(opts['quality'], 80)
+        self.assertNotIn('quality', options)
+
+    def _alias_quality(self, alias_options, **thumbnailer_kwargs):
+        """
+        Generate the ``q`` alias with ``alias_options`` and return its name
+        and the quality passed to ``engine.save_pil_image``.
+        """
+        aliases.set('q', alias_options)
+        self.addCleanup(aliases.populate_from_settings)
+        with mock.patch.object(
+            engine, 'save_pil_image', wraps=engine.save_pil_image
+        ) as save:
+            thumb = self.ext_thumbnailer['q']
+        return thumb.name, save.call_args.kwargs.get('quality')
+
+    def test_alias_quality_overrides_format_default(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'JPEG': {'quality': 76}}
+        name, quality = self._alias_quality({'size': (100, 100), 'quality': 50})
+        self.assertIn('_q50.jpg', name)
+        self.assertEqual(quality, 50)
+
+    def test_alias_quality_overrides_default_options(self):
+        settings.THUMBNAIL_DEFAULT_OPTIONS = {'quality': 40}
+        name, quality = self._alias_quality({'size': (100, 100), 'quality': 50})
+        self.assertIn('_q50.jpg', name)
+        self.assertEqual(quality, 50)
+
+    def test_alias_format_uses_format_default(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {
+            'JPEG': {'quality': 76},
+            'WEBP': {'quality': 80},
+        }
+        name, quality = self._alias_quality({'size': (100, 100), 'format': 'webp'})
+        self.assertIn('_q80.webp', name)
+        self.assertEqual(quality, 80)
 
     def test_subsampling(self):
         samplings = {
@@ -290,13 +474,17 @@ class FilesTest(test.BaseTest):
     def test_thumbnailfile_options(self):
         opts = {'size': (50, 50), 'crop': True, 'upscale': True}
         thumb = self.thumbnailer.get_thumbnail(opts)
-        self.assertEqual(thumb.thumbnail_options, ThumbnailOptions(opts))
+        self.assertEqual(
+            thumb.thumbnail_options,
+            self.thumbnailer.resolve_quality(self.thumbnailer.get_options(opts)),
+        )
+        self.assertEqual(thumb.thumbnail_options['quality'], 76)
 
     def test_get_thumbnail_name(self):
         opts = {'size': (50, 50), 'crop': 'smart', 'upscale': True, 'target': (10, 10)}
         self.assertEqual(
             self.thumbnailer.get_thumbnail_name(opts),
-            'test.jpg.50x50_q85_crop-smart_target-10,10_upscale.jpg',
+            'test.jpg.50x50_q76_crop-smart_target-10,10_upscale.jpg',
         )
 
     def test_get_thumbnail_name_strips_location_prefix_only(self):
@@ -304,7 +492,7 @@ class FilesTest(test.BaseTest):
         self.thumbnailer.name = f'{location}/sub{location}/test.jpg'
         self.assertEqual(
             self.thumbnailer.get_thumbnail_name({'size': (50, 50)}),
-            f'sub{location}/test.jpg.50x50_q85.jpg'.lstrip('/'),
+            f'sub{location}/test.jpg.50x50_q76.jpg'.lstrip('/'),
         )
 
     def test_default_options_setting(self):
@@ -347,11 +535,35 @@ class FilesTest(test.BaseTest):
         self.thumbnailer.get_thumbnail({'size': (50, 50)})
         self.assertEqual(models.Source.objects.get().thumb_hash, '')
 
-    def test_thumb_hash_remote_source(self):
+    def get_file_source_thumbnailer(self):
+        source = BytesIO()
+        Image.new('RGB', (800, 600)).save(source, 'JPEG')
+        source.seek(0)
+        thumbnailer = files.get_thumbnailer(source, 'test.jpg')
+        thumbnailer.thumbnail_storage = self.storage
+        return thumbnailer
+
+    def test_file_source(self):
         settings.THUMBNAIL_HASHER = 'tests.test_files.fake_hasher'
-        self.remote_thumbnailer.remote_source = True
-        self.remote_thumbnailer.get_thumbnail({'size': (50, 50)})
+        thumbnailer = self.get_file_source_thumbnailer()
+        self.assertTrue(thumbnailer.remote_source)
+        opts = {'size': (50, 50)}
+        thumb = thumbnailer.get_thumbnail(opts)
+        self.assertEqual(thumb.name, 'test.jpg.50x50_q76.jpg')
+        self.assertTrue(self.storage.exists(thumb.name))
+        # No cache is used, so the thumbnail is never found as existing.
+        self.assertIsNone(thumbnailer.get_existing_thumbnail(opts))
+        self.assertIsNone(thumbnailer.get_thumbnail(opts, generate=False))
+        self.assertIsNone(thumbnailer.get_thumb_hash())
         self.assertEqual(models.Source.objects.count(), 0)
+        self.assertEqual(models.Thumbnail.objects.count(), 0)
+
+    def test_file_source_cache_dimensions(self):
+        settings.THUMBNAIL_CACHE_DIMENSIONS = True
+        thumbnailer = self.get_file_source_thumbnailer()
+        thumb = thumbnailer.get_thumbnail({'size': (50, 50)})
+        self.assertEqual((thumb.width, thumb.height), (50, 38))
+        self.assertEqual(models.ThumbnailDimensions.objects.count(), 0)
 
     def test_remote_cached_dimensions_queries(self):
         settings.THUMBNAIL_CACHE_DIMENSIONS = True
@@ -530,7 +742,9 @@ class FilesTest(test.BaseTest):
             options = {'size': (10, 20)}
             thumb = self.thumbnailer.get_thumbnail(options, generate=False)
             self.assertEqual(thumb, None)
-            self.assertEqual(self.thumbnailer.missed_signal, ThumbnailOptions(options))
+            self.assertEqual(
+                self.thumbnailer.missed_signal, self.thumbnailer.get_options(options)
+            )
         finally:
             signals.thumbnail_created.disconnect(signal_handler)
 

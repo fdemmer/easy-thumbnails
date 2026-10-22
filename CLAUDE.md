@@ -71,7 +71,7 @@ Do not use Conventional Commits. Follow the existing history: a short, capitaliz
 
 4. **`processors.py`** — Functions that transform a PIL image: `colorspace`, `autocrop`, `scale_and_crop`, `filters`, `background`. Each accepts `**kwargs` matching `ThumbnailOptions`. Configured via `THUMBNAIL_PROCESSORS`.
 
-5. **`options.py`** — `ThumbnailOptions` dict subclass that normalises option values (e.g. parses `"100x100"` into a `(100, 100)` tuple).
+5. **`options.py`** — `ThumbnailOptions` dict subclass that applies `THUMBNAIL_DEFAULT_OPTIONS`, defaults `subsampling` and normalises `format`. It does not add `quality` (`Thumbnailer.get_options` does) or parse `size` strings (the template tag does). `prepared_options()` builds the filename parts.
 
 ### Database cache
 
