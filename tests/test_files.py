@@ -300,8 +300,12 @@ class FilesTest(test.BaseTest):
             {'size': (100, 100), 'format': 'webp', 'quality': None},
             ThumbnailOptions({'size': (100, 100), 'format': 'webp', 'quality': None}),
         ):
-            opts = self.ext_thumbnailer.get_options(options)
+            opts = self.ext_thumbnailer.resolve_quality(
+                self.ext_thumbnailer.get_options(options)
+            )
             self.assertEqual(opts['quality'], 80)
+            name = self.ext_thumbnailer.get_thumbnail_name(options)
+            self.assertTrue(name.endswith('_q80.webp'), name)
 
     def test_quality_none_without_format_default(self):
         settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {}
@@ -320,25 +324,78 @@ class FilesTest(test.BaseTest):
         self.assertTrue(name.endswith('.100x100.png'), name)
         self.assertIsNone(quality)
 
-    def test_quality_transparent_uses_regular_format(self):
+    def test_quality_transparent_uses_transparency_format(self):
         settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {
             'JPEG': {'quality': 76},
             'WEBP': {'quality': 80},
         }
         self.transparent_thumbnailer.thumbnail_transparency_extension = 'webp'
-        thumb = self.transparent_thumbnailer.get_thumbnail({'size': (100, 100)})
-        self.assertTrue(thumb.name.endswith('_q76.webp'), thumb.name)
-        self.assertEqual(
-            self.transparent_thumbnailer.get_existing_thumbnail({'size': (100, 100)}),
-            thumb,
+        name, quality = self._saved_quality(
+            self.transparent_thumbnailer, {'size': (100, 100)}
+        )
+        self.assertTrue(name.endswith('_q80.webp'), name)
+        self.assertEqual(quality, 80)
+        thumb = self.transparent_thumbnailer.get_existing_thumbnail({'size': (100, 100)})
+        self.assertEqual(thumb.name, name)
+        self.assertEqual(thumb.thumbnail_options['quality'], 80)
+        # The opaque variant still uses the regular format's default.
+        self.assertTrue(
+            self.transparent_thumbnailer.get_thumbnail_name(
+                {'size': (100, 100)}
+            ).endswith('_q76.jpg')
         )
 
-    def test_get_options_thumbnail_options_instance(self):
+    def test_quality_transparent_png(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'JPEG': {'quality': 76}}
+        self.transparent_thumbnailer.thumbnail_transparency_extension = 'png'
+        name, quality = self._saved_quality(
+            self.transparent_thumbnailer, {'size': (100, 100)}
+        )
+        self.assertTrue(name.endswith('.100x100.png'), name)
+        self.assertIsNone(quality)
+
+    def test_resolve_quality_thumbnail_options_instance(self):
         settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'WEBP': {'quality': 80}}
         options = ThumbnailOptions({'size': (100, 100), 'format': 'webp'})
-        opts = self.ext_thumbnailer.get_options(options)
+        opts = self.ext_thumbnailer.resolve_quality(
+            self.ext_thumbnailer.get_options(options)
+        )
         self.assertEqual(opts['quality'], 80)
         self.assertNotIn('quality', options)
+
+    def _alias_quality(self, alias_options, **thumbnailer_kwargs):
+        """
+        Generate the ``q`` alias with ``alias_options`` and return its name
+        and the quality passed to ``engine.save_pil_image``.
+        """
+        aliases.set('q', alias_options)
+        self.addCleanup(aliases.populate_from_settings)
+        with mock.patch.object(
+            engine, 'save_pil_image', wraps=engine.save_pil_image
+        ) as save:
+            thumb = self.ext_thumbnailer['q']
+        return thumb.name, save.call_args.kwargs.get('quality')
+
+    def test_alias_quality_overrides_format_default(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {'JPEG': {'quality': 76}}
+        name, quality = self._alias_quality({'size': (100, 100), 'quality': 50})
+        self.assertIn('_q50.jpg', name)
+        self.assertEqual(quality, 50)
+
+    def test_alias_quality_overrides_default_options(self):
+        settings.THUMBNAIL_DEFAULT_OPTIONS = {'quality': 40}
+        name, quality = self._alias_quality({'size': (100, 100), 'quality': 50})
+        self.assertIn('_q50.jpg', name)
+        self.assertEqual(quality, 50)
+
+    def test_alias_format_uses_format_default(self):
+        settings.THUMBNAIL_IMAGE_SAVE_OPTIONS = {
+            'JPEG': {'quality': 76},
+            'WEBP': {'quality': 80},
+        }
+        name, quality = self._alias_quality({'size': (100, 100), 'format': 'webp'})
+        self.assertIn('_q80.webp', name)
+        self.assertEqual(quality, 80)
 
     def test_subsampling(self):
         samplings = {
@@ -417,7 +474,11 @@ class FilesTest(test.BaseTest):
     def test_thumbnailfile_options(self):
         opts = {'size': (50, 50), 'crop': True, 'upscale': True}
         thumb = self.thumbnailer.get_thumbnail(opts)
-        self.assertEqual(thumb.thumbnail_options, self.thumbnailer.get_options(opts))
+        self.assertEqual(
+            thumb.thumbnail_options,
+            self.thumbnailer.resolve_quality(self.thumbnailer.get_options(opts)),
+        )
+        self.assertEqual(thumb.thumbnail_options['quality'], 76)
 
     def test_get_thumbnail_name(self):
         opts = {'size': (50, 50), 'crop': 'smart', 'upscale': True, 'target': (10, 10)}

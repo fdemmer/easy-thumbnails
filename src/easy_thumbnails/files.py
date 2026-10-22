@@ -405,32 +405,30 @@ class Thumbnailer(File):
         Get the thumbnail options that includes the default options for this
         thumbnailer (and the project-wide default options).
 
-        If no ``quality`` is given (or it is ``None``), the default quality of
-        the output format is added (see ``set_quality()``).
+        The default quality of the output format is not added here, as it
+        depends on whether the thumbnail is transparent (see
+        ``resolve_quality()``).
         """
         if isinstance(thumbnail_options, ThumbnailOptions):
-            if thumbnail_options.get('quality') is not None:
-                return thumbnail_options
-
+            return thumbnail_options
         # copy to avoid modifying given dict in place
-        opts = ThumbnailOptions(thumbnail_options or {}, **kwargs)
-        self.set_quality(opts)
-        return opts
+        return ThumbnailOptions(thumbnail_options or {}, **kwargs)
 
-    def set_quality(self, thumbnail_options):
+    def resolve_quality(self, thumbnail_options, transparent=False):
         """
-        Set the quality to save a thumbnail with in ``thumbnail_options``.
+        Return ``thumbnail_options`` with the quality to save a thumbnail with.
 
         A ``quality`` thumbnail option is kept, unless it is ``None``.
-        Otherwise it is set to the ``quality`` entry of
-        ``THUMBNAIL_IMAGE_SAVE_OPTIONS`` for the output format (see
-        ``get_output_extension()``). If that format has no default quality,
-        the ``quality`` key is removed.
+        Otherwise a copy is returned, with ``quality`` set to the ``quality``
+        entry of ``THUMBNAIL_IMAGE_SAVE_OPTIONS`` for the output format (see
+        ``get_output_extension()``, which ``transparent`` is passed to). If
+        that format has no default quality, the ``quality`` key is removed.
         """
         if thumbnail_options.get('quality') is not None:
-            return
+            return thumbnail_options
 
-        extension = self.get_output_extension(thumbnail_options)
+        thumbnail_options = ThumbnailOptions(thumbnail_options)
+        extension = self.get_output_extension(thumbnail_options, transparent)
         format = utils.get_pil_format(extension)
         save_options = settings.THUMBNAIL_IMAGE_SAVE_OPTIONS.get(format, {})
 
@@ -441,6 +439,7 @@ class Thumbnailer(File):
             # format left out of the setting): save with Pillow's default and
             # drop a given ``quality=None``, so it does not end up in the name.
             thumbnail_options.pop('quality', None)
+        return thumbnail_options
 
     def get_output_extension(self, thumbnail_options, transparent=False, default='jpg'):
         """
@@ -509,9 +508,9 @@ class Thumbnailer(File):
         thumbnail_image = engine.process_image(
             image, thumbnail_options, self.thumbnail_processors
         )
-        filename = self.get_thumbnail_name(
-            thumbnail_options, transparent=utils.is_transparent(thumbnail_image)
-        )
+        transparent = utils.is_transparent(thumbnail_image)
+        thumbnail_options = self.resolve_quality(thumbnail_options, transparent)
+        filename = self.get_thumbnail_name(thumbnail_options, transparent)
         save_options = {
             'subsampling': thumbnail_options['subsampling'],
             'keep_icc_profile': thumbnail_options.get('keep_icc_profile', False),
@@ -578,16 +577,17 @@ class Thumbnailer(File):
         ``thumbnail_options``
             Dict or :class:`~easy_thumbnails.options.ThumbnailOptions` of
             thumbnail options (e.g. ``{'size': (100, 100), 'crop': True}``).
-            Normalised through ``get_options()``, so the default quality of
-            the output format is added if missing.
-            Its prepared form is passed to the namer and substituted for
-            ``%(opts)s`` in basedir/subdir.
+            Normalised through ``get_options()`` and ``resolve_quality()``,
+            so the default quality of the output format is added if missing.
+            The result is passed to the namer, and its prepared form is
+            substituted for ``%(opts)s`` in basedir/subdir.
 
         ``transparent``
             If true, the transparency extension is used for the file
-            extension instead of the regular one (unless the source
-            extension is preserved). ``get_existing_thumbnail()`` calls
-            this with both values to look up either variant.
+            extension (and its default quality) instead of the regular one
+            (unless the source extension is preserved).
+            ``get_existing_thumbnail()`` calls this with both values to look
+            up either variant.
 
         Derived from the file itself:
 
@@ -614,7 +614,9 @@ class Thumbnailer(File):
 
         Returns the path as a string; it is not checked for existence.
         """
-        thumbnail_options = self.get_options(thumbnail_options)
+        thumbnail_options = self.resolve_quality(
+            self.get_options(thumbnail_options), transparent
+        )
         source_file_path = PurePath(self.name)
 
         path = str(source_file_path.parent)
@@ -655,10 +657,13 @@ class Thumbnailer(File):
         of thumbnail options, or ``None`` if not found.
         """
         thumbnail_options = self.get_options(thumbnail_options)
-        names = [self.get_thumbnail_name(thumbnail_options, transparent=False)]
-        transparent_name = self.get_thumbnail_name(thumbnail_options, transparent=True)
-        if transparent_name not in names:
-            names.append(transparent_name)
+        # candidate names, with the options (and quality) of each
+        candidates = {}
+        for transparent in (False, True):
+            options = self.resolve_quality(thumbnail_options, transparent)
+            name = self.get_thumbnail_name(options, transparent)
+            candidates.setdefault(name, options)
+        names = list(candidates)
 
         if not utils.is_storage_local(self.thumbnail_storage):
             prefetch = getattr(self, '_thumbnail_prefetch', {})
@@ -666,13 +671,13 @@ class Thumbnailer(File):
                 # one query for both candidate names (and the source)
                 self._prefetch_names(names)
 
-        for filename in names:
+        for filename, options in candidates.items():
             exists = self.thumbnail_exists(filename)
             if exists:
                 thumbnail_file = ThumbnailFile(
                     name=filename,
                     storage=self.thumbnail_storage,
-                    thumbnail_options=thumbnail_options,
+                    thumbnail_options=options,
                 )
                 if settings.THUMBNAIL_CACHE_DIMENSIONS:
                     # If this wasn't local storage, exists will be a thumbnail

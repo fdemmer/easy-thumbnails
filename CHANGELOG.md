@@ -17,8 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   thumbnail option still takes precedence. To migrate, move a custom
   `THUMBNAIL_QUALITY` into the `quality` entry of each format. As the quality
   is part of the thumbnail name, thumbnails without an explicit quality are
-  regenerated once. Formats without a default quality (e.g. preserved PNG) no
-  longer get a `q…` part in their name.
+  regenerated once. With the `alias` or `alias_or_size` namer the name has no
+  quality, so existing thumbnails are kept until they are deleted. Formats
+  without a default quality (e.g. preserved PNG) no longer get a `q…` part in
+  their name. Transparent thumbnails get the default quality of
+  `THUMBNAIL_TRANSPARENCY_EXTENSION`'s format.
 - Fix `generate_all_aliases`, `Thumbnailer[alias]` and
   `Thumbnailer.prefetch_aliases` adding an `ALIAS` key to the shared alias
   options (and so to the `THUMBNAIL_ALIASES` setting). With the `alias` or

@@ -343,18 +343,19 @@ class Settings(AppSettings):
             'AVIF': {'quality': 54},
         }
 
-    A ``quality`` thumbnail option (or one in ``THUMBNAIL_DEFAULT_OPTIONS``)
-    takes precedence. The quality is part of the thumbnail file name, so
-    changing it regenerates the thumbnails.
+    A ``quality`` in ``THUMBNAIL_DEFAULT_OPTIONS``, a thumbnail alias or the
+    thumbnail options takes precedence (in increasing order). The quality is
+    part of the thumbnail file name (unless the ``alias`` or ``alias_or_size``
+    namer is used), so changing it regenerates the thumbnails.
 
     Setting this replaces the whole dictionary, so include every format you
     want a default quality for. Formats without a ``quality`` entry are saved
     with Pillow's default quality.
 
-    The default quality is chosen for the regular output format (the
-    ``format`` option, a preserved source extension or ``THUMBNAIL_EXTENSION``).
-    Thumbnails saved with ``THUMBNAIL_TRANSPARENCY_EXTENSION`` use the same
-    quality. See :doc:`/webp` for details.
+    The default quality is the one of the format the thumbnail is saved in:
+    the ``format`` option, a preserved source extension, or
+    ``THUMBNAIL_TRANSPARENCY_EXTENSION`` / ``THUMBNAIL_EXTENSION`` depending
+    on whether the thumbnail is transparent. See :doc:`/webp` for details.
     """
 
 

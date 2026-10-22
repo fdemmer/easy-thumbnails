@@ -355,6 +355,16 @@ class ThumbnailTagAliasTest(ThumbnailerBase):
             upscale=True,
         )
 
+    def test_alias_quality_override(self):
+        settings.THUMBNAIL_ALIASES['']['small']['quality'] = 50
+        alias.aliases.populate_from_settings()
+        self.assertIn('_q50_', self.render_template('{% thumbnail filename "small" %}'))
+        output = self.render_template('{% thumbnail filename "small" quality=30 %}')
+        self.assertIn('_q30_', output)
+        self.assertCorrectOutput(
+            '{% thumbnail filename "small" quality=30 %}', 'small', quality=30
+        )
+
 
 class ThumbnailerDataUriTest(ThumbnailerBase):
     def test_data_uri(self):

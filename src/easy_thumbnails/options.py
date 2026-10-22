@@ -26,9 +26,10 @@ class ThumbnailOptions(dict):
       becomes ``jpg``. It must be one of ``OUTPUT_FORMATS`` (``jpg``,
       ``webp``, ``avif``), otherwise a ``ValueError`` is raised.
 
-    It doesn't add a ``quality``; ``Thumbnailer.get_options`` adds the default
-    quality of the output format from ``THUMBNAIL_IMAGE_SAVE_OPTIONS``. It
-    doesn't parse a ``size`` string either (the ``{% thumbnail %}`` tag does).
+    It doesn't add a ``quality``; ``Thumbnailer.resolve_quality`` adds the
+    default quality of the output format from ``THUMBNAIL_IMAGE_SAVE_OPTIONS``.
+    It doesn't parse a ``size`` string either (the ``{% thumbnail %}`` tag
+    does).
 
     :meth:`prepared_options` turns the options into the parts of the thumbnail
     file name.
