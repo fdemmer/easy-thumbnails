@@ -347,6 +347,65 @@ Purge two aliases everywhere except one field::
     python manage.py thumbnail purge --alias small --alias large \
         --exclude myapp.article.cover
 
+.. _thumbnail_generate:
+
+thumbnail generate
+==================
+
+**Usage**::
+
+    python manage.py thumbnail generate [options]
+
+Generates missing alias thumbnails of existing sources, e.g. to pre-generate
+the thumbnails of a new alias or to regenerate thumbnails after a
+:ref:`purge <thumbnail_purge>`. Thumbnails that exist and are not older than
+their source are kept, so running the command again generates nothing.
+
+For every non-empty ``ThumbnailerImageField`` value, the thumbnails of its
+aliases (see ``THUMBNAIL_ALIASES``) are generated and saved like thumbnails
+generated on demand, including the ``thumbnail_created`` signal.
+
+If a thumbnail cannot be generated (e.g. the source file is missing or not an
+image), the error is reported and counted in the ``Errors`` line of the
+summary, which also shows the number of sources processed, thumbnails
+generated and thumbnails that existed already.
+
+Options
+-------
+
+``--dry-run``
+    Report how many thumbnails would be generated without generating anything.
+
+``--alias NAME``
+    Only generate thumbnails of this alias. May be repeated. Project-wide
+    aliases can be given too. An unknown alias name is an error; names are
+    only checked against the fields selected by ``--include``/``--exclude``,
+    and fields not defining the alias are skipped.
+
+``--include-global``
+    Without ``--alias``, only the field, model and app specific aliases of
+    each field are generated (as on upload with the
+    ``easy_thumbnails.signal_handlers.generate_aliases`` handler). With this
+    option, the project-wide aliases are generated too, for every field.
+
+``--include SPEC`` / ``--exclude SPEC``
+    Restrict generating to ``app``, ``app.model`` or ``app.model.field``
+    (wildcards allowed). May be repeated.
+
+Examples
+--------
+
+Preview generating all aliases of one model::
+
+    python manage.py thumbnail generate --dry-run --include myapp.article
+
+Regenerate two aliases of one field::
+
+    python manage.py thumbnail purge --alias small --alias large \
+        --include myapp.article.cover
+    python manage.py thumbnail generate --alias small --alias large \
+        --include myapp.article.cover
+
 .. _thumbnail_thumb_hash:
 
 thumbnail thumb_hash

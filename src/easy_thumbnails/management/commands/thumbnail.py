@@ -386,6 +386,59 @@ class Command(BaseCommand):
             ),
         )
 
+        generate_parser = subparsers.add_parser(
+            'generate',
+            help='Generate missing alias thumbnails of existing sources.',
+        )
+        generate_parser.set_defaults(method=self.do_generate)
+        generate_parser.add_argument(
+            '--dry-run',
+            action='store_true',
+            dest='dry_run',
+            default=False,
+            help='Report what would be generated without generating anything.',
+        )
+        generate_parser.add_argument(
+            '--alias',
+            dest='alias',
+            metavar='NAME',
+            action='append',
+            default=[],
+            help=(
+                'Only generate thumbnails of this alias (THUMBNAIL_ALIASES). '
+                'May be repeated. Generates all aliases of each field if not given.'
+            ),
+        )
+        generate_parser.add_argument(
+            '--include-global',
+            action='store_true',
+            dest='include_global',
+            default=False,
+            help='Also generate project-wide aliases if --alias is not given.',
+        )
+        generate_parser.add_argument(
+            '--include',
+            dest='include',
+            metavar='SPEC',
+            action='append',
+            default=[],
+            help=(
+                'Restrict generating to "app" or "app.model" or "app.model.field". '
+                'May be repeated.'
+            ),
+        )
+        generate_parser.add_argument(
+            '--exclude',
+            dest='exclude',
+            metavar='SPEC',
+            action='append',
+            default=[],
+            help=(
+                'Exclude "app" or "app.model" or "app.model.field" from generating. '
+                'May be repeated.'
+            ),
+        )
+
         thumb_hash_parser = subparsers.add_parser(
             'thumb_hash',
             help='Generate missing thumb_hash values of Source records.',
@@ -682,6 +735,86 @@ class Command(BaseCommand):
         self.stdout.write(f'{"Sources processed:":<40} {counts["sources"]:>7}')
         label = 'Thumbnails that would be purged:' if dry_run else 'Thumbnails purged:'
         self.stdout.write(f'{label:<40} {counts["thumbnails"]:>7}')
+        self.stdout.write(f'{"Errors:":<40} {counts["errors"]:>7}')
+        self.stdout.write(f'(Completed in {execution_time} seconds)\n')
+
+    def _generate_aliases(self, fieldfile, alias_names, include_global):
+        """
+        Return the alias options to generate for `fieldfile`: the given aliases
+        if any (that are configured for it), otherwise all of its aliases.
+        """
+        if not alias_names:
+            return aliases.all(fieldfile, include_global=include_global)
+        all_aliases = aliases.all(fieldfile, include_global=True)
+        return {name: all_aliases[name] for name in alias_names if name in all_aliases}
+
+    def do_generate(self, *args, **options):
+        """
+        Generate missing alias thumbnails of existing sources.
+
+        For every non-empty ThumbnailerImageField value the thumbnails of its
+        aliases are generated, unless a current thumbnail exists already, e.g.
+        to pre-generate thumbnails of a new alias or after a purge. Thumbnails
+        older than their source are generated again.
+
+        Fields can be narrowed down with --include/--exclude.
+
+        With --alias, only thumbnails of the given aliases are generated.
+        Without it, the field, model and app specific aliases of each field are
+        generated, and the project-wide aliases too with --include-global.
+
+        With --dry-run, only reports what would be generated.
+        """
+        dry_run = options['dry_run']
+        alias_names = options['alias']
+        include_global = options['include_global']
+        verbosity = int(options.get('verbosity', 1))
+
+        pairs = self._resolve_field_pairs(options)
+        self._check_alias_names(alias_names, pairs)
+
+        if dry_run:
+            self.stdout.write('Dry run...')
+
+        counts = Counter()
+        time_start = time.time()
+        for model, field in pairs:
+            query = model.objects.filter(q_has_value(field)).only('pk', field.name)
+            for instance in queryset_iterator(query):
+                fieldfile = getattr(instance, field.name)
+                selected = self._generate_aliases(fieldfile, alias_names, include_global)
+                if not selected:
+                    continue
+                counts['sources'] += 1
+
+                for alias_name, alias_options in selected.items():
+                    thumbnail_options = fieldfile.get_options(
+                        {**alias_options, 'ALIAS': alias_name}
+                    )
+                    if fieldfile.get_existing_thumbnail(thumbnail_options):
+                        counts['existing'] += 1
+                        continue
+                    if not dry_run:
+                        try:
+                            thumbnail = fieldfile.generate_thumbnail(thumbnail_options)
+                            fieldfile.save_thumbnail(thumbnail)
+                        except Exception as e:
+                            name = f'{alias_name} of {fieldfile.name}'
+                            self.stderr.write(f'Could not generate {name}: {e}')
+                            counts['errors'] += 1
+                            continue
+                        if verbosity > 1:
+                            self.stdout.write(thumbnail.name)
+                    counts['thumbnails'] += 1
+
+        execution_time = round(time.time() - time_start)
+        self.stdout.write(f'{timezone.now().strftime("%Y-%m-%d %H:%M "):-<48}')
+        self.stdout.write(f'{"Sources processed:":<40} {counts["sources"]:>7}')
+        label = (
+            'Thumbnails that would be generated:' if dry_run else 'Thumbnails generated:'
+        )
+        self.stdout.write(f'{label:<40} {counts["thumbnails"]:>7}')
+        self.stdout.write(f'{"Thumbnails existing:":<40} {counts["existing"]:>7}')
         self.stdout.write(f'{"Errors:":<40} {counts["errors"]:>7}')
         self.stdout.write(f'(Completed in {execution_time} seconds)\n')
 
