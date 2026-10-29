@@ -62,6 +62,16 @@ class FilesTest(test.BaseTest):
         self.remote_storage.delete_temporary_storage()
         super().tearDown()
 
+    def _isolate_aliases(self):
+        """
+        Restore the global alias registry after the test, so aliases it sets
+        don't leak into other tests.
+        """
+        snapshot = {target: dict(opts) for target, opts in aliases._aliases.items()}
+        patcher = mock.patch.object(aliases, '_aliases', snapshot)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_tag(self):
         local = self.thumbnailer.get_thumbnail({'size': (100, 100)})
         remote = self.remote_thumbnailer.get_thumbnail({'size': (100, 100)})
@@ -368,8 +378,8 @@ class FilesTest(test.BaseTest):
         Generate the ``q`` alias with ``alias_options`` and return its name
         and the quality passed to ``engine.save_pil_image``.
         """
+        self._isolate_aliases()
         aliases.set('q', alias_options)
-        self.addCleanup(aliases.populate_from_settings)
         with mock.patch.object(
             engine, 'save_pil_image', wraps=engine.save_pil_image
         ) as save:
@@ -647,9 +657,9 @@ class FilesTest(test.BaseTest):
 
     def test_prefetch_aliases(self):
         settings.THUMBNAIL_CACHE_DIMENSIONS = True
+        self._isolate_aliases()
         aliases.set('small', {'size': (50, 50)})
         aliases.set('tiny', {'size': (30, 30)})
-        self.addCleanup(aliases.populate_from_settings)
         for alias in ('small', 'tiny'):
             self.remote_thumbnailer.get_thumbnail({**aliases.get(alias), 'ALIAS': alias})
         thumbnailer = files.get_thumbnailer(self.remote_storage, 'test.jpg')

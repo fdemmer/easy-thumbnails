@@ -735,8 +735,10 @@ class ThumbnailPurgeCommandTest(test.BaseTest):
                 'large': {'size': (50, 50)},
             },
         }
+        patcher = patch.object(aliases, '_aliases', {})
+        patcher.start()
+        self.addCleanup(patcher.stop)
         aliases.populate_from_settings()
-        self.addCleanup(aliases.populate_from_settings)
 
         field = TestModel._meta.get_field('picture')
         self.storage = field.storage
@@ -812,8 +814,10 @@ class ThumbnailGenerateCommandTest(test.BaseTest):
                 'medium': {'size': (30, 30)},
             },
         }
+        patcher = patch.object(aliases, '_aliases', {})
+        patcher.start()
+        self.addCleanup(patcher.stop)
         aliases.populate_from_settings()
-        self.addCleanup(aliases.populate_from_settings)
 
         field = TestModel._meta.get_field('picture')
         self.storage = field.storage
