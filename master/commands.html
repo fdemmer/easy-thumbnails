@@ -72,9 +72,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#id12">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#thumbnail-thumb-hash">thumbnail thumb_hash</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#thumbnail-generate">thumbnail generate</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id14">Options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id15">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#thumbnail-thumb-hash">thumbnail thumb_hash</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id17">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id18">Examples</a></li>
 </ul>
 </li>
 </ul>
@@ -443,8 +448,60 @@ untouched.</p>
 </div>
 </section>
 </section>
+<section id="thumbnail-generate">
+<span id="id13"></span><h2>thumbnail generate<a class="headerlink" href="#thumbnail-generate" title="Link to this heading"></a></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">generate</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Generates missing alias thumbnails of existing sources, e.g. to pre-generate
+the thumbnails of a new alias or to regenerate thumbnails after a
+<a class="reference internal" href="#thumbnail-purge"><span class="std std-ref">purge</span></a>. Thumbnails that exist and are not older than
+their source are kept, so running the command again generates nothing.</p>
+<p>For every non-empty <code class="docutils literal notranslate"><span class="pre">ThumbnailerImageField</span></code> value, the thumbnails of its
+aliases (see <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_ALIASES</span></code>) are generated and saved like thumbnails
+generated on demand, including the <code class="docutils literal notranslate"><span class="pre">thumbnail_created</span></code> signal.</p>
+<p>If a thumbnail cannot be generated (e.g. the source file is missing or not an
+image), the error is reported and counted in the <code class="docutils literal notranslate"><span class="pre">Errors</span></code> line of the
+summary, which also shows the number of sources processed, thumbnails
+generated and thumbnails that existed already.</p>
+<section id="id14">
+<h3>Options<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">--dry-run</span></code></dt><dd><p>Report how many thumbnails would be generated without generating anything.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--alias</span> <span class="pre">NAME</span></code></dt><dd><p>Only generate thumbnails of this alias. May be repeated. Project-wide
+aliases can be given too. An unknown alias name is an error; names are
+only checked against the fields selected by <code class="docutils literal notranslate"><span class="pre">--include</span></code>/<code class="docutils literal notranslate"><span class="pre">--exclude</span></code>,
+and fields not defining the alias are skipped.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--include-global</span></code></dt><dd><p>Without <code class="docutils literal notranslate"><span class="pre">--alias</span></code>, only the field, model and app specific aliases of
+each field are generated (as on upload with the
+<code class="docutils literal notranslate"><span class="pre">easy_thumbnails.signal_handlers.generate_aliases</span></code> handler). With this
+option, the project-wide aliases are generated too, for every field.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--include</span> <span class="pre">SPEC</span></code> / <code class="docutils literal notranslate"><span class="pre">--exclude</span> <span class="pre">SPEC</span></code></dt><dd><p>Restrict generating to <code class="docutils literal notranslate"><span class="pre">app</span></code>, <code class="docutils literal notranslate"><span class="pre">app.model</span></code> or <code class="docutils literal notranslate"><span class="pre">app.model.field</span></code>
+(wildcards allowed). May be repeated.</p>
+</dd>
+</dl>
+</section>
+<section id="id15">
+<h3>Examples<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<p>Preview generating all aliases of one model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">generate</span> <span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span> <span class="o">--</span><span class="n">include</span> <span class="n">myapp</span><span class="o">.</span><span class="n">article</span>
+</pre></div>
+</div>
+<p>Regenerate two aliases of one field:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">purge</span> <span class="o">--</span><span class="n">alias</span> <span class="n">small</span> <span class="o">--</span><span class="n">alias</span> <span class="n">large</span> \
+    <span class="o">--</span><span class="n">include</span> <span class="n">myapp</span><span class="o">.</span><span class="n">article</span><span class="o">.</span><span class="n">cover</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">generate</span> <span class="o">--</span><span class="n">alias</span> <span class="n">small</span> <span class="o">--</span><span class="n">alias</span> <span class="n">large</span> \
+    <span class="o">--</span><span class="n">include</span> <span class="n">myapp</span><span class="o">.</span><span class="n">article</span><span class="o">.</span><span class="n">cover</span>
+</pre></div>
+</div>
+</section>
+</section>
 <section id="thumbnail-thumb-hash">
-<span id="id13"></span><h2>thumbnail thumb_hash<a class="headerlink" href="#thumbnail-thumb-hash" title="Link to this heading"></a></h2>
+<span id="id16"></span><h2>thumbnail thumb_hash<a class="headerlink" href="#thumbnail-thumb-hash" title="Link to this heading"></a></h2>
 <p><strong>Usage</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">thumb_hash</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span>
 </pre></div>
@@ -460,8 +517,8 @@ thumbnail.</p>
 <p>The summary shows the number of sources processed, hashes generated, sources
 the hasher returned no hash for (e.g. SVG images with the default hasher) and
 errors (source files that cannot be opened or hashed).</p>
-<section id="id14">
-<h3>Options<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<section id="id17">
+<h3>Options<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">--dry-run</span></code></dt><dd><p>Report how many hashes would be generated without saving them.</p>
 </dd>
@@ -475,8 +532,8 @@ errors (source files that cannot be opened or hashed).</p>
 </dd>
 </dl>
 </section>
-<section id="id15">
-<h3>Examples<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<section id="id18">
+<h3>Examples<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
 <p>Generate all missing hashes:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">thumbnail</span> <span class="n">thumb_hash</span>
 </pre></div>
