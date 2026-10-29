@@ -800,6 +800,104 @@ class ThumbnailPurgeCommandTest(test.BaseTest):
         self.assertEqual(Thumbnail.objects.count(), 0)
 
 
+class ThumbnailGenerateCommandTest(test.BaseTest):
+    def setUp(self):
+        super().setUp()
+        thumbnail_settings.THUMBNAIL_ALIASES = {
+            '': {
+                'small': {'size': (20, 20)},
+                'large': {'size': (50, 50)},
+            },
+            'easy_thumbnails_tests.TestModel.picture': {
+                'medium': {'size': (30, 30)},
+            },
+        }
+        aliases.populate_from_settings()
+        self.addCleanup(aliases.populate_from_settings)
+
+        field = TestModel._meta.get_field('picture')
+        self.storage = field.storage
+        name = self.create_image(self.storage, 'pictures/generate.jpg')
+        self.addCleanup(self.storage.delete, name)
+
+        self.instance = TestModel.objects.create(avatar='avatars/a.jpg', picture=name)
+        self.thumbnailer = get_thumbnailer(self.instance.picture)
+
+    def _call(self, **kwargs):
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        call_command('thumbnail', 'generate', stdout=stdout, stderr=stderr, **kwargs)
+        return stdout.getvalue(), stderr.getvalue()
+
+    def _exists(self, alias_name):
+        thumbnail = self.thumbnailer.get_existing_thumbnail(
+            {**aliases.get(alias_name, self.instance.picture), 'ALIAS': alias_name}
+        )
+        return thumbnail is not None
+
+    def test_generates_field_aliases(self):
+        stdout, _ = self._call()
+        self.assertRegex(stdout, r'Thumbnails generated:\s+1\n')
+        self.assertTrue(self._exists('medium'))
+        self.assertFalse(self._exists('small'))
+        self.assertFalse(self._exists('large'))
+
+    def test_include_global_generates_global_aliases(self):
+        self._call(include_global=True)
+        self.assertEqual(Thumbnail.objects.count(), 3)
+        self.assertTrue(self._exists('small'))
+        self.assertTrue(self._exists('large'))
+
+    def test_alias_filter(self):
+        self._call(alias=['small'])
+        self.assertEqual(Thumbnail.objects.count(), 1)
+        self.assertTrue(self._exists('small'))
+
+    def test_dry_run_generates_nothing(self):
+        stdout, _ = self._call(dry_run=True, include_global=True)
+        self.assertRegex(stdout, r'Thumbnails that would be generated:\s+3\n')
+        self.assertEqual(Thumbnail.objects.count(), 0)
+
+    def test_keeps_existing_thumbnails(self):
+        self._call(include_global=True)
+        modified = list(Thumbnail.objects.values_list('modified', flat=True))
+        stdout, _ = self._call(include_global=True)
+        self.assertRegex(stdout, r'Thumbnails generated:\s+0\n')
+        self.assertRegex(stdout, r'Thumbnails existing:\s+3\n')
+        self.assertEqual(
+            list(Thumbnail.objects.values_list('modified', flat=True)), modified
+        )
+
+    def test_generates_purged_thumbnails(self):
+        self._call(alias=['small', 'large'])
+        call_command('thumbnail', 'purge', alias=['small'], stdout=io.StringIO())
+        self.assertFalse(self._exists('small'))
+        stdout, _ = self._call(alias=['small', 'large'])
+        self.assertRegex(stdout, r'Thumbnails generated:\s+1\n')
+        self.assertTrue(self._exists('small'))
+
+    def test_unknown_alias_raises(self):
+        with self.assertRaises(CommandError):
+            self._call(alias=['nope'])
+
+    def test_exclude_skips_field(self):
+        self._call(exclude=['easy_thumbnails_tests.testmodel.picture'])
+        self.assertEqual(Thumbnail.objects.count(), 0)
+
+    def test_include_other_app_generates_nothing(self):
+        self._call(include=['auth'])
+        self.assertEqual(Thumbnail.objects.count(), 0)
+
+    def test_broken_source_is_reported(self):
+        broken = self.storage.save('pictures/broken.jpg', io.BytesIO(b'not an image'))
+        self.addCleanup(self.storage.delete, broken)
+        TestModel.objects.create(avatar='avatars/b.jpg', picture=broken)
+        stdout, stderr = self._call()
+        self.assertIn(f'Could not generate medium of {broken}', stderr)
+        self.assertRegex(stdout, r'Errors:\s+1\n')
+        self.assertTrue(self._exists('medium'))
+
+
 def other_hasher(image):
     return 'other'
 
