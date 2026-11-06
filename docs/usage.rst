@@ -373,10 +373,24 @@ single query, which also fetches the cached dimensions (see
         thumb = thumbnailer[alias]
         thumb.url, thumb.width, thumb.height
 
+To show thumbnails of several sources, e.g. the profile pictures of a list of
+users, use the :func:`prefetch_aliases` function to fetch all of them with a
+single query, instead of one per source::
+
+    from easy_thumbnails.files import prefetch_aliases
+
+    users = list(User.objects.all())
+    prefetch_aliases(user.avatar for user in users)
+    for user in users:
+        user.avatar['small'].url
+
 .. automethod:: Thumbnailer.prefetch_thumbnails
    :noindex:
 
 .. automethod:: Thumbnailer.prefetch_aliases
+   :noindex:
+
+.. autofunction:: prefetch_aliases
    :noindex:
 
 Non-Django file objects

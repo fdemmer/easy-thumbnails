@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Show a progress bar in `thumbnail purge` and `thumbnail generate` if stderr
   is a terminal.
+- Add the `prefetch_aliases` function to fetch the thumbnails of several files
+  with a single query, where `Thumbnailer.prefetch_aliases` needs one per file.
 
 ## [3.4.0] - 2026-10-29
 
