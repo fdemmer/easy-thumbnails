@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is a terminal.
 - Add the `prefetch_aliases` function to fetch the thumbnails of several files
   with a single query, where `Thumbnailer.prefetch_aliases` needs one per file.
+- Fix the `{% thumbnail %}` tag not passing the alias name to the namer. With
+  the `alias` and `alias_or_size` namers, thumbnails of different aliases could
+  share a file, showing the wrong image. Aliases used with this tag and these
+  namers are generated once more under their alias name, the old files are not
+  removed.
 
 ## [3.4.0] - 2026-10-29
 

@@ -8,7 +8,7 @@ from django.utils.module_loading import import_string
 
 from easy_thumbnails import VIL, alias, storage
 from easy_thumbnails.conf import settings
-from easy_thumbnails.files import get_thumbnailer
+from easy_thumbnails.files import get_thumbnailer, prefetch_aliases
 from tests import utils as test
 
 
@@ -364,6 +364,70 @@ class ThumbnailTagAliasTest(ThumbnailerBase):
         self.assertCorrectOutput(
             '{% thumbnail filename "small" quality=30 %}', 'small', quality=30
         )
+
+
+class ThumbnailTagAliasNamerTest(ThumbnailerBase):
+    def setUp(self):
+        super().setUp()
+        settings.THUMBNAIL_ALIASES = {
+            '': {
+                'small': {'size': (20, 20)},
+                'large': {'size': (40, 40)},
+                'small_crop': {'size': (20, 20), 'crop': True},
+            },
+        }
+        alias.aliases.populate_from_settings()
+
+    def get_source(self, storage=None):
+        storage = storage or self.storage
+        source = get_thumbnailer(storage, self.filename)
+        source.thumbnail_storage = storage
+        return source
+
+    def render_thumbnail(self, options, source=None):
+        context = Context({'source': source or self.get_source()})
+        Template(
+            '{% load thumbnail %}{% thumbnail source ' + options + ' as thumb %}'
+        ).render(context)
+        return context['thumb']
+
+    def assertSameAsAlias(self, alias_name, expected_name, expected_size):
+        thumb = self.render_thumbnail(f'"{alias_name}"')
+        self.assertEqual(thumb.name, expected_name)
+        self.assertEqual((thumb.width, thumb.height), expected_size)
+        self.assertEqual(self.get_source()[alias_name].name, expected_name)
+
+    def test_default_namer(self):
+        self.assertSameAsAlias('small', 'test.jpg.20x20_q76.jpg', (20, 15))
+        self.assertSameAsAlias('large', 'test.jpg.40x40_q76.jpg', (40, 30))
+
+    def test_alias_namer(self):
+        settings.THUMBNAIL_NAMER = 'easy_thumbnails.namers.alias'
+        self.assertSameAsAlias('small', 'test.jpg.small.jpg', (20, 15))
+        self.assertSameAsAlias('large', 'test.jpg.large.jpg', (40, 30))
+
+    def test_alias_or_size_namer(self):
+        settings.THUMBNAIL_NAMER = 'easy_thumbnails.namers.alias_or_size'
+        self.assertSameAsAlias('small', 'test.small.jpg', (20, 15))
+        self.assertSameAsAlias('small_crop', 'test.small_crop.jpg', (20, 20))
+
+    def test_overrides_are_not_named_after_the_alias(self):
+        settings.THUMBNAIL_NAMER = 'easy_thumbnails.namers.alias_or_size'
+        thumb = self.render_thumbnail('"small" crop')
+        self.assertEqual(thumb.name, 'test.20x20.jpg')
+
+    def test_prefetched_alias(self):
+        settings.THUMBNAIL_CACHE_DIMENSIONS = True
+        settings.THUMBNAIL_NAMER = 'easy_thumbnails.namers.alias'
+        remote_storage = test.FakeRemoteStorage()
+        self.addCleanup(remote_storage.delete_temporary_storage)
+        self.filename = self.create_image(remote_storage, 'test.jpg')
+        self.get_source(remote_storage)['small']
+        source = self.get_source(remote_storage)
+        prefetch_aliases([source], ['small'])
+        with self.assertNumQueries(0):
+            thumb = self.render_thumbnail('"small"', source)
+        self.assertEqual(thumb.name, 'test.jpg.small.jpg')
 
 
 class ThumbnailerDataUriTest(ThumbnailerBase):
