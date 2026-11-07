@@ -673,6 +673,125 @@ class FilesTest(test.BaseTest):
         with self.assertRaises(KeyError):
             thumbnailer.prefetch_aliases(['unknown'])
 
+    def _get_remote_thumbnailers(self, *names):
+        thumbnailers = []
+        for name in names:
+            thumbnailer = files.get_thumbnailer(self.remote_storage, name)
+            thumbnailer.thumbnail_storage = self.remote_storage
+            thumbnailers.append(thumbnailer)
+        return thumbnailers
+
+    def _set_up_several_files(self):
+        settings.THUMBNAIL_CACHE_DIMENSIONS = True
+        self._isolate_aliases()
+        aliases.set('small', {'size': (50, 50)})
+        aliases.set('tiny', {'size': (30, 30)})
+        names = ['test.jpg', self.create_image(self.remote_storage, 'other.jpg')]
+        for thumbnailer in self._get_remote_thumbnailers(*names):
+            for alias in ('small', 'tiny'):
+                thumbnailer.get_thumbnail({**aliases.get(alias), 'ALIAS': alias})
+        return names
+
+    def test_prefetch_aliases_of_several_files(self):
+        thumbnailers = self._get_remote_thumbnailers(*self._set_up_several_files())
+        with self.assertNumQueries(1):
+            files.prefetch_aliases(thumbnailers, ['small', 'tiny'])
+        with self.assertNumQueries(0):
+            sizes = [
+                (thumb.width, thumb.height)
+                for thumbnailer in thumbnailers
+                for thumb in (thumbnailer['small'], thumbnailer['tiny'])
+            ]
+        self.assertEqual(sizes, [(50, 38), (30, 22)] * 2)
+
+    def test_prefetch_aliases_default_to_all_of_target(self):
+        thumbnailers = self._get_remote_thumbnailers(*self._set_up_several_files())
+        with self.assertNumQueries(1):
+            files.prefetch_aliases(thumbnailers)
+        with self.assertNumQueries(0):
+            for thumbnailer in thumbnailers:
+                self.assertTrue(thumbnailer['small'])
+                self.assertTrue(thumbnailer['tiny'])
+
+    def test_prefetch_aliases_accepts_generators(self):
+        names = self._set_up_several_files()
+        thumbnailers = self._get_remote_thumbnailers(*names)
+        with self.assertNumQueries(1):
+            files.prefetch_aliases(iter(thumbnailers), iter(['small']))
+        with self.assertNumQueries(0):
+            for thumbnailer in thumbnailers:
+                self.assertTrue(thumbnailer['small'])
+
+    def test_prefetch_aliases_of_the_same_file(self):
+        name, _ = self._set_up_several_files()
+        thumbnailers = self._get_remote_thumbnailers(name, name)
+        with self.assertNumQueries(1):
+            files.prefetch_aliases(thumbnailers, ['small'])
+        with self.assertNumQueries(0):
+            for thumbnailer in thumbnailers:
+                self.assertTrue(thumbnailer['small'])
+
+    def test_prefetch_aliases_generates_missing(self):
+        names = self._set_up_several_files()
+        models.Thumbnail.objects.filter(source__name=names[0]).delete()
+        thumbnailers = self._get_remote_thumbnailers(*names)
+        files.prefetch_aliases(thumbnailers, ['small'])
+        for thumbnailer in thumbnailers:
+            thumb = thumbnailer['small']
+            self.assertEqual((thumb.width, thumb.height), (50, 38))
+        # the generated thumbnail is not served from the (stale) prefetch
+        self.assertEqual(
+            models.Thumbnail.objects.filter(source__name=names[0]).count(), 1
+        )
+
+    def test_prefetch_aliases_keeps_only_own_thumbnails(self):
+        thumbnailers = self._get_remote_thumbnailers(*self._set_up_several_files())
+        files.prefetch_aliases(thumbnailers, ['small'])
+        for thumbnailer in thumbnailers:
+            sources = {
+                thumbnail.source.name
+                for thumbnail in thumbnailer._thumbnail_prefetch.values()
+                if thumbnail
+            }
+            self.assertEqual(sources, {thumbnailer.name})
+
+    def test_prefetch_aliases_keeps_source_cache(self):
+        thumbnailer, _ = self._get_remote_thumbnailers(*self._set_up_several_files())
+        source = thumbnailer.get_source_cache()
+        files.prefetch_aliases([thumbnailer], ['small'])
+        self.assertIs(thumbnailer._source_cache, source)
+
+    def test_prefetch_aliases_skips_empty_and_remote_sources(self):
+        self._isolate_aliases()
+        aliases.set('small', {'size': (50, 50)})
+        remote_source = files.Thumbnailer(name='http://example.com/test.jpg')
+        remote_source.remote_source = True
+        with self.assertNumQueries(0):
+            files.prefetch_aliases([], ['small'])
+            files.prefetch_aliases([files.Thumbnailer(name='')], ['small'])
+            files.prefetch_aliases([remote_source], ['small'])
+        self.assertFalse(hasattr(remote_source, '_thumbnail_prefetch'))
+
+    def test_prefetch_aliases_of_several_storages(self):
+        names = self._set_up_several_files()
+        local_name = self.create_image(self.storage, 'local.jpg')
+        local = files.get_thumbnailer(self.storage, local_name)
+        local.thumbnail_storage = self.storage
+        local.get_thumbnail({**aliases.get('small'), 'ALIAS': 'small'})
+        local = files.get_thumbnailer(self.storage, local_name)
+        local.thumbnail_storage = self.storage
+        thumbnailers = [*self._get_remote_thumbnailers(*names), local]
+        with self.assertNumQueries(2):
+            files.prefetch_aliases(thumbnailers, ['small'])
+        with self.assertNumQueries(0):
+            for thumbnailer in thumbnailers:
+                self.assertTrue(thumbnailer['small'])
+
+    def test_prefetch_aliases_unknown_alias(self):
+        thumbnailers = self._get_remote_thumbnailers(*self._set_up_several_files())
+        with self.assertRaises(KeyError):
+            files.prefetch_aliases(thumbnailers, ['unknown'])
+
     def test_add_dimension_cache(self):
         settings.THUMBNAIL_CACHE_DIMENSIONS = True
         opts = {'size': (50, 50)}

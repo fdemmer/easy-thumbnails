@@ -1,3 +1,4 @@
+from collections import defaultdict
 from pathlib import Path, PurePath
 
 from django.core.files.base import ContentFile, File
@@ -92,6 +93,83 @@ def generate_all_aliases(fieldfile, include_global):
         thumbnailer = get_thumbnailer(fieldfile)
         for key, options in all_options.items():
             thumbnailer.get_thumbnail({**options, 'ALIAS': key})
+
+
+def prefetch_aliases(thumbnailers, aliases_names=None):
+    """
+    Fetch the thumbnails of several files with a single query.
+
+    Like :meth:`Thumbnailer.prefetch_aliases`, which needs a query per file.
+    Accessing the aliases of these thumbnailers afterwards needs no further
+    queries for existing thumbnails. Thumbnails that are missing are generated
+    as usual.
+
+    A query is needed per combination of source and thumbnail storage, so
+    files of one field use a single query.
+
+    :param thumbnailers: Iterable of :class:`Thumbnailer` instances, including
+        ``ThumbnailerFieldFile``. Empty files and remote sources are skipped.
+    :param aliases_names: Iterable of alias names (optional). By default all
+        aliases of the target of each thumbnailer are fetched.
+    :raises KeyError: If one of the given aliases does not exist.
+    """
+    if aliases_names is not None:
+        aliases_names = list(aliases_names)
+    prefetches = []
+    for thumbnailer in thumbnailers:
+        if thumbnailer.name and not thumbnailer.remote_source:
+            names = thumbnailer._get_prefetch_names(
+                thumbnailer._get_alias_options(
+                    aliases.all(thumbnailer.alias_target)
+                    if aliases_names is None
+                    else aliases_names
+                )
+            )
+            thumbnailer._thumbnail_prefetch = {}
+            prefetches.append((thumbnailer, names))
+    _prefetch_names(prefetches)
+
+
+def _prefetch_names(prefetches):
+    """
+    Fetch the ``Thumbnail`` records for the given file names and add them to
+    the prefetched thumbnails, using a single query per storage combination.
+
+    Names without a record are remembered as missing. The joined ``Source``
+    is used as the source cache of a thumbnailer, if it has none yet.
+
+    :param prefetches: Iterable of tuples of a :class:`Thumbnailer` and the
+        thumbnail names to fetch for it.
+    """
+    storages = defaultdict(list)
+    for thumbnailer, names in prefetches:
+        prefetch = thumbnailer.__dict__.setdefault('_thumbnail_prefetch', {})
+        prefetch.update(dict.fromkeys(names))
+        key = (
+            utils.get_storage_hash(thumbnailer.thumbnail_storage),
+            utils.get_storage_hash(thumbnailer.source_storage),
+        )
+        storages[key].append((thumbnailer, names))
+
+    for (thumbnail_hash, source_hash), group in storages.items():
+        # thumbnailers can be equal, e.g. for the same file of several instances
+        thumbnailers = defaultdict(list)
+        for thumbnailer, _ in group:
+            thumbnailers[thumbnailer.name].append(thumbnailer)
+        thumbnails = models.Thumbnail.objects.select_related(
+            'source', 'dimensions'
+        ).filter(
+            storage_hash=thumbnail_hash,
+            name__in={name for _, names in group for name in names},
+            source__storage_hash=source_hash,
+            source__name__in=thumbnailers,
+        )
+        for thumbnail in thumbnails:
+            for thumbnailer in thumbnailers[thumbnail.source.name]:
+                if thumbnail.name in thumbnailer._thumbnail_prefetch:
+                    thumbnailer._thumbnail_prefetch[thumbnail.name] = thumbnail
+                    if not hasattr(thumbnailer, '_source_cache'):
+                        thumbnailer._source_cache = thumbnail.source
 
 
 def database_get_image_dimensions(file, close=False):
@@ -708,39 +786,28 @@ class Thumbnailer(File):
             :meth:`get_thumbnail`. Options of aliases must contain ``ALIAS``,
             see :meth:`prefetch_aliases`.
         """
+        names = self._get_prefetch_names(thumbnail_options_list)
+        self._thumbnail_prefetch = {}
+        self._prefetch_names(names)
+
+    def _get_prefetch_names(self, thumbnail_options_list):
+        """
+        Return the candidate thumbnail names of the given options.
+        """
         names = set()
         for thumbnail_options in thumbnail_options_list:
             thumbnail_options = self.get_options(thumbnail_options)
             names.add(self.get_thumbnail_name(thumbnail_options, transparent=False))
             names.add(self.get_thumbnail_name(thumbnail_options, transparent=True))
-        self._thumbnail_prefetch = {}
-        self._prefetch_names(names)
+        return names
 
     def _prefetch_names(self, names):
         """
         Fetch the ``Thumbnail`` records for the given file names with a single
         query and add them to the prefetched thumbnails.
-
-        Names without a record are remembered as missing. The joined ``Source``
-        is used as the source cache, if there is none yet.
         """
-        if self.remote_source:
-            return
-        thumbnails = models.Thumbnail.objects.select_related(
-            'source', 'dimensions'
-        ).filter(
-            storage_hash=utils.get_storage_hash(self.thumbnail_storage),
-            name__in=names,
-            source__storage_hash=utils.get_storage_hash(self.source_storage),
-            source__name=self.name,
-        )
-        prefetch = self.__dict__.setdefault('_thumbnail_prefetch', {})
-        for name in names:
-            prefetch[name] = None
-        for thumbnail in thumbnails:
-            prefetch[thumbnail.name] = thumbnail
-            if not hasattr(self, '_source_cache'):
-                self._source_cache = thumbnail.source
+        if not self.remote_source:
+            _prefetch_names([(self, names)])
 
     def prefetch_aliases(self, aliases_names):
         """
@@ -753,6 +820,16 @@ class Thumbnailer(File):
             thumbnailer like ``thumbnailer[alias]`` does.
 
         Raises a ``KeyError`` if one of the aliases does not exist.
+
+        To prefetch the thumbnails of several files with a single query, use
+        the :func:`prefetch_aliases` function.
+        """
+        self.prefetch_thumbnails(self._get_alias_options(aliases_names))
+
+    def _get_alias_options(self, aliases_names):
+        """
+        Return the options of the given aliases for the target of this
+        thumbnailer, raising a ``KeyError`` for an alias that does not exist.
         """
         options_list = []
         for alias in aliases_names:
@@ -760,7 +837,7 @@ class Thumbnailer(File):
             if not options:
                 raise KeyError(alias)
             options_list.append({**options, 'ALIAS': alias})
-        self.prefetch_thumbnails(options_list)
+        return options_list
 
     def get_thumbnail(
         self, thumbnail_options, save=True, generate=None, silent_template_exception=False
