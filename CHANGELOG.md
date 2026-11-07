@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 (up to 2.x, version numbers were not strictly semantic).
 
+## [Unreleased]
+
+- Show a progress bar in `thumbnail purge` and `thumbnail generate` if stderr
+  is a terminal.
+
 ## [3.4.0] - 2026-10-29
 
 - Add `thumbnail generate` management command to generate missing alias

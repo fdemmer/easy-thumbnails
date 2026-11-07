@@ -1,12 +1,14 @@
 import datetime as dt
 import io
+import os
 from pathlib import Path
+from unittest import TestCase
 from unittest.mock import patch
 
 from django.conf import settings
 from django.core.files.storage import storages
 from django.core.management import call_command
-from django.core.management.base import CommandError
+from django.core.management.base import CommandError, OutputWrapper
 from django.db import models as django_models
 from django.test import override_settings
 from django.utils import timezone
@@ -21,11 +23,20 @@ from easy_thumbnails.management import (
     delete_thumbnails,
     thumbnails_for_file,
 )
-from easy_thumbnails.management.commands.thumbnail import _collect_fields, _matches
+from easy_thumbnails.management.commands.thumbnail import (
+    ProgressBar,
+    _collect_fields,
+    _matches,
+)
 from easy_thumbnails.models import Source, Thumbnail
 from easy_thumbnails.utils import get_storage_hash
 from tests import utils as test
 from tests.models import TestModel
+
+
+class FakeTerminal(io.StringIO):
+    def isatty(self):
+        return True
 
 
 class ThumbnailCommandTests(test.BaseTest):
@@ -801,6 +812,143 @@ class ThumbnailPurgeCommandTest(test.BaseTest):
         self._call(include=['easy_thumbnails_tests.testmodel.picture'])
         self.assertEqual(Thumbnail.objects.count(), 0)
 
+    def _call_on_terminal(self, **kwargs):
+        stderr = FakeTerminal()
+        call_command('thumbnail', 'purge', stdout=io.StringIO(), stderr=stderr, **kwargs)
+        return stderr.getvalue()
+
+    def test_progress_bar_on_terminal(self):
+        stderr = self._call_on_terminal()
+        self.assertIn('Purging [', stderr)
+        self.assertIn('100%  1/1', stderr)
+        # the line is left empty for the summary
+        self.assertRegex(stderr, r'\r +\r$')
+        self.assertEqual(Thumbnail.objects.count(), 0)
+
+    def test_no_progress_bar_without_terminal(self):
+        _, stderr = self._call()
+        self.assertNotIn('\r', stderr)
+
+    def test_no_count_query_without_terminal(self):
+        with patch.object(django_models.QuerySet, 'count') as count:
+            self._call()
+        count.assert_not_called()
+
+    def test_no_progress_bar_unless_default_verbosity(self):
+        for verbosity in (0, 2):
+            with self.subTest(verbosity=verbosity):
+                stderr = self._call_on_terminal(verbosity=verbosity, dry_run=True)
+                self.assertNotIn('\r', stderr)
+
+    def test_progress_bar_on_dry_run(self):
+        stderr = self._call_on_terminal(dry_run=True)
+        self.assertIn('100%  1/1', stderr)
+        self.assertEqual(Thumbnail.objects.count(), 2)
+
+    def test_no_progress_bar_without_values(self):
+        stderr = self._call_on_terminal(include=['auth'])
+        self.assertNotIn('\r', stderr)
+
+    def test_progress_bar_counts_values_without_source(self):
+        TestModel.objects.create(avatar='avatars/b.jpg', picture='pictures/none.jpg')
+        stderr = self._call_on_terminal()
+        self.assertIn('100%  2/2', stderr)
+
+    def test_error_starts_on_its_own_line(self):
+        storage = self.thumbnailer.thumbnail_storage
+        with patch.object(type(storage), 'delete', side_effect=OSError('nope')):
+            stderr = self._call_on_terminal()
+        self.assertRegex(stderr, r'\r +\rCould not delete .*: nope\n')
+        self.assertEqual(Thumbnail.objects.count(), 2)
+
+
+class ProgressBarTest(TestCase):
+    def _bar(self, total, **kwargs):
+        stream = OutputWrapper(FakeTerminal())
+        return stream, ProgressBar(stream, total, label='Testing', **kwargs)
+
+    def _lines(self, stream):
+        return stream._out.getvalue().split('\r')
+
+    def test_redraws_in_place(self):
+        stream, bar = self._bar(2)
+        with bar:
+            list(bar.track('ab'))
+        self.assertNotIn('\n', stream._out.getvalue())
+        self.assertIn('[' + '-' * 40 + ']    0%  0/2', stream._out.getvalue())
+        self.assertIn('[' + '#' * 40 + ']  100%  2/2', stream._out.getvalue())
+
+    def test_advances_after_each_item(self):
+        _, bar = self._bar(2)
+        for expected, _item in enumerate(bar.track('ab')):
+            self.assertEqual(bar.done, expected)
+        self.assertEqual(bar.done, 2)
+
+    def test_stream_style_is_not_applied(self):
+        stream, bar = self._bar(1)
+        stream.style_func = lambda text: f'<{text}>'
+        with bar:
+            bar.advance()
+        self.assertNotIn('<', stream._out.getvalue())
+
+    def test_zero_total_writes_nothing(self):
+        stream, bar = self._bar(0)
+        with bar:
+            list(bar.track('ab'))
+        self.assertEqual(stream._out.getvalue(), '')
+
+    def test_done_is_clamped_to_total(self):
+        stream, bar = self._bar(1)
+        with bar:
+            list(bar.track('abc'))
+        self.assertNotIn('300%', stream._out.getvalue())
+        self.assertEqual(bar.done, 1)
+
+    def test_redraws_are_throttled(self):
+        stream, bar = self._bar(1000)
+        bar.refresh_interval = 3600
+        with bar:
+            list(bar.track(range(1000)))
+        # first and last, and the clearing of the line
+        self.assertEqual(stream._out.getvalue().count('\r'), 4)
+
+    def test_clears_on_exception(self):
+        stream, bar = self._bar(2)
+        with self.assertRaises(KeyboardInterrupt), bar:
+            raise KeyboardInterrupt
+        self.assertRegex(stream._out.getvalue(), r'\r +\r$')
+
+    def test_shorter_line_overwrites_previous(self):
+        stream, bar = self._bar(2)
+        bar.drawn_length = 200
+        with patch.object(bar, '_get_columns', return_value=81):
+            bar._draw()
+        self.assertEqual(len(self._lines(stream)[-1]), 80)
+
+    def test_fits_narrow_terminal(self):
+        for columns in (80, 50, 30, 10):
+            with self.subTest(columns=columns):
+                stream, bar = self._bar(1000)
+                size = os.terminal_size((columns, 24))
+                with patch(
+                    'easy_thumbnails.management.commands.thumbnail.shutil.get_terminal_size',
+                    return_value=size,
+                ):
+                    bar.done = 499
+                    bar.advance()
+                    bar._draw()
+                for line in self._lines(stream):
+                    self.assertLess(len(line), columns)
+
+    def test_uses_size_of_its_own_stream(self):
+        stream, bar = self._bar(1)
+        stream._out.fileno = lambda: 2
+        with patch(
+            'os.get_terminal_size', return_value=os.terminal_size((33, 24))
+        ) as size:
+            self.assertEqual(bar._get_columns(), 33)
+        size.assert_called_once_with(2)
+
 
 class ThumbnailGenerateCommandTest(test.BaseTest):
     def setUp(self):
@@ -900,6 +1048,58 @@ class ThumbnailGenerateCommandTest(test.BaseTest):
         self.assertIn(f'Could not generate medium of {broken}', stderr)
         self.assertRegex(stdout, r'Errors:\s+1\n')
         self.assertTrue(self._exists('medium'))
+
+    def _call_on_terminal(self, **kwargs):
+        stderr = FakeTerminal()
+        call_command(
+            'thumbnail', 'generate', stdout=io.StringIO(), stderr=stderr, **kwargs
+        )
+        return stderr.getvalue()
+
+    def test_progress_bar_on_terminal(self):
+        stderr = self._call_on_terminal()
+        self.assertIn('Generating [', stderr)
+        self.assertIn('100%  1/1', stderr)
+        # the line is left empty for the summary
+        self.assertRegex(stderr, r'\r +\r$')
+        self.assertTrue(self._exists('medium'))
+
+    def test_no_progress_bar_without_terminal(self):
+        _, stderr = self._call()
+        self.assertNotIn('\r', stderr)
+
+    def test_no_count_query_without_terminal(self):
+        with patch.object(django_models.QuerySet, 'count') as count:
+            self._call()
+        count.assert_not_called()
+
+    def test_no_progress_bar_unless_default_verbosity(self):
+        for verbosity in (0, 2):
+            with self.subTest(verbosity=verbosity):
+                stderr = self._call_on_terminal(verbosity=verbosity, dry_run=True)
+                self.assertNotIn('\r', stderr)
+
+    def test_progress_bar_on_dry_run(self):
+        stderr = self._call_on_terminal(dry_run=True)
+        self.assertIn('100%  1/1', stderr)
+        self.assertFalse(self._exists('medium'))
+
+    def test_no_progress_bar_without_values(self):
+        stderr = self._call_on_terminal(include=['auth'])
+        self.assertNotIn('\r', stderr)
+
+    def test_progress_bar_counts_values_without_aliases(self):
+        TestModel.objects.create(avatar='avatars/b.jpg', picture='pictures/none.jpg')
+        with patch.object(aliases, 'all', return_value={}):
+            stderr = self._call_on_terminal()
+        self.assertIn('100%  2/2', stderr)
+
+    def test_error_starts_on_its_own_line(self):
+        broken = self.storage.save('pictures/broken.jpg', io.BytesIO(b'not an image'))
+        self.addCleanup(self.storage.delete, broken)
+        TestModel.objects.create(avatar='avatars/b.jpg', picture=broken)
+        stderr = self._call_on_terminal()
+        self.assertRegex(stderr, r'\r +\rCould not generate medium of ')
 
 
 def other_hasher(image):

@@ -1,5 +1,7 @@
 import datetime as dt
 import fnmatch
+import os
+import shutil
 import time
 from collections import Counter
 from pathlib import Path
@@ -26,6 +28,96 @@ from easy_thumbnails.utils import (
     q_has_value,
     queryset_iterator,
 )
+
+
+class ProgressBar:
+    """
+    Single line progress bar for a terminal, redrawn in place on `stream`.
+
+    Use as a context manager, which removes the bar again on exit. A `total` of
+    zero disables it, so callers don't need a conditional around it. Call
+    `clear()` before writing anything else to `stream`.
+    """
+
+    refresh_interval = 0.1
+    max_bar_width = 40
+    min_bar_width = 10
+
+    def __init__(self, stream, total, label='Progress'):
+        self.stream = stream
+        self.total = total
+        self.label = label
+        self.done = 0
+        self.started = time.monotonic()
+        self.last_draw = self.started
+        self.drawn_length = 0
+
+    def __enter__(self):
+        self._draw()
+        return self
+
+    def __exit__(self, *exc_info):
+        self.clear()
+
+    def track(self, iterable):
+        """
+        Yield from `iterable`, advancing the bar after each item is processed.
+        """
+        for item in iterable:
+            yield item
+            self.advance()
+
+    def advance(self):
+        self.done = min(self.done + 1, self.total)
+        now = time.monotonic()
+        if self.done == self.total or now - self.last_draw >= self.refresh_interval:
+            self.last_draw = now
+            self._draw()
+
+    def clear(self):
+        if self.drawn_length:
+            self._write(f'\r{" " * self.drawn_length}\r')
+            self.drawn_length = 0
+
+    def _write(self, text):
+        # style_func: stderr is styled as an error on a terminal
+        self.stream.write(text, style_func=str, ending='')
+        self.stream.flush()
+
+    def _draw(self):
+        if not self.total:
+            return
+        # keep clear of the last column, which would wrap the line
+        columns = self._get_columns() - 1
+        line = self._render(columns)
+        padding = max(min(self.drawn_length, columns) - len(line), 0)
+        self._write(f'\r{line}{" " * padding}')
+        self.drawn_length = len(line) + padding
+
+    def _get_columns(self):
+        # shutil only looks at stdout, which may be redirected, and
+        # OutputWrapper before Django 5.2 doesn't delegate fileno()
+        stream = getattr(self.stream, '_out', self.stream)
+        try:
+            return os.get_terminal_size(stream.fileno()).columns
+        except (AttributeError, OSError, ValueError):
+            return shutil.get_terminal_size().columns
+
+    def _render(self, columns):
+        status = f'{self.done * 100 // self.total:>3}%  {self.done}/{self.total}'
+        if 0 < self.done < self.total:
+            elapsed = time.monotonic() - self.started
+            remaining = round(elapsed * (self.total - self.done) / self.done)
+            status += f'  ETA {dt.timedelta(seconds=remaining)}'
+
+        bar_width = columns - len(f'{self.label} []  {status}')
+        if bar_width < self.min_bar_width:
+            return f'{self.label} {status}'[:columns]
+
+        bar_width = min(bar_width, self.max_bar_width)
+        filled = self.done * bar_width // self.total
+        bar = '#' * filled + '-' * (bar_width - filled)
+        return f'{self.label} [{bar}]  {status}'
 
 
 class ThumbnailCollectionCleaner:
@@ -648,6 +740,17 @@ class Command(BaseCommand):
             if unknown:
                 raise CommandError(f'Unknown alias: {", ".join(unknown)}')
 
+    def _progress_total(self, pairs, verbosity):
+        """
+        Return the number of field values for a ProgressBar, or zero to not
+        show one: it's only for a terminal and the default verbosity.
+        """
+        if verbosity != 1 or not self.stderr.isatty():
+            return 0
+        return sum(
+            model.objects.filter(q_has_value(field)).count() for model, field in pairs
+        )
+
     def _purge_queryset(self, fieldfile, source_cache, alias_names):
         """
         Return the Thumbnail records of `source_cache` to purge: those in the
@@ -693,6 +796,9 @@ class Command(BaseCommand):
         and aliases with identical options share thumbnails.
 
         With --dry-run, only reports what would be purged.
+
+        On a terminal, a progress bar on stderr counts the field values
+        processed, unless the verbosity is not the default.
         """
         dry_run = options['dry_run']
         alias_names = options['alias']
@@ -704,31 +810,38 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write('Dry run...')
 
+        total = self._progress_total(pairs, verbosity)
         counts = Counter()
         time_start = time.time()
-        for model, field in pairs:
-            query = model.objects.filter(q_has_value(field)).only('pk', field.name)
-            for instance in queryset_iterator(query):
-                fieldfile = getattr(instance, field.name)
-                source_cache = fieldfile.get_source_cache()
-                if source_cache is None:
-                    continue
-                counts['sources'] += 1
+        with ProgressBar(self.stderr, total, label='Purging') as progress:
+            for model, field in pairs:
+                query = model.objects.filter(q_has_value(field)).only('pk', field.name)
+                for instance in progress.track(queryset_iterator(query)):
+                    fieldfile = getattr(instance, field.name)
+                    source_cache = fieldfile.get_source_cache()
+                    if source_cache is None:
+                        continue
+                    counts['sources'] += 1
 
-                thumbnails = self._purge_queryset(fieldfile, source_cache, alias_names)
+                    thumbnails = self._purge_queryset(
+                        fieldfile, source_cache, alias_names
+                    )
 
-                for thumbnail in thumbnails:
-                    if verbosity > 1:
-                        self.stdout.write(f'{thumbnail.name}')
-                    if not dry_run:
-                        try:
-                            fieldfile.thumbnail_storage.delete(thumbnail.name)
-                        except OSError as e:
-                            self.stderr.write(f'Could not delete {thumbnail.name}: {e}')
-                            counts['errors'] += 1
-                            continue
-                        thumbnail.delete()
-                    counts['thumbnails'] += 1
+                    for thumbnail in thumbnails:
+                        if verbosity > 1:
+                            self.stdout.write(f'{thumbnail.name}')
+                        if not dry_run:
+                            try:
+                                fieldfile.thumbnail_storage.delete(thumbnail.name)
+                            except OSError as e:
+                                progress.clear()
+                                self.stderr.write(
+                                    f'Could not delete {thumbnail.name}: {e}'
+                                )
+                                counts['errors'] += 1
+                                continue
+                            thumbnail.delete()
+                        counts['thumbnails'] += 1
 
         execution_time = round(time.time() - time_start)
         self.stdout.write(f'{timezone.now().strftime("%Y-%m-%d %H:%M "):-<48}')
@@ -764,6 +877,9 @@ class Command(BaseCommand):
         generated, and the project-wide aliases too with --include-global.
 
         With --dry-run, only reports what would be generated.
+
+        On a terminal, a progress bar on stderr counts the field values
+        processed, unless the verbosity is not the default.
         """
         dry_run = options['dry_run']
         alias_names = options['alias']
@@ -776,36 +892,43 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write('Dry run...')
 
+        total = self._progress_total(pairs, verbosity)
         counts = Counter()
         time_start = time.time()
-        for model, field in pairs:
-            query = model.objects.filter(q_has_value(field)).only('pk', field.name)
-            for instance in queryset_iterator(query):
-                fieldfile = getattr(instance, field.name)
-                selected = self._generate_aliases(fieldfile, alias_names, include_global)
-                if not selected:
-                    continue
-                counts['sources'] += 1
-
-                for alias_name, alias_options in selected.items():
-                    thumbnail_options = fieldfile.get_options(
-                        {**alias_options, 'ALIAS': alias_name}
+        with ProgressBar(self.stderr, total, label='Generating') as progress:
+            for model, field in pairs:
+                query = model.objects.filter(q_has_value(field)).only('pk', field.name)
+                for instance in progress.track(queryset_iterator(query)):
+                    fieldfile = getattr(instance, field.name)
+                    selected = self._generate_aliases(
+                        fieldfile, alias_names, include_global
                     )
-                    if fieldfile.get_existing_thumbnail(thumbnail_options):
-                        counts['existing'] += 1
+                    if not selected:
                         continue
-                    if not dry_run:
-                        try:
-                            thumbnail = fieldfile.generate_thumbnail(thumbnail_options)
-                            fieldfile.save_thumbnail(thumbnail)
-                        except Exception as e:
-                            name = f'{alias_name} of {fieldfile.name}'
-                            self.stderr.write(f'Could not generate {name}: {e}')
-                            counts['errors'] += 1
+                    counts['sources'] += 1
+
+                    for alias_name, alias_options in selected.items():
+                        thumbnail_options = fieldfile.get_options(
+                            {**alias_options, 'ALIAS': alias_name}
+                        )
+                        if fieldfile.get_existing_thumbnail(thumbnail_options):
+                            counts['existing'] += 1
                             continue
-                        if verbosity > 1:
-                            self.stdout.write(thumbnail.name)
-                    counts['thumbnails'] += 1
+                        if not dry_run:
+                            try:
+                                thumbnail = fieldfile.generate_thumbnail(
+                                    thumbnail_options
+                                )
+                                fieldfile.save_thumbnail(thumbnail)
+                            except Exception as e:
+                                name = f'{alias_name} of {fieldfile.name}'
+                                progress.clear()
+                                self.stderr.write(f'Could not generate {name}: {e}')
+                                counts['errors'] += 1
+                                continue
+                            if verbosity > 1:
+                                self.stdout.write(thumbnail.name)
+                        counts['thumbnails'] += 1
 
         execution_time = round(time.time() - time_start)
         self.stdout.write(f'{timezone.now().strftime("%Y-%m-%d %H:%M "):-<48}')
