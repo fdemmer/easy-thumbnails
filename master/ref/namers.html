@@ -149,6 +149,14 @@ base64 sha1 hash of the thumbnail options. For example:
 <code class="docutils literal notranslate"><span class="pre">1xedFtqllFo9_100x100_QHCa6G1l.jpg</span></code>.</p>
 </dd></dl>
 
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">alias</span></code> and <code class="docutils literal notranslate"><span class="pre">alias_or_size</span></code> namers don’t name a thumbnail by its
+options, so use them for plain aliases only. Other thumbnails, such as
+<code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">thumbnail</span> <span class="pre">source</span> <span class="pre">'30x30'</span> <span class="pre">%}</span></code> or an alias with overriding options,
+share a single file with the <code class="docutils literal notranslate"><span class="pre">alias</span></code> namer, and share a file with
+thumbnails of the same size with the <code class="docutils literal notranslate"><span class="pre">alias_or_size</span></code> namer.</p>
+</div>
 </section>
 <section id="custom-namers">
 <h2>Custom namers<a class="headerlink" href="#custom-namers" title="Link to this heading"></a></h2>

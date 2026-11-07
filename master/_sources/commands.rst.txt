@@ -304,6 +304,10 @@ its ``Thumbnail`` record is kept and it is counted in the ``Errors`` line of
 the summary, which also shows the number of sources processed and thumbnails
 purged.
 
+If stderr is a terminal, a progress bar shows the file field values processed
+so far, as the number of thumbnails is not known up front. It is not shown with
+``--verbosity`` other than the default of ``1``, or if stderr is redirected.
+
 Options
 -------
 
@@ -369,6 +373,10 @@ If a thumbnail cannot be generated (e.g. the source file is missing or not an
 image), the error is reported and counted in the ``Errors`` line of the
 summary, which also shows the number of sources processed, thumbnails
 generated and thumbnails that existed already.
+
+If stderr is a terminal, a progress bar shows the file field values processed
+so far, as the number of thumbnails is not known up front. It is not shown with
+``--verbosity`` other than the default of ``1``, or if stderr is redirected.
 
 Options
 -------

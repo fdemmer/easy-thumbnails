@@ -94,6 +94,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#easy_thumbnails.files.database_get_image_dimensions"><code class="docutils literal notranslate"><span class="pre">database_get_image_dimensions()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#easy_thumbnails.files.generate_all_aliases"><code class="docutils literal notranslate"><span class="pre">generate_all_aliases()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#easy_thumbnails.files.get_thumbnailer"><code class="docutils literal notranslate"><span class="pre">get_thumbnailer()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#easy_thumbnails.files.prefetch_aliases"><code class="docutils literal notranslate"><span class="pre">prefetch_aliases()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="namers.html">Namers</a></li>
@@ -330,6 +331,8 @@ thumbnailer like <code class="docutils literal notranslate"><span class="pre">th
 </dd>
 </dl>
 <p>Raises a <code class="docutils literal notranslate"><span class="pre">KeyError</span></code> if one of the aliases does not exist.</p>
+<p>To prefetch the thumbnails of several files with a single query, use
+the <a class="reference internal" href="#easy_thumbnails.files.prefetch_aliases" title="easy_thumbnails.files.prefetch_aliases"><code class="xref py py-func docutils literal notranslate"><span class="pre">prefetch_aliases()</span></code></a> function.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -342,12 +345,14 @@ thumbnailer like <code class="docutils literal notranslate"><span class="pre">th
 existing thumbnails, and their dimensions are available without reading
 the file (if <code class="docutils literal notranslate"><span class="pre">THUMBNAIL_CACHE_DIMENSIONS</span></code> is enabled).</p>
 <p>Thumbnails that are missing are generated as usual.</p>
+<p>The records are kept on this instance, so use it for the following
+calls. Prefetching again replaces the records fetched before.</p>
 <p>Arguments:</p>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">thumbnail_options_list</span></code></dt><dd><p>Iterable of dicts or
 <a class="reference internal" href="options.html#easy_thumbnails.options.ThumbnailOptions" title="easy_thumbnails.options.ThumbnailOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThumbnailOptions</span></code></a>, as for
 <a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.get_thumbnail" title="easy_thumbnails.files.Thumbnailer.get_thumbnail"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_thumbnail()</span></code></a>. Options of aliases must contain <code class="docutils literal notranslate"><span class="pre">ALIAS</span></code>,
-see <a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.prefetch_aliases" title="easy_thumbnails.files.Thumbnailer.prefetch_aliases"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prefetch_aliases()</span></code></a>.</p>
+see <a class="reference internal" href="#easy_thumbnails.files.prefetch_aliases" title="easy_thumbnails.files.prefetch_aliases"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prefetch_aliases()</span></code></a>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -509,6 +514,37 @@ to the thumbnail (i.e. a new thumbnail will be created for every
 <p>If <code class="docutils literal notranslate"><span class="pre">obj</span></code> is a <code class="docutils literal notranslate"><span class="pre">Thumbnailer</span></code> instance, it will just be returned. If it’s
 an object with an <code class="docutils literal notranslate"><span class="pre">easy_thumbnails_thumbnailer</span></code> then the attribute is
 simply returned under the assumption it is a Thumbnailer instance)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_thumbnails.files.prefetch_aliases">
+<span class="sig-prename descclassname"><span class="pre">easy_thumbnails.files.</span></span><span class="sig-name descname"><span class="pre">prefetch_aliases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thumbnailers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aliases_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easy_thumbnails.files.prefetch_aliases" title="Link to this definition"></a></dt>
+<dd><p>Fetch the thumbnails of several files with a single query.</p>
+<p>Like <a class="reference internal" href="#easy_thumbnails.files.Thumbnailer.prefetch_aliases" title="easy_thumbnails.files.Thumbnailer.prefetch_aliases"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Thumbnailer.prefetch_aliases()</span></code></a>, which needs a query per file.
+Accessing the aliases of these thumbnailers afterwards needs no further
+queries for existing thumbnails. Thumbnails that are missing are generated
+as usual.</p>
+<p>A query is needed per combination of source and thumbnail storage, so
+files of one field use a single query.</p>
+<p>The thumbnails are kept on the given instances, so use these instances to
+access the aliases, and prefetching them again replaces the thumbnails
+fetched before.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>thumbnailers</strong> – Iterable of <a class="reference internal" href="#easy_thumbnails.files.Thumbnailer" title="easy_thumbnails.files.Thumbnailer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Thumbnailer</span></code></a> instances, including
+<code class="docutils literal notranslate"><span class="pre">ThumbnailerFieldFile</span></code>. Wrap the files of plain Django file fields
+with <a class="reference internal" href="#easy_thumbnails.files.get_thumbnailer" title="easy_thumbnails.files.get_thumbnailer"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_thumbnailer()</span></code></a>. Empty files and remote sources are
+skipped.</p></li>
+<li><p><strong>aliases_names</strong> – Iterable of alias names (optional). By default all
+aliases of the target of each thumbnailer are fetched.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>KeyError</strong> – If one of the given aliases does not exist for the target
+of one of the thumbnailers.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
