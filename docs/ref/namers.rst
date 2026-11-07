@@ -14,6 +14,13 @@ Built-in namers
 .. automodule:: easy_thumbnails.namers
    :members:
 
+.. note::
+    The ``alias`` and ``alias_or_size`` namers don't name a thumbnail by its
+    options, so use them for plain aliases only. Other thumbnails, such as
+    ``{% thumbnail source '30x30' %}`` or an alias with overriding options,
+    share a single file with the ``alias`` namer, and share a file with
+    thumbnails of the same size with the ``alias_or_size`` namer.
+
 
 Custom namers
 ==============

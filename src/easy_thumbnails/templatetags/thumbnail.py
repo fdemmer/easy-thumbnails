@@ -84,6 +84,9 @@ class ThumbnailNode(Node):
                 alias = aliases.get(size, target=source)
                 if alias:
                     del opts['size']
+                    # with overriding options, it's not the thumbnail of the alias
+                    if not opts:
+                        opts['ALIAS'] = size
                     opts = dict(alias, **opts)
                 else:
                     if raise_errors:
