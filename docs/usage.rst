@@ -360,12 +360,41 @@ For example, assuming an ``aardvark.jpg`` image exists in the default storage::
 Prefetching thumbnails
 ----------------------
 
-Looking up existing thumbnails costs database queries: one for the
-``Source`` and one per thumbnail with remote storage, and one per thumbnail
-to read the cached dimensions with local storage. If you need several
-thumbnails of one source (e.g. for a ``srcset``), prefetch them with a
-single query, which also fetches the cached dimensions (see
-``THUMBNAIL_CACHE_DIMENSIONS``)::
+Using an existing thumbnail costs database queries: one to look it up if
+thumbnails are in remote storage, and one to read its ``width`` or ``height``.
+Prefetching replaces these with a single query up front:
+
+* With ``THUMBNAIL_CACHE_DIMENSIONS`` enabled, using the thumbnails afterwards
+  needs no further queries.
+* With remote storage and without that setting, the lookups are saved, but
+  reading the dimensions still costs a query per thumbnail.
+* With local storage and without that setting, prefetching saves nothing, so
+  don't use it.
+
+Choose the method by what you need to fetch:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Use
+     - For
+     - Thumbnails to fetch
+     - Queries
+   * - :meth:`Thumbnailer.prefetch_aliases`
+     - One file
+     - Given alias names
+     - One
+   * - :meth:`Thumbnailer.prefetch_thumbnails`
+     - One file
+     - Given thumbnail options
+     - One
+   * - :func:`prefetch_aliases`
+     - Several files
+     - Given alias names, or by default all aliases of each file
+     - One per combination of source and thumbnail storage
+
+To fetch several thumbnails of one source (e.g. for a ``srcset``), call the
+method of its thumbnailer::
 
     thumbnailer = get_thumbnailer('animals/aardvark.jpg')
     thumbnailer.prefetch_aliases(['small', 'large'])
@@ -374,8 +403,9 @@ single query, which also fetches the cached dimensions (see
         thumb.url, thumb.width, thumb.height
 
 To show thumbnails of several sources, e.g. the profile pictures of a list of
-users, use the :func:`prefetch_aliases` function to fetch all of them with a
-single query, instead of one per source::
+users, use the :func:`prefetch_aliases` function, which needs a single query
+instead of one per source. Thumbnails with explicit options can only be
+prefetched per source::
 
     from easy_thumbnails.files import prefetch_aliases
 
@@ -383,6 +413,41 @@ single query, instead of one per source::
     prefetch_aliases(user.avatar for user in users)
     for user in users:
         user.avatar['small'].url
+
+The ``Thumbnail`` records are fetched together with their ``Source`` and
+``ThumbnailDimensions`` and kept on the thumbnailer instance. Prefetching doesn't
+generate anything: thumbnails that are missing are generated as usual when they
+are accessed.
+
+Because the records are kept on the instance, you need to use the same instances
+afterwards:
+
+* Don't call :func:`get_thumbnailer` with a path again, as it returns a new
+  thumbnailer.
+* Evaluate querysets once, as in the ``list()`` above. Iterating over a new
+  queryset creates new model instances, and so new field files.
+* Prefetching again replaces the records fetched before, so fetch everything you
+  need in one call.
+
+The example above needs a :class:`~easy_thumbnails.fields.ThumbnailerImageField`
+or :class:`~easy_thumbnails.fields.ThumbnailerField`, whose files are
+thumbnailers. Files of a plain ``ImageField`` or ``FileField`` raise an
+``AttributeError``. Wrap them with :func:`get_thumbnailer` and keep the result,
+as each call returns a new thumbnailer::
+
+    thumbnailers = [get_thumbnailer(user.avatar) for user in users]
+    prefetch_aliases(thumbnailers)
+    for thumbnailer in thumbnailers:
+        thumbnailer['small'].url
+
+Prefetched thumbnails also work in templates, if the template gets the same
+instances::
+
+    {% thumbnail user.avatar 'small' %}
+    {{ user.avatar|thumbnail_url:'small' }}
+
+An alias with overriding options, like ``{% thumbnail user.avatar 'small' crop %}``,
+is a different thumbnail, which prefetching the alias doesn't cover.
 
 .. automethod:: Thumbnailer.prefetch_thumbnails
    :noindex:

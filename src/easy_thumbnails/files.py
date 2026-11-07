@@ -107,11 +107,18 @@ def prefetch_aliases(thumbnailers, aliases_names=None):
     A query is needed per combination of source and thumbnail storage, so
     files of one field use a single query.
 
+    The thumbnails are kept on the given instances, so use these instances to
+    access the aliases, and prefetching them again replaces the thumbnails
+    fetched before.
+
     :param thumbnailers: Iterable of :class:`Thumbnailer` instances, including
-        ``ThumbnailerFieldFile``. Empty files and remote sources are skipped.
+        ``ThumbnailerFieldFile``. Wrap the files of plain Django file fields
+        with :func:`get_thumbnailer`. Empty files and remote sources are
+        skipped.
     :param aliases_names: Iterable of alias names (optional). By default all
         aliases of the target of each thumbnailer are fetched.
-    :raises KeyError: If one of the given aliases does not exist.
+    :raises KeyError: If one of the given aliases does not exist for the target
+        of one of the thumbnailers.
     """
     if aliases_names is not None:
         aliases_names = list(aliases_names)
@@ -777,6 +784,9 @@ class Thumbnailer(File):
         the file (if ``THUMBNAIL_CACHE_DIMENSIONS`` is enabled).
 
         Thumbnails that are missing are generated as usual.
+
+        The records are kept on this instance, so use it for the following
+        calls. Prefetching again replaces the records fetched before.
 
         Arguments:
 
